@@ -1,0 +1,40 @@
+# Variables de Entorno para Vercel
+# Copia y pega estas 6 variables en Vercel Dashboard
+
+# 1. DATABASE_URL (Neon PostgreSQL - Pooled Connection)
+DATABASE_URL=postgresql://neondb_owner:npg_kgcCKJuwpF63@ep-jolly-wave-acz30twt-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+
+# 2. TURSO_DATABASE_URL (Turso LibSQL)
+TURSO_DATABASE_URL=libsql://flip-v2-yasmanijob.aws-us-east-1.turso.io
+
+# 3. TURSO_AUTH_TOKEN (Token de Turso)
+TURSO_AUTH_TOKEN=eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzQxNDQxNDksImlkIjoiMDE5ZDEzMzMtNzgwMS03Zjk0LTlhOGYtMDEyYTAxNWQxODhiIiwicmlkIjoiM2VhOGNmOTctNjM3NC00NjhjLTkxYzItMmYxYzUxM2IxNDQ2In0.zZdG69K6hhya1dc3B3eWWFpX6dImIxGUQ2uQjj9kISbXGoirD-4ZHbqBq3v1hqKPA-iGKb5f_BBqNlFxjBoGAQ
+
+# 4. BETTER_AUTH_SECRET (Generado con openssl)
+BETTER_AUTH_SECRET=4quRwA5VPAYmkvBkUWC4fsmQITeyypueF4b8yLKBp18=
+
+# 5. NEXT_PUBLIC_APP_URL (URL de tu aplicación)
+# IMPORTANTE: Después del primer deploy, actualiza esto con la URL real de Vercel
+NEXT_PUBLIC_APP_URL=https://flip-v2.vercel.app
+
+# 6. NEXT_PUBLIC_REQUIRE_EMAIL_VERIFICATION (Verificación de email)
+NEXT_PUBLIC_REQUIRE_EMAIL_VERIFICATION=false
+
+# ============================================================================
+# INSTRUCCIONES PARA AGREGAR EN VERCEL:
+# ============================================================================
+# 
+# 1. Ve a tu proyecto en Vercel Dashboard
+# 2. Click en "Settings" → "Environment Variables"
+# 3. Para cada variable:
+#    - Name: Copia el nombre (ej: DATABASE_URL)
+#    - Value: Copia el valor completo
+#    - Environment: Selecciona "Production", "Preview", y "Development"
+#    - Click "Add"
+# 
+# 4. Después del primer deploy:
+#    - Copia la URL que Vercel te da (ej: flip-abc123.vercel.app)
+#    - Actualiza NEXT_PUBLIC_APP_URL con esa URL
+#    - Redeploy el proyecto
+# 
+# ============================================================================
