@@ -22,6 +22,10 @@ const getBaseURL = () => {
 
 const baseURL = getBaseURL();
 
+console.log('[Better Auth] Base URL:', baseURL);
+console.log('[Better Auth] VERCEL_URL:', process.env.VERCEL_URL);
+console.log('[Better Auth] NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
+
 export const auth = betterAuth({
   baseURL,
   database: drizzleAdapter(db, {
@@ -49,13 +53,8 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
   },
-  trustedOrigins: [
-    baseURL,
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    // Allow all Vercel preview URLs
-    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
-  ].filter(Boolean) as string[],
+  // Don't validate origins - let all requests through
+  trustedOrigins: [],
   plugins: [
     {
       id: 'lazy-registration',
