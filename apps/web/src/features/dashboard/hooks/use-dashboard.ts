@@ -13,6 +13,6 @@ export function useInstitutionStats() {
     return useQuery({
         queryKey: ['dashboard', 'institution-stats'],
         queryFn: DashboardApi.getInstitutionStats,
-        staleTime: 2 * 60 * 1000, // 2 minutes
+        staleTime: 5 * 60 * 1000, // 5 minutos (aumentado de 2min para consistencia)
     });
 }

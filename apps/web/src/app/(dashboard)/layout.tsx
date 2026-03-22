@@ -4,7 +4,7 @@ import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/sidebar";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryProvider } from "@/providers/query-provider";
 import { Sparkles, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -15,16 +15,6 @@ export default function DashboardLayout({
 }) {
     const router = useRouter();
     const { data: session, isPending } = useSession();
-
-    // Create QueryClient instance (only once per layout)
-    const [queryClient] = useState(() => new QueryClient({
-        defaultOptions: {
-            queries: {
-                staleTime: 60 * 1000, // 1 minute
-                refetchOnWindowFocus: false,
-            },
-        },
-    }));
 
     const [institution, setInstitution] = useState<any>(null);
     const [isBannerDismissed, setIsBannerDismissed] = useState(false);
@@ -131,7 +121,7 @@ export default function DashboardLayout({
     }
 
     return (
-        <QueryClientProvider client={queryClient}>
+        <QueryProvider>
             <div className="flex flex-col min-h-screen bg-background">
                 {/* ── Global Smart Trial Banner (Edge-to-Edge) ── */}
                 {isTrial && !isBannerDismissed && (
@@ -194,6 +184,6 @@ export default function DashboardLayout({
                     </main>
                 </div>
             </div>
-        </QueryClientProvider>
+        </QueryProvider>
     );
 }

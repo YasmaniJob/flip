@@ -27,7 +27,7 @@ export function useMyTodayReservations() {
     return useQuery({
         queryKey: reservationKeys.myToday(),
         queryFn: ReservationsApi.getMyToday,
-        staleTime: 30 * 1000,
+        staleTime: 2 * 60 * 1000, // 2 minutos (aumentado de 30s - agenda del día no cambia tan rápido)
     });
 }
 

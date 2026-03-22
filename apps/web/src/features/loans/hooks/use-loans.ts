@@ -13,9 +13,9 @@ export function useLoans() {
     return useQuery<Loan[]>({
         queryKey: loanKeys.list(),
         queryFn: () => LoansApi.getAll(),
-        staleTime: 0,                         // always stale — any invalidation refetches immediately
-        refetchInterval: 3 * 1000,            // poll every 3s for cross-session updates
-        refetchIntervalInBackground: true,    // keep polling even when browser tab is inactive
+        staleTime: 30 * 1000,                 // 30 segundos - datos frescos por 30s
+        refetchInterval: 30 * 1000,           // poll every 30s (reducido de 3s)
+        refetchIntervalInBackground: false,   // no polling cuando tab está inactivo
         refetchOnWindowFocus: true,
     });
 }
