@@ -1,0 +1,10 @@
+-- CREATE TABLE "category_sequences" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"institution_id" text NOT NULL,
+-- 	"category_prefix" text NOT NULL,
+-- 	"last_number" integer DEFAULT 0 NOT NULL
+-- );
+-- --> statement-breakpoint
+-- ALTER TABLE "category_sequences" ADD CONSTRAINT "category_sequences_institution_id_institutions_id_fk" FOREIGN KEY ("institution_id") REFERENCES "public"."institutions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- CREATE UNIQUE INDEX "idx_sequence_institution_prefix" ON "category_sequences" USING btree ("institution_id","category_prefix");--> statement-breakpoint
+-- CREATE INDEX "idx_resource_internal_id" ON "resources" USING btree ("institution_id","internal_id");

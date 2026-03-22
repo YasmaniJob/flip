@@ -1,0 +1,187 @@
+-- Migration 0000 commented out to sync with existing DB state
+-- CREATE TABLE "accounts" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"user_id" text NOT NULL,
+-- 	"account_id" text NOT NULL,
+-- 	"provider_id" text NOT NULL,
+-- 	"access_token" text,
+-- 	"refresh_token" text,
+-- 	"access_token_expires_at" timestamp,
+-- 	"refresh_token_expires_at" timestamp,
+-- 	"scope" text,
+-- 	"id_token" text,
+-- 	"password" text,
+-- 	"created_at" timestamp DEFAULT now(),
+-- 	"updated_at" timestamp DEFAULT now()
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "categories" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"institution_id" text NOT NULL,
+-- 	"name" text NOT NULL,
+-- 	"icon" text,
+-- 	"color" text
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "curricular_areas" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"institution_id" text NOT NULL,
+-- 	"name" text NOT NULL,
+-- 	"levels" jsonb,
+-- 	"is_standard" boolean DEFAULT false,
+-- 	"active" boolean DEFAULT true,
+-- 	"created_at" timestamp DEFAULT now()
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "grades" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"institution_id" text NOT NULL,
+-- 	"name" text NOT NULL,
+-- 	"level" text NOT NULL,
+-- 	"sort_order" integer DEFAULT 0,
+-- 	"created_at" timestamp DEFAULT now()
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "institutions" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"name" text NOT NULL,
+-- 	"slug" text NOT NULL,
+-- 	"plan" text DEFAULT 'free',
+-- 	"is_platform_owner" boolean DEFAULT false,
+-- 	"subscription_status" text DEFAULT 'trial',
+-- 	"trial_ends_at" timestamp,
+-- 	"subscription_ends_at" timestamp,
+-- 	"settings" jsonb,
+-- 	"created_at" timestamp DEFAULT now(),
+-- 	CONSTRAINT "institutions_slug_unique" UNIQUE("slug")
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "loan_resources" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"loan_id" text NOT NULL,
+-- 	"resource_id" text NOT NULL
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "loans" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"institution_id" text NOT NULL,
+-- 	"staff_id" text,
+-- 	"status" text DEFAULT 'active',
+-- 	"purpose" text,
+-- 	"purpose_details" jsonb,
+-- 	"loan_date" timestamp DEFAULT now(),
+-- 	"return_date" timestamp,
+-- 	"notes" text
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "resources" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"institution_id" text NOT NULL,
+-- 	"category_id" text,
+-- 	"name" text NOT NULL,
+-- 	"brand" text,
+-- 	"model" text,
+-- 	"serial_number" text,
+-- 	"status" text DEFAULT 'disponible',
+-- 	"condition" text DEFAULT 'bueno',
+-- 	"stock" integer DEFAULT 1,
+-- 	"attributes" jsonb,
+-- 	"notes" text,
+-- 	"created_at" timestamp DEFAULT now()
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "sections" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"institution_id" text NOT NULL,
+-- 	"name" text NOT NULL,
+-- 	"grade_id" text NOT NULL,
+-- 	"area_id" text,
+-- 	"student_count" integer,
+-- 	"created_at" timestamp DEFAULT now()
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "sessions" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"user_id" text NOT NULL,
+-- 	"token" text NOT NULL,
+-- 	"expires_at" timestamp NOT NULL,
+-- 	"ip_address" text,
+-- 	"user_agent" text,
+-- 	"created_at" timestamp DEFAULT now(),
+-- 	"updated_at" timestamp DEFAULT now(),
+-- 	CONSTRAINT "sessions_token_unique" UNIQUE("token")
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "staff" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"institution_id" text NOT NULL,
+-- 	"name" text NOT NULL,
+-- 	"dni" text,
+-- 	"email" text,
+-- 	"phone" text,
+-- 	"area" text,
+-- 	"role" text DEFAULT 'docente',
+-- 	"status" text DEFAULT 'active',
+-- 	"created_at" timestamp DEFAULT now(),
+-- 	"updated_at" timestamp DEFAULT now()
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "users" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"institution_id" text,
+-- 	"name" text NOT NULL,
+-- 	"email" text NOT NULL,
+-- 	"email_verified" boolean DEFAULT false,
+-- 	"image" text,
+-- 	"dni" text,
+-- 	"role" text DEFAULT 'docente',
+-- 	"is_super_admin" boolean DEFAULT false,
+-- 	"created_at" timestamp DEFAULT now(),
+-- 	"updated_at" timestamp DEFAULT now(),
+-- 	CONSTRAINT "users_email_unique" UNIQUE("email")
+-- );
+-- --> statement-breakpoint
+-- CREATE TABLE "verification" (
+-- 	"id" text PRIMARY KEY NOT NULL,
+-- 	"identifier" text NOT NULL,
+-- 	"value" text NOT NULL,
+-- 	"expires_at" timestamp NOT NULL,
+-- 	"created_at" timestamp DEFAULT now(),
+-- 	"updated_at" timestamp DEFAULT now()
+-- );
+-- --> statement-breakpoint
+-- ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "curricular_areas" ADD CONSTRAINT "curricular_areas_institution_id_institutions_id_fk" FOREIGN KEY ("institution_id") REFERENCES "public"."institutions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "grades" ADD CONSTRAINT "grades_institution_id_institutions_id_fk" FOREIGN KEY ("institution_id") REFERENCES "public"."institutions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "loan_resources" ADD CONSTRAINT "loan_resources_loan_id_loans_id_fk" FOREIGN KEY ("loan_id") REFERENCES "public"."loans"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "loan_resources" ADD CONSTRAINT "loan_resources_resource_id_resources_id_fk" FOREIGN KEY ("resource_id") REFERENCES "public"."resources"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "loans" ADD CONSTRAINT "loans_institution_id_institutions_id_fk" FOREIGN KEY ("institution_id") REFERENCES "public"."institutions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "loans" ADD CONSTRAINT "loans_staff_id_staff_id_fk" FOREIGN KEY ("staff_id") REFERENCES "public"."staff"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "resources" ADD CONSTRAINT "resources_institution_id_institutions_id_fk" FOREIGN KEY ("institution_id") REFERENCES "public"."institutions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "resources" ADD CONSTRAINT "resources_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "sections" ADD CONSTRAINT "sections_institution_id_institutions_id_fk" FOREIGN KEY ("institution_id") REFERENCES "public"."institutions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "sections" ADD CONSTRAINT "sections_grade_id_grades_id_fk" FOREIGN KEY ("grade_id") REFERENCES "public"."grades"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "sections" ADD CONSTRAINT "sections_area_id_curricular_areas_id_fk" FOREIGN KEY ("area_id") REFERENCES "public"."curricular_areas"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "sessions" ADD CONSTRAINT "sessions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "staff" ADD CONSTRAINT "staff_institution_id_institutions_id_fk" FOREIGN KEY ("institution_id") REFERENCES "public"."institutions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- ALTER TABLE "users" ADD CONSTRAINT "users_institution_id_institutions_id_fk" FOREIGN KEY ("institution_id") REFERENCES "public"."institutions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- CREATE INDEX "idx_account_user" ON "accounts" USING btree ("user_id");--> statement-breakpoint
+-- CREATE INDEX "idx_area_institution" ON "curricular_areas" USING btree ("institution_id");--> statement-breakpoint
+-- CREATE INDEX "idx_ie_minedu_nivel" ON "education_institutions_minedu" USING btree ("nivel");--> statement-breakpoint
+-- CREATE INDEX "idx_ie_minedu_departamento" ON "education_institutions_minedu" USING btree ("departamento");--> statement-breakpoint
+-- CREATE INDEX "idx_ie_minedu_nombre" ON "education_institutions_minedu" USING btree ("nombre");--> statement-breakpoint
+-- CREATE INDEX "idx_grade_institution_level" ON "grades" USING btree ("institution_id","level");--> statement-breakpoint
+-- CREATE INDEX "idx_institution_slug" ON "institutions" USING btree ("slug");--> statement-breakpoint
+-- CREATE INDEX "idx_institution_codigo" ON "institutions" USING btree ("codigo_modular");--> statement-breakpoint
+-- CREATE INDEX "idx_loan_resource_loan" ON "loan_resources" USING btree ("loan_id");--> statement-breakpoint
+-- CREATE INDEX "idx_loan_institution_status" ON "loans" USING btree ("institution_id","status");--> statement-breakpoint
+-- CREATE INDEX "idx_loan_staff" ON "loans" USING btree ("staff_id");--> statement-breakpoint
+-- CREATE INDEX "idx_resource_institution_category" ON "resources" USING btree ("institution_id","category_id");--> statement-breakpoint
+-- CREATE INDEX "idx_resource_status" ON "resources" USING btree ("status");--> statement-breakpoint
+-- CREATE INDEX "idx_section_grade" ON "sections" USING btree ("grade_id");--> statement-breakpoint
+-- CREATE INDEX "idx_session_user" ON "sessions" USING btree ("user_id");--> statement-breakpoint
+-- CREATE INDEX "idx_session_token" ON "sessions" USING btree ("token");--> statement-breakpoint
+-- CREATE INDEX "idx_staff_institution" ON "staff" USING btree ("institution_id");--> statement-breakpoint
+-- CREATE INDEX "idx_staff_name" ON "staff" USING btree ("name");--> statement-breakpoint
+-- CREATE INDEX "idx_user_institution" ON "users" USING btree ("institution_id");--> statement-breakpoint
+-- CREATE INDEX "idx_user_email" ON "users" USING btree ("email");

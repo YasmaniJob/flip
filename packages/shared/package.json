@@ -1,0 +1,19 @@
+{
+    "name": "@flip/shared",
+    "version": "0.0.1",
+    "private": true,
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "typecheck": "tsc --noEmit",
+        "lint": "eslint src --ext .ts"
+    },
+    "dependencies": {
+        "zod": "^3.24.0",
+        "date-fns": "^4.1.0"
+    },
+    "devDependencies": {
+        "typescript": "^5.9.3"
+    }
+}

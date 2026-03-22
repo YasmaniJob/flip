@@ -1,0 +1,46 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build outputs
+.next
+.turbo
+dist
+build
+
+# Development
+.env.local
+.env*.local
+
+# Testing
+coverage
+.nyc_output
+
+# Misc
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Documentation (no needed for deploy)
+docs/
+*.md
+!README.md
+
+# Scripts
+scripts/
+*.sh
+*.bat
+
+# Git
+.git
+.gitignore

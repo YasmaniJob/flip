@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "bmad-orchestrator": {
+      "source": "supercent-io/skills-template",
+      "sourceType": "github",
+      "computedHash": "ddc2e3d1e2f7b0a3fe23d747e2187a393f76f17ae36e91a7b7f35ee49383fac5"
+    },
+    "error-handling-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "6efcf6584de527e30fe20bef36638fa02d543ee8466fcbcd98c878b636016da0"
+    },
+    "frontend-design-system": {
+      "source": "supercent-io/skills-template",
+      "sourceType": "github",
+      "computedHash": "a34ea7236bce99d011fcfae4b40c700da019a9950ee8035cd17fe48ef89989ee"
+    }
+  }
+}

@@ -1,0 +1,1 @@
+-- CREATE INDEX "idx_loan_resource_composite" ON "loan_resources" USING btree ("loan_id","resource_id");

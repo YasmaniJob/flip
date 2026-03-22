@@ -1,0 +1,36 @@
+========================================
+VALORES DE VARIABLES DE ENTORNO
+========================================
+
+Copia estos valores cuando el script te los pida:
+
+1. DATABASE_URL:
+postgresql://neondb_owner:npg_kgcCKJuwpF63@ep-jolly-wave-acz30twt-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+
+2. TURSO_DATABASE_URL:
+libsql://flip-v2-yasmanijob.aws-us-east-1.turso.io
+
+3. TURSO_AUTH_TOKEN:
+eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzQxNDQxNDksImlkIjoiMDE5ZDEzMzMtNzgwMS03Zjk0LTlhOGYtMDEyYTAxNWQxODhiIiwicmlkIjoiM2VhOGNmOTctNjM3NC00NjhjLTkxYzItMmYxYzUxM2IxNDQ2In0.zZdG69K6hhya1dc3B3eWWFpX6dImIxGUQ2uQjj9kISbXGoirD-4ZHbqBq3v1hqKPA-iGKb5f_BBqNlFxjBoGAQ
+
+4. BETTER_AUTH_SECRET:
+4quRwA5VPAYmkvBkUWC4fsmQITeyypueF4b8yLKBp18=
+
+5. NEXT_PUBLIC_APP_URL:
+[IMPORTANTE: Despues del primer deploy, Vercel te dara una URL como https://flip-v2-xxx.vercel.app]
+[Usa esa URL aqui. Por ahora, pon: https://flip-v2.vercel.app]
+
+6. NEXT_PUBLIC_REQUIRE_EMAIL_VERIFICATION:
+false
+
+========================================
+NOTAS:
+========================================
+
+- Copia cada valor COMPLETO (sin espacios al inicio o final)
+- Para NEXT_PUBLIC_APP_URL, primero pon un valor temporal
+- Despues del deploy, actualiza NEXT_PUBLIC_APP_URL con la URL real
+- Para actualizar una variable: vercel env rm NEXT_PUBLIC_APP_URL production
+  Luego: vercel env add NEXT_PUBLIC_APP_URL production
+
+========================================

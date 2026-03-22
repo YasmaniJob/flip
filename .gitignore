@@ -1,0 +1,45 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build outputs
+dist
+.next
+.turbo
+out
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage
+
+# Misc
+*.tsbuildinfo
+
+# Data files (MINEDU padron)
+apps/web/data/*.xlsx
+apps/web/data/*.csv
+apps/web/data/*.xls
+apps/web/data/import-log.txt
+
+# Windows reserved names
+nul
+NUL

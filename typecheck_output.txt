@@ -1,0 +1,9 @@
+src/features/inventory/components/resource-dialog.tsx(1,20): error TS6133: 'useEffect' is declared but its value is never read.
+src/features/inventory/components/resource-dialog.tsx(16,68): error TS6133: 'AlertCircle' is declared but its value is never read.
+src/features/loans/components/wizard/loan-wizard.tsx(77,11): error TS6133: 'handleNext' is declared but its value is never read.
+src/features/loans/components/wizard/loan-wizard.tsx(83,11): error TS6133: 'handleBack' is declared but its value is never read.
+src/features/meetings/components/meeting-wizard.tsx(8,116): error TS6133: 'Clock' is declared but its value is never read.
+src/features/meetings/components/meeting-wizard.tsx(11,1): error TS6133: 'es' is declared but its value is never read.
+undefined
+H:\Aplicaciones\flip-v2\apps\web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: tsc --noEmit
