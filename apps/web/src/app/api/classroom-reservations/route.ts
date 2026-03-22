@@ -17,10 +17,10 @@ import { createReservationSchema, reservationsQuerySchema } from '@/lib/validati
 import { successResponse, paginatedResponse, errorResponse } from '@/lib/utils/response';
 import { NotFoundError } from '@/lib/utils/errors';
 import { validateSlotsNoConflicts, normalizeDate } from '@/lib/utils/reservations';
-import { eq, desc, and, asc } from 'drizzle-orm';
+import { eq, desc, and, asc, gte, lte, sql } from 'drizzle-orm';
 
 // GET /api/classroom-reservations - List reservations with filters
-// Updated: 2026-03-22 01:05 - Manual relation loading to avoid Drizzle issues
+// Updated: 2026-03-22 12:30 - Optimized with single query using Drizzle relations
 export async function GET(request: NextRequest) {
   const start = Date.now();
   try {
@@ -34,98 +34,52 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(query.limit || '10');
     const offset = (page - 1) * limit;
 
-    // Build where conditions
+    // Build where conditions for reservations
     const conditions = [eq(classroomReservations.institutionId, institutionId)];
 
     if (query.classroomId) {
       conditions.push(eq(classroomReservations.classroomId, query.classroomId));
     }
 
-    // Get reservations WITHOUT nested relations
-    const reservationsList = await db.query.classroomReservations.findMany({
+    // Build where conditions for slots based on date filters
+    const slotsWhereConditions = [];
+    if (query.startDate) {
+      slotsWhereConditions.push(gte(reservationSlots.date, new Date(normalizeDate(query.startDate))));
+    }
+    if (query.endDate) {
+      slotsWhereConditions.push(lte(reservationSlots.date, new Date(normalizeDate(query.endDate))));
+    }
+
+    // Get reservations WITH all nested relations in a single query
+    const reservationsWithRelations = await db.query.classroomReservations.findMany({
       where: and(...conditions),
+      with: {
+        classroom: true,
+        staff: {
+          with: {
+            user: true,
+          },
+        },
+        grade: true,
+        section: true,
+        curricularArea: true,
+        slots: {
+          where: slotsWhereConditions.length > 0 ? and(...slotsWhereConditions) : undefined,
+          with: {
+            pedagogicalHour: true,
+          },
+          orderBy: [asc(reservationSlots.date)],
+        },
+      },
       orderBy: [desc(classroomReservations.createdAt)],
       limit,
       offset,
     });
 
-    // Manually load relations for each reservation
-    const reservationsWithRelations = await Promise.all(
-      reservationsList.map(async (reservation) => {
-        // Load slots
-        const slots = await db.query.reservationSlots.findMany({
-          where: eq(reservationSlots.reservationId, reservation.id),
-          orderBy: [asc(reservationSlots.date)],
-        });
-
-        // Load pedagogical hours for slots
-        const slotsWithHours = await Promise.all(
-          slots.map(async (slot) => {
-            const pedagogicalHour = slot.pedagogicalHourId
-              ? await db.query.pedagogicalHours.findFirst({
-                  where: eq(pedagogicalHours.id, slot.pedagogicalHourId),
-                })
-              : null;
-            return { ...slot, pedagogicalHour };
-          })
-        );
-
-        // Load other relations
-        const [classroom, staffMember, grade, section, curricularArea] = await Promise.all([
-          reservation.classroomId
-            ? db.query.classrooms.findFirst({ where: eq(classrooms.id, reservation.classroomId) })
-            : Promise.resolve(null),
-          db.query.staff.findFirst({ where: eq(staff.id, reservation.staffId) }),
-          reservation.gradeId
-            ? db.query.grades.findFirst({ where: eq(grades.id, reservation.gradeId) })
-            : Promise.resolve(null),
-          reservation.sectionId
-            ? db.query.sections.findFirst({ where: eq(sections.id, reservation.sectionId) })
-            : Promise.resolve(null),
-          reservation.curricularAreaId
-            ? db.query.curricularAreas.findFirst({ where: eq(curricularAreas.id, reservation.curricularAreaId) })
-            : Promise.resolve(null),
-        ]);
-
-        // Load user for staff
-        const userForStaff = staffMember?.userId
-          ? await db.query.users.findFirst({ where: eq(users.id, staffMember.userId) })
-          : null;
-
-        return {
-          ...reservation,
-          classroom,
-          staff: staffMember ? { ...staffMember, user: userForStaff } : null,
-          grade,
-          section,
-          curricularArea,
-          slots: slotsWithHours,
-        };
-      })
-    );
-
-    // Filter by date range if provided
+    // Filter by shift if provided (keep in memory as it's on pedagogicalHour)
     let filteredReservations = reservationsWithRelations;
-    if (query.startDate || query.endDate) {
-      const startDate = query.startDate ? normalizeDate(query.startDate) : null;
-      const endDate = query.endDate ? normalizeDate(query.endDate) : null;
-
-      filteredReservations = reservationsWithRelations
-        .map((reservation) => ({
-          ...reservation,
-          slots: reservation.slots.filter((slot) => {
-            const slotDate = normalizeDate(slot.date.toISOString());
-            if (startDate && slotDate < startDate) return false;
-            if (endDate && slotDate > endDate) return false;
-            return true;
-          }),
-        }))
-        .filter((reservation) => reservation.slots.length > 0);
-    }
-
-    // Filter by shift if provided
     if (query.shift) {
-      filteredReservations = filteredReservations
+      filteredReservations = reservationsWithRelations
         .map((reservation) => ({
           ...reservation,
           slots: reservation.slots.filter(
@@ -134,6 +88,9 @@ export async function GET(request: NextRequest) {
         }))
         .filter((reservation) => reservation.slots.length > 0);
     }
+
+    // Filter out reservations with no slots (after date filtering in DB)
+    filteredReservations = filteredReservations.filter((reservation) => reservation.slots.length > 0);
 
     const total = filteredReservations.length;
 
