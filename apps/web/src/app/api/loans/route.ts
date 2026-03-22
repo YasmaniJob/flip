@@ -11,6 +11,7 @@ import { randomUUID } from 'crypto';
 
 // GET /api/loans - List loans with role-based filtering
 export async function GET(request: NextRequest) {
+  const start = Date.now();
   try {
     const { user } = await requireAuth(request);
     const institutionId = await getInstitutionId(request);
@@ -145,7 +146,10 @@ export async function GET(request: NextRequest) {
       lastPage: Math.ceil(total / limit),
     });
   } catch (error) {
+    console.log(`[TIMING] loans GET ERROR: ${Date.now() - start}ms`);
     return errorResponse(error);
+  } finally {
+    console.log(`[TIMING] loans GET: ${Date.now() - start}ms`);
   }
 }
 

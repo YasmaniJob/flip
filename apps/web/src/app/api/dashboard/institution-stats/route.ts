@@ -7,6 +7,7 @@ import { eq, and, count } from 'drizzle-orm';
 
 // GET /api/dashboard/institution-stats - Institution-level stats
 export async function GET(request: NextRequest) {
+  const start = Date.now();
   try {
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
@@ -56,6 +57,9 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
+    console.log(`[TIMING] institution-stats: ${Date.now() - start}ms`);
     return errorResponse(error);
+  } finally {
+    console.log(`[TIMING] institution-stats: ${Date.now() - start}ms`);
   }
 }

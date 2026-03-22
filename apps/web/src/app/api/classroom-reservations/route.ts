@@ -22,6 +22,7 @@ import { eq, desc, and, asc } from 'drizzle-orm';
 // GET /api/classroom-reservations - List reservations with filters
 // Updated: 2026-03-22 01:05 - Manual relation loading to avoid Drizzle issues
 export async function GET(request: NextRequest) {
+  const start = Date.now();
   try {
     const { user } = await requireAuth(request);
     const institutionId = getInstitutionId(user);
@@ -136,12 +137,14 @@ export async function GET(request: NextRequest) {
 
     const total = filteredReservations.length;
 
+    console.log(`[TIMING] classroom-reservations GET: ${Date.now() - start}ms`);
     return paginatedResponse(filteredReservations, {
       page,
       limit,
       total,
     });
   } catch (error) {
+    console.log(`[TIMING] classroom-reservations GET ERROR: ${Date.now() - start}ms`);
     return errorResponse(error);
   }
 }

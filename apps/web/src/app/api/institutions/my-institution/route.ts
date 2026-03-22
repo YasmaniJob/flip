@@ -11,6 +11,7 @@ export const revalidate = 300;
 
 // GET /api/institutions/my-institution - Get current user's institution
 export async function GET(request: NextRequest) {
+  const start = Date.now();
   try {
     const { user } = await requireAuth(request);
 
@@ -26,8 +27,10 @@ export async function GET(request: NextRequest) {
       throw new NotFoundError('Institución no encontrada');
     }
 
+    console.log(`[TIMING] my-institution GET: ${Date.now() - start}ms`);
     return successResponse(institution);
   } catch (error) {
+    console.log(`[TIMING] my-institution GET ERROR: ${Date.now() - start}ms`);
     return errorResponse(error);
   }
 }

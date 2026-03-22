@@ -79,7 +79,7 @@ NEXT_PUBLIC_APP_URL
 
 **Value (temporal - actualizar después del deploy):**
 ```
-https://flip-v2.vercel.app
+https://flip-web-peach.vercel.app
 ```
 
 **Environment:** Production, Preview, Development

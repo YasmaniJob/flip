@@ -60,6 +60,7 @@ async function generateInternalId(
 
 // GET /api/resources - List resources with filters
 export async function GET(request: NextRequest) {
+  const start = Date.now();
   try {
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
@@ -104,8 +105,10 @@ export async function GET(request: NextRequest) {
       orderBy: (r, { asc }) => [asc(r.internalId), asc(r.createdAt)],
     });
 
+    console.log(`[TIMING] resources GET: ${Date.now() - start}ms`);
     return successResponse(results);
   } catch (error) {
+    console.log(`[TIMING] resources GET ERROR: ${Date.now() - start}ms`);
     return errorResponse(error);
   }
 }
