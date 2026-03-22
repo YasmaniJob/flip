@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
         ignoreBuildErrors: true,
     },
 
+    // Make VERCEL_URL available to the server
+    env: {
+        VERCEL_URL: process.env.VERCEL_URL,
+    },
+
     // Experimental features
     experimental: {
         // Enable Turbopack for faster builds

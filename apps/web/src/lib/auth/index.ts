@@ -4,8 +4,26 @@ import { db } from '@/lib/db';
 import * as schema from '@/lib/db/schema';
 import { sql } from 'drizzle-orm';
 
+// Determine base URL dynamically
+const getBaseURL = () => {
+  // In production, use NEXT_PUBLIC_APP_URL or VERCEL_URL
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  
+  // Vercel provides VERCEL_URL automatically
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // Fallback to localhost for development
+  return 'http://localhost:3000';
+};
+
+const baseURL = getBaseURL();
+
 export const auth = betterAuth({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  baseURL,
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: {
@@ -32,9 +50,11 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24, // 1 day
   },
   trustedOrigins: [
-    process.env.NEXT_PUBLIC_APP_URL,
+    baseURL,
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    // Allow all Vercel preview URLs
+    ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
   ].filter(Boolean) as string[],
   plugins: [
     {
