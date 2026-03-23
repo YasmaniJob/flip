@@ -50,6 +50,10 @@ export const auth = betterAuth({
       sameSite: "lax",
       httpOnly: true,
     },
+    crossSubDomainCookies: {
+      enabled: true,
+    },
+    disableCSRFCheck: process.env.NODE_ENV === "production", // Disable CSRF in production (Vercel handles this)
   },
   database: drizzleAdapter(db, {
     provider: "pg",
