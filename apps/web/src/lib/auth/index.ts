@@ -27,7 +27,15 @@ const baseURL = getBaseURL();
 const requireEmailVerification =
   process.env.NEXT_PUBLIC_REQUIRE_EMAIL_VERIFICATION === "true";
 
+// Build trusted origins list
+const trustedOrigins = [baseURL];
+// Add www variant if not already included
+if (!baseURL.includes('www.')) {
+  trustedOrigins.push(baseURL.replace('https://', 'https://www.'));
+}
+
 console.log("[Better Auth] Base URL:", baseURL);
+console.log("[Better Auth] Trusted Origins:", trustedOrigins);
 console.log(
   "[Better Auth] NEXT_PUBLIC_REQUIRE_EMAIL_VERIFICATION:",
   requireEmailVerification,
@@ -35,7 +43,14 @@ console.log(
 
 export const auth = betterAuth({
   baseURL,
-  trustedOrigins: [baseURL],
+  trustedOrigins,
+  advanced: {
+    cookieOptions: {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      httpOnly: true,
+    },
+  },
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
@@ -115,31 +130,34 @@ export const auth = betterAuth({
               return context.path === "/sign-in/email";
             },
             handler: async (c: any) => {
-              const body = c.body as unknown as Record<string, any>;
-              if (!body || !body.email || !body.password) return;
+              try {
+                const body = c.body as unknown as Record<string, any>;
+                if (!body || !body.email || !body.password) {
+                  console.log("[Lazy Registration] Missing email or password in request");
+                  return;
+                }
 
-              const email = body.email.toString();
-              const password = body.password.toString();
+                const email = body.email.toString();
+                const password = body.password.toString();
 
-              // 1. Check if user already exists
-              const [user] = await db
-                .select()
-                .from(schema.users)
-                .where(sql`${schema.users.email} = ${email}`)
-                .limit(1);
-
-              if (!user) {
-                // 2. Check if staff exists with this email and DNI
-                const [staff] = await db
+                // 1. Check if user already exists
+                const [user] = await db
                   .select()
-                  .from(schema.staff)
-                  .where(
-                    sql`${schema.staff.email} = ${email} AND ${schema.staff.dni} = ${password}`,
-                  )
+                  .from(schema.users)
+                  .where(sql`${schema.users.email} = ${email}`)
                   .limit(1);
 
-                if (staff) {
-                  try {
+                if (!user) {
+                  // 2. Check if staff exists with this email and DNI
+                  const [staff] = await db
+                    .select()
+                    .from(schema.staff)
+                    .where(
+                      sql`${schema.staff.email} = ${email} AND ${schema.staff.dni} = ${password}`,
+                    )
+                    .limit(1);
+
+                  if (staff) {
                     console.log(
                       `[Lazy Registration] Creating account for staff: ${email}`,
                     );
@@ -155,17 +173,22 @@ export const auth = betterAuth({
                     console.log(
                       `[Lazy Registration] Account created successfully for: ${email}`,
                     );
-                  } catch (err) {
-                    console.error(
-                      `[Lazy Registration] Error creating account for ${email}:`,
-                      err,
+                  } else {
+                    console.log(
+                      `[Lazy Registration] No staff found for: ${email}`,
                     );
                   }
                 } else {
                   console.log(
-                    `[Lazy Registration] No staff found for: ${email}`,
+                    `[Lazy Registration] User already exists: ${email}`,
                   );
                 }
+              } catch (err) {
+                console.error(
+                  `[Lazy Registration] Hook error:`,
+                  err,
+                );
+                // Don't throw - let the normal login flow continue
               }
               return;
             },
