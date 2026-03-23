@@ -1,35 +1,39 @@
-import { betterAuth } from 'better-auth';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { db } from '@/lib/db';
-import * as schema from '@/lib/db/schema';
-import { sql } from 'drizzle-orm';
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db } from "@/lib/db";
+import * as schema from "@/lib/db/schema";
+import { sql } from "drizzle-orm";
+import {
+  sendVerificationEmail,
+  sendResetPasswordEmail,
+} from "@/lib/email/resend";
 
 // Determine base URL dynamically
 const getBaseURL = () => {
-  // In production, use NEXT_PUBLIC_APP_URL or VERCEL_URL
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL;
   }
-  
-  // Vercel provides VERCEL_URL automatically
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  
-  // Fallback to localhost for development
-  return 'http://localhost:3000';
+  return "http://localhost:3000";
 };
 
 const baseURL = getBaseURL();
 
-console.log('[Better Auth] Base URL:', baseURL);
-console.log('[Better Auth] VERCEL_URL:', process.env.VERCEL_URL);
-console.log('[Better Auth] NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
+const requireEmailVerification =
+  process.env.NEXT_PUBLIC_REQUIRE_EMAIL_VERIFICATION === "true";
+
+console.log("[Better Auth] Base URL:", baseURL);
+console.log(
+  "[Better Auth] NEXT_PUBLIC_REQUIRE_EMAIL_VERIFICATION:",
+  requireEmailVerification,
+);
 
 export const auth = betterAuth({
   baseURL,
   database: drizzleAdapter(db, {
-    provider: 'pg',
+    provider: "pg",
     schema: {
       user: schema.users,
       session: schema.sessions,
@@ -40,28 +44,71 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 6,
-    requireEmailVerification: false,
+    requireEmailVerification,
+    async sendVerificationEmail({
+      user,
+      url,
+    }: {
+      user: { email: string; name?: string };
+      url: string;
+    }) {
+      try {
+        const result = await sendVerificationEmail(user.email, url, user.name);
+        if (!result.success) {
+          console.error(
+            "[Better Auth] Failed to send verification email:",
+            result.error,
+          );
+        }
+      } catch (err) {
+        console.error(
+          "[Better Auth] Exception sending verification email:",
+          err,
+        );
+      }
+    },
+    async sendResetPasswordEmail({
+      user,
+      url,
+    }: {
+      user: { email: string; name?: string };
+      url: string;
+    }) {
+      try {
+        const result = await sendResetPasswordEmail(user.email, url, user.name);
+        if (!result.success) {
+          console.error(
+            "[Better Auth] Failed to send reset password email:",
+            result.error,
+          );
+        }
+      } catch (err) {
+        console.error(
+          "[Better Auth] Exception sending reset password email:",
+          err,
+        );
+      }
+    },
   },
   user: {
     additionalFields: {
-      institutionId: { type: 'string', required: false },
-      role: { type: 'string', required: false, defaultValue: 'docente' },
-      isSuperAdmin: { type: 'boolean', required: false, defaultValue: false },
+      institutionId: { type: "string", required: false },
+      role: { type: "string", required: false, defaultValue: "docente" },
+      isSuperAdmin: { type: "boolean", required: false, defaultValue: false },
     },
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
   },
-  // Remove trustedOrigins to use default behavior (same-origin)
   plugins: [
     {
-      id: 'lazy-registration',
+      id: "lazy-registration",
       hooks: {
         before: [
           {
             matcher(context: any) {
-              return context.path === '/sign-in/email';
+              return context.path === "/sign-in/email";
             },
             handler: async (c: any) => {
               const body = c.body as unknown as Record<string, any>;
@@ -78,47 +125,44 @@ export const auth = betterAuth({
                 .limit(1);
 
               if (!user) {
-                // 2. If no user, check if staff exists with this email and DNI (password)
+                // 2. Check if staff exists with this email and DNI
                 const [staff] = await db
                   .select()
                   .from(schema.staff)
                   .where(
-                    sql`${schema.staff.email} = ${email} AND ${schema.staff.dni} = ${password}`
+                    sql`${schema.staff.email} = ${email} AND ${schema.staff.dni} = ${password}`,
                   )
                   .limit(1);
 
                 if (staff) {
-                  // 3. Staff exists, so we create their Better Auth account seamlessly
                   try {
                     console.log(
-                      `[Lazy Registration] Creating account for staff: ${email}`
+                      `[Lazy Registration] Creating account for staff: ${email}`,
                     );
-                    // Use internal API to hash password and set up accounts perfectly
                     await auth.api.signUpEmail({
                       body: {
                         email: staff.email!,
                         password: password,
                         name: staff.name,
                         institutionId: staff.institutionId,
-                        role: staff.role || 'docente',
+                        role: staff.role || "docente",
                       } as any,
                     });
                     console.log(
-                      `[Lazy Registration] Account created successfully for: ${email}`
+                      `[Lazy Registration] Account created successfully for: ${email}`,
                     );
                   } catch (err) {
                     console.error(
                       `[Lazy Registration] Error creating account for ${email}:`,
-                      err
+                      err,
                     );
-                    // Let it continue; the next step (actual sign-in) will fail normally
                   }
                 } else {
-                  console.log(`[Lazy Registration] No staff found for: ${email}`);
+                  console.log(
+                    `[Lazy Registration] No staff found for: ${email}`,
+                  );
                 }
               }
-
-              // Let the normal sign-in proceed (which will succeed if we just created them!)
               return;
             },
           },
