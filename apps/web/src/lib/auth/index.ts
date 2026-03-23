@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
+import { sendResetPasswordEmail } from "@/lib/email/resend";
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
@@ -16,6 +17,10 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: false,
+    async sendResetPassword({ user, url }) {
+      await sendResetPasswordEmail(user.email, url, user.name);
+    },
   },
   user: {
     additionalFields: {
