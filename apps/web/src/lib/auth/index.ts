@@ -10,6 +10,9 @@ import {
 
 // Determine base URL dynamically
 const getBaseURL = () => {
+  if (process.env.BETTER_AUTH_URL) {
+    return process.env.BETTER_AUTH_URL;
+  }
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL;
   }
@@ -68,7 +71,7 @@ export const auth = betterAuth({
         );
       }
     },
-    async sendResetPasswordEmail({
+    async sendResetPassword({
       user,
       url,
     }: {
