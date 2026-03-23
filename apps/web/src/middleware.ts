@@ -13,17 +13,12 @@ const PUBLIC_PATHS = [
   "/verify-required",
 ];
 
-// Auth-related paths that should always be accessible
-const AUTH_PATHS = ["/api/auth"];
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow all API routes except auth-related ones
-  if (
-    pathname.startsWith("/api/") &&
-    !AUTH_PATHS.some((p) => pathname.startsWith(p))
-  ) {
+  // Allow all API routes - middleware should not block API routes
+  // Auth is handled by Better Auth API directly
+  if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
 
