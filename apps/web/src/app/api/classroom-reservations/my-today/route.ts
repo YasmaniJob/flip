@@ -10,7 +10,7 @@ import { eq, and } from 'drizzle-orm';
 export async function GET(request: NextRequest) {
   try {
     const { user } = await requireAuth(request);
-    const institutionId = getInstitutionId(user);
+    const institutionId = await getInstitutionId(user);
 
     // Get today's date normalized
     const today = normalizeDate(new Date().toISOString());

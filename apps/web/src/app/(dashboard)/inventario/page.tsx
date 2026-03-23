@@ -1,4 +1,4 @@
-import { InventarioClient } from "./inventario-client";
+import InventarioClient from "./inventario-client";
 
 export default function InventarioPage() {
     return <InventarioClient />;

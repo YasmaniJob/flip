@@ -169,7 +169,7 @@ export function AddStaffDialog({ open, onOpenChange, initialData }: AddStaffDial
                         <div className="flex gap-2">
                             <Button
                                 type="button"
-                                variant={watchedRole === "docente" ? "jira" : "jiraOutline"}
+                                variant={watchedRole === "docente" ? "default" : "outline"}
                                 className="flex-1 rounded-none px-0 text-xs"
                                 onClick={() => setValue("role", "docente", { shouldValidate: true, shouldDirty: true })}
                             >
@@ -177,7 +177,7 @@ export function AddStaffDialog({ open, onOpenChange, initialData }: AddStaffDial
                             </Button>
                             <Button
                                 type="button"
-                                variant={watchedRole === "pip" ? "jira" : "jiraOutline"}
+                                variant={watchedRole === "pip" ? "default" : "outline"}
                                 className="flex-1 rounded-none px-0 text-xs"
                                 onClick={() => setValue("role", "pip", { shouldValidate: true, shouldDirty: true })}
                             >
@@ -187,7 +187,7 @@ export function AddStaffDialog({ open, onOpenChange, initialData }: AddStaffDial
                                 <>
                                     <Button
                                         type="button"
-                                        variant={watchedRole === "admin" ? "jira" : "jiraOutline"}
+                                        variant={watchedRole === "admin" ? "default" : "outline"}
                                         className="flex-1 rounded-none px-0 text-xs"
                                         onClick={() => setValue("role", "admin", { shouldValidate: true, shouldDirty: true })}
                                     >
@@ -195,7 +195,7 @@ export function AddStaffDialog({ open, onOpenChange, initialData }: AddStaffDial
                                     </Button>
                                     <Button
                                         type="button"
-                                        variant={watchedRole === "superadmin" ? "jira" : "jiraOutline"}
+                                        variant={watchedRole === "superadmin" ? "default" : "outline"}
                                         className="flex-1 rounded-none px-0 text-xs"
                                         onClick={() => setValue("role", "superadmin", { shouldValidate: true, shouldDirty: true })}
                                     >
@@ -218,7 +218,7 @@ export function AddStaffDialog({ open, onOpenChange, initialData }: AddStaffDial
                         Cancelar
                     </Button>
                     <Button
-                        variant="jira"
+                        variant="default"
                         onClick={handleSubmit(onSubmit)}
                         disabled={submitting || !isValid || (isEditing && !isDirty)}
                         className="rounded-none min-w-[140px]"

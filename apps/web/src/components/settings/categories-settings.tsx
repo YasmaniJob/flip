@@ -23,7 +23,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { SimpleFormModal } from '@/components/molecules/wizard-modal';
-import { ImportCategoriesDialog } from './import-categories-dialog';
+import { ImportTemplatesDialog } from './import-templates-dialog';
 
 const DEFAULT_COLORS = [
     '#0052CC', '#0747A6', '#5243AA', '#403294',
@@ -129,7 +129,7 @@ export function CategoriesSettings() {
                     className="bg-white hover:bg-muted/50 text-foreground border-border rounded-md shadow-none font-black uppercase tracking-widest text-[11px] h-9"
                 >
                     <Sparkles className="h-3.5 w-3.5 mr-2 text-primary" />
-                    Importar Categorías
+                    Configurar Subcategorías
                 </Button>
                 <Button
                     onClick={openCreate}
@@ -159,7 +159,7 @@ export function CategoriesSettings() {
                             className="bg-white border-border text-foreground hover:bg-muted/50 rounded-md shadow-none font-black uppercase tracking-widest text-[11px] h-10 px-6"
                         >
                             <Sparkles className="h-3.5 w-3.5 mr-2 text-primary" />
-                            Importar Predeterminadas
+                            Configurar Subcategorías
                         </Button>
                         <Button
                             onClick={openCreate}
@@ -313,10 +313,9 @@ export function CategoriesSettings() {
             </SimpleFormModal>
 
             {/* Import Dialog */}
-            <ImportCategoriesDialog
+            <ImportTemplatesDialog
                 open={showImportDialog}
                 onOpenChange={setShowImportDialog}
-                existingCategories={categories}
                 onSuccess={() => {
                     refetch();
                 }}

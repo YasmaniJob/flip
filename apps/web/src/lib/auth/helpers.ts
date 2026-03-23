@@ -38,6 +38,11 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult> {
 export async function requireRole(request: NextRequest, allowedRoles: string[]): Promise<AuthResult['user']> {
   const { user } = await requireAuth(request);
 
+  // Superadmin bypass: they have permission for everything
+  if (user.role === 'superadmin' || user.isSuperAdmin) {
+    return user;
+  }
+
   if (!user.role || !allowedRoles.includes(user.role)) {
     throw new ForbiddenError('No tienes permisos para esta acción');
   }

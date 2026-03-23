@@ -394,7 +394,6 @@ export function TemplatesSettings() {
             <ImportTemplatesDialog
                 open={showImportDialog}
                 onOpenChange={setShowImportDialog}
-                existingTemplates={templates}
                 categories={categories}
                 onSuccess={() => {
                     refetch();

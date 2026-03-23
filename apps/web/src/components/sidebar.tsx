@@ -105,8 +105,8 @@ const platformMenuItems: MenuItem[] = [
   { icon: BarChart3, label: "Analytics", href: "/platform/analytics" },
   {
     icon: CreditCard,
-    label: "Subscripciones",
-    href: "/platform/subscripciones",
+    label: "Suscripciones",
+    href: "/suscripciones",
   },
 ];
 

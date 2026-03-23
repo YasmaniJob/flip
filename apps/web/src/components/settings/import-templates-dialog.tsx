@@ -1,289 +1,412 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useState, useMemo } from 'react';
+import { Check, Search, Sparkles, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useCategories, useCreateCategory } from '@/features/settings/hooks/use-categories';
+import { useCreateTemplate } from '@/features/settings/hooks/use-templates';
+import { useQueryClient } from '@tanstack/react-query';
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
 } from '@/components/ui/dialog';
-import { DEFAULT_TEMPLATES } from '@/lib/constants/default-templates';
-import { useCreateTemplate, type ResourceTemplate } from '@/features/settings/hooks/use-templates';
-import type { Category } from '@/features/settings/hooks/use-categories';
-import { Loader2, Package, CheckCircle2 } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+
+// ─── Lista maestra de subcategorías estándar ───────────────────────────────────
+const STANDARD_CATALOGUE = [
+    {
+        category: { name: 'Equipos Portátiles', icon: '💻', color: '#0052CC' },
+        templates: [
+            { name: 'Laptop', icon: '💻' },
+            { name: 'Tablet', icon: '📱' },
+            { name: 'Chromebook', icon: '🖥️' },
+        ],
+    },
+    {
+        category: { name: 'Displays y Multimedia', icon: '📺', color: '#0065FF' },
+        templates: [
+            { name: 'Proyector', icon: '📽️' },
+            { name: 'Televisor', icon: '📺' },
+            { name: 'Monitor', icon: '🖥️' },
+        ],
+    },
+    {
+        category: { name: 'Periféricos', icon: '🎧', color: '#2684FF' },
+        templates: [
+            { name: 'Mouse', icon: '🖱️' },
+            { name: 'Teclado', icon: '⌨️' },
+            { name: 'Auriculares', icon: '🎧' },
+            { name: 'Webcam', icon: '📷' },
+        ],
+    },
+    {
+        category: { name: 'Red e Infraestructura', icon: '📡', color: '#00B8D9' },
+        templates: [
+            { name: 'Switch', icon: '🔀' },
+            { name: 'Router', icon: '📡' },
+            { name: 'Access Point', icon: '📶' },
+        ],
+    },
+    {
+        category: { name: 'Almacenamiento', icon: '💾', color: '#36B37E' },
+        templates: [
+            { name: 'Disco Duro Externo', icon: '💾' },
+            { name: 'Memoria USB', icon: '🔌' },
+        ],
+    },
+    {
+        category: { name: 'Protección Eléctrica', icon: '🔋', color: '#FFAB00' },
+        templates: [
+            { name: 'UPS', icon: '🔋' },
+            { name: 'Regleta', icon: '🔌' },
+            { name: 'Estabilizador', icon: '⚡' },
+        ],
+    },
+    {
+        category: { name: 'Mobiliario', icon: '🪑', color: '#BF2600' },
+        templates: [
+            { name: 'Silla', icon: '🪑' },
+            { name: 'Mesa', icon: '🪞' },
+            { name: 'Estante', icon: '🗄️' },
+        ],
+    },
+    {
+        category: { name: 'Equipos de Audio', icon: '🎵', color: '#6554C0' },
+        templates: [
+            { name: 'Micrófono', icon: '🎤' },
+            { name: 'Parlante', icon: '🔊' },
+            { name: 'Amplificador', icon: '📻' },
+        ],
+    },
+    {
+        category: { name: 'Kits Educativos', icon: '🤖', color: '#00875A' },
+        templates: [
+            { name: 'Kit de Robótica', icon: '🤖' },
+            { name: 'Impresora 3D', icon: '🖨️' },
+            { name: 'Drone', icon: '🚁' },
+        ],
+    },
+    {
+        category: { name: 'Mantenimiento', icon: '🧰', color: '#505F79' },
+        templates: [
+            { name: 'Herramienta', icon: '🔧' },
+            { name: 'Kit de Limpieza', icon: '🧹' },
+        ],
+    },
+] as const;
+
+type TemplateKey = `${string}||${string}`;
 
 interface ImportTemplatesDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    existingTemplates: ResourceTemplate[];
-    categories: Category[];
+    categories: any[];
     onSuccess?: () => void;
 }
 
-export function ImportTemplatesDialog({
-    open,
-    onOpenChange,
-    existingTemplates,
-    categories,
-    onSuccess,
-}: ImportTemplatesDialogProps) {
-    const createMutation = useCreateTemplate();
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const [importing, setImporting] = useState(false);
-    const [importComplete, setImportComplete] = useState(false);
+export function ImportTemplatesDialog({ open, onOpenChange, categories, onSuccess }: ImportTemplatesDialogProps) {
+    const [selected, setSelected] = useState<Set<TemplateKey>>(new Set());
+    const [searchTerm, setSearchTerm] = useState('');
+    const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+    const [isImporting, setIsImporting] = useState(false);
 
-    // Map category names to IDs
-    const categoryMap = categories.reduce((acc, cat) => {
-        acc[cat.name] = cat.id;
-        return acc;
-    }, {} as Record<string, string>);
+    const { data: existingCategories = [] } = useCategories();
+    const createCategoryMutation = useCreateCategory();
+    const createTemplateMutation = useCreateTemplate();
+    const queryClient = useQueryClient();
 
-    // Get available categories (those that exist and have templates defined)
-    const availableCategories = Object.keys(DEFAULT_TEMPLATES).filter(
-        categoryName => categoryMap[categoryName]
-    );
+    const filteredCatalogue = useMemo(() => {
+        if (!searchTerm.trim()) return STANDARD_CATALOGUE;
+        const lower = searchTerm.toLowerCase();
+        return STANDARD_CATALOGUE
+            .map((group) => ({
+                ...group,
+                templates: group.templates.filter((t) => t.name.toLowerCase().includes(lower)),
+            }))
+            .filter((group) =>
+                group.templates.length > 0 || group.category.name.toLowerCase().includes(lower),
+            );
+    }, [searchTerm]);
 
-    // Count how many templates would be imported per category
-    const getNewTemplatesCount = (categoryName: string) => {
-        const categoryId = categoryMap[categoryName];
-        if (!categoryId) return 0;
+    const makeKey = (categoryName: string, templateName: string): TemplateKey =>
+        `${categoryName}||${templateName}`;
 
-        const existingNames = new Set(
-            existingTemplates
-                .filter(t => t.categoryId === categoryId)
-                .map(t => t.name.toLowerCase())
-        );
-
-        return DEFAULT_TEMPLATES[categoryName].filter(
-            template => !existingNames.has(template.name.toLowerCase())
-        ).length;
+    const toggleTemplate = (categoryName: string, templateName: string) => {
+        const key = makeKey(categoryName, templateName);
+        setSelected((prev) => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+        });
     };
 
-    const handleImport = async () => {
-        setImporting(true);
-        try {
-            for (const categoryName of selectedCategories) {
-                const categoryId = categoryMap[categoryName];
-                if (!categoryId) continue;
+    const toggleGroup = (categoryName: string, templates: readonly { name: string; icon: string }[]) => {
+        const keys = templates.map((t) => makeKey(categoryName, t.name));
+        const allSelected = keys.every((k) => selected.has(k));
+        setSelected((prev) => {
+            const next = new Set(prev);
+            if (allSelected) keys.forEach((k) => next.delete(k));
+            else keys.forEach((k) => next.add(k));
+            return next;
+        });
+    };
 
-                const existingNames = new Set(
-                    existingTemplates
-                        .filter(t => t.categoryId === categoryId)
-                        .map(t => t.name.toLowerCase())
-                );
+    const toggleCollapse = (name: string) => {
+        setCollapsedGroups((prev) => {
+            const next = new Set(prev);
+            if (next.has(name)) next.delete(name);
+            else next.add(name);
+            return next;
+        });
+    };
 
-                const templatesToImport = DEFAULT_TEMPLATES[categoryName].filter(
-                    template => !existingNames.has(template.name.toLowerCase())
-                );
-
-                for (const template of templatesToImport) {
-                    await createMutation.mutateAsync({
-                        categoryId,
-                        name: template.name,
-                        icon: template.icon,
-                    });
-                }
-            }
-
-            setImportComplete(true);
-            setTimeout(() => {
-                onSuccess?.();
-                onOpenChange(false);
-                setImportComplete(false);
-                setSelectedCategories([]);
-            }, 1500);
-        } catch (error) {
-            console.error('Error importing templates:', error);
-        } finally {
-            setImporting(false);
+    const handleSelectAll = () => {
+        if (selected.size > 0) {
+            setSelected(new Set());
+        } else {
+            const allKeys = new Set<TemplateKey>();
+            filteredCatalogue.forEach((group) =>
+                group.templates.forEach((t) => allKeys.add(makeKey(group.category.name, t.name))),
+            );
+            setSelected(allKeys);
         }
     };
 
-    const toggleCategory = (categoryName: string) => {
-        setSelectedCategories(prev =>
-            prev.includes(categoryName)
-                ? prev.filter(c => c !== categoryName)
-                : [...prev, categoryName]
-        );
+    const handleImport = async () => {
+        if (selected.size === 0) return;
+        setIsImporting(true);
+        try {
+            // Group selected items by category
+            const byCategory = new Map<string, {
+                categoryDef: typeof STANDARD_CATALOGUE[number]['category'];
+                templates: { name: string; icon: string }[];
+            }>();
+
+            STANDARD_CATALOGUE.forEach((group) => {
+                group.templates.forEach((t) => {
+                    if (!selected.has(makeKey(group.category.name, t.name))) return;
+                    if (!byCategory.has(group.category.name)) {
+                        byCategory.set(group.category.name, { categoryDef: group.category, templates: [] });
+                    }
+                    byCategory.get(group.category.name)!.templates.push(t);
+                });
+            });
+
+            // Create categories (if missing) then templates
+            for (const [catName, { categoryDef, templates }] of byCategory) {
+                const existing = existingCategories.find(
+                    (c) => c.name.toLowerCase() === catName.toLowerCase(),
+                );
+                let categoryId: string;
+                if (existing) {
+                    categoryId = existing.id;
+                } else {
+                    const newCat = await createCategoryMutation.mutateAsync({
+                        name: categoryDef.name,
+                        icon: categoryDef.icon,
+                        color: categoryDef.color,
+                    });
+                    categoryId = newCat.id;
+                }
+                for (const t of templates) {
+                    await createTemplateMutation.mutateAsync({ categoryId, name: t.name, icon: t.icon });
+                }
+            }
+
+            queryClient.invalidateQueries({ queryKey: ['categories'] });
+            queryClient.invalidateQueries({ queryKey: ['templates'] });
+            onSuccess?.();
+            onOpenChange(false);
+            setSelected(new Set());
+            setSearchTerm('');
+        } catch (error) {
+            console.error('Error importing templates:', error);
+        } finally {
+            setIsImporting(false);
+        }
     };
 
-    const selectAll = () => {
-        const categoriesToSelect = availableCategories.filter(
-            cat => getNewTemplatesCount(cat) > 0
-        );
-        setSelectedCategories(categoriesToSelect);
+    const handleClose = () => {
+        if (isImporting) return;
+        setSelected(new Set());
+        setSearchTerm('');
+        onOpenChange(false);
     };
-
-    const deselectAll = () => {
-        setSelectedCategories([]);
-    };
-
-    const totalNewTemplates = selectedCategories.reduce(
-        (sum, cat) => sum + getNewTemplatesCount(cat),
-        0
-    );
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl shadow-none border border-border">
-                <DialogHeader>
-                    <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
-                        <Package className="h-5 w-5 text-primary" />
-                        Importar Templates Predeterminados
+        <Dialog open={open} onOpenChange={handleClose}>
+            <DialogContent className="sm:max-w-[620px] max-h-[85vh] flex flex-col p-0 shadow-none border border-border gap-0 rounded-md">
+                <DialogHeader className="shrink-0 px-6 pt-6 pb-4 border-b border-border">
+                    <DialogTitle className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        Importar Subcategorías Estándar
                     </DialogTitle>
-                    <DialogDescription className="text-sm">
-                        Selecciona las categorías cuyos templates deseas importar. Solo se importarán los templates que aún no existen.
+                    <DialogDescription className="text-xs text-muted-foreground mt-1">
+                        Selecciona las subcategorías que usa tu institución. Se crearán sus categorías padre automáticamente si es necesario.
                     </DialogDescription>
                 </DialogHeader>
 
-                {availableCategories.length === 0 ? (
-                    <div className="py-12 text-center">
-                        <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-sm font-medium text-muted-foreground">
-                            No hay categorías disponibles. Primero debes crear categorías.
-                        </p>
+                {/* Toolbar */}
+                <div className="shrink-0 px-6 py-3 border-b border-border flex items-center gap-3 bg-muted/20">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <input
+                            type="text"
+                            placeholder="Buscar subcategorías..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full h-8 bg-background border border-border rounded-md pl-9 pr-3 text-xs font-medium focus:outline-none focus:border-primary/50 transition-colors"
+                        />
                     </div>
-                ) : importComplete ? (
-                    <div className="py-12 text-center">
-                        <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                        <p className="text-lg font-black uppercase tracking-tight text-foreground">
-                            ¡Templates Importados!
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                            Se importaron {totalNewTemplates} templates exitosamente.
-                        </p>
-                    </div>
-                ) : (
-                    <>
-                        <div className="flex justify-end gap-2 mb-2">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={selectAll}
-                                className="h-7 text-[10px] font-black uppercase tracking-widest"
-                            >
-                                Seleccionar Todos
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={deselectAll}
-                                className="h-7 text-[10px] font-black uppercase tracking-widest"
-                            >
-                                Deseleccionar Todos
-                            </Button>
-                        </div>
+                    <button
+                        type="button"
+                        onClick={handleSelectAll}
+                        className="h-8 px-3 text-[10px] font-black uppercase tracking-widest border border-border rounded-md hover:border-primary/50 hover:bg-accent/50 transition-colors flex items-center gap-1.5 shrink-0"
+                    >
+                        <Check className="h-3 w-3" />
+                        {selected.size > 0 ? 'Quitar todo' : 'Seleccionar todo'}
+                    </button>
+                    {selected.size > 0 && (
+                        <span className="text-[10px] font-black text-primary uppercase tracking-widest shrink-0">
+                            {selected.size} sel.
+                        </span>
+                    )}
+                </div>
 
-                        <ScrollArea className="h-[400px] pr-4">
-                            <div className="space-y-3">
-                                {availableCategories.map((categoryName) => {
-                                    const category = categories.find(c => c.name === categoryName);
-                                    const newCount = getNewTemplatesCount(categoryName);
-                                    const totalCount = DEFAULT_TEMPLATES[categoryName].length;
-                                    const isChecked = selectedCategories.includes(categoryName);
+                {/* Scrollable list */}
+                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5 custom-scrollbar">
+                    {filteredCatalogue.map((group) => {
+                        const groupKeys = group.templates.map((t) => makeKey(group.category.name, t.name));
+                        const allGroupSel = groupKeys.every((k) => selected.has(k));
+                        const someGroupSel = groupKeys.some((k) => selected.has(k));
+                        const isCollapsed = collapsedGroups.has(group.category.name);
 
-                                    if (!category) return null;
-
-                                    return (
-                                        <div
-                                            key={categoryName}
-                                            className={`border rounded-lg p-4 transition-all ${
-                                                isChecked
-                                                    ? 'border-primary bg-primary/5'
-                                                    : 'border-border bg-card/40'
-                                            } ${newCount === 0 ? 'opacity-50' : 'cursor-pointer hover:border-primary/40'}`}
-                                            onClick={() => newCount > 0 && toggleCategory(categoryName)}
-                                        >
-                                            <div className="flex items-start gap-3">
-                                                <Checkbox
-                                                    checked={isChecked}
-                                                    disabled={newCount === 0}
-                                                    onCheckedChange={() => toggleCategory(categoryName)}
-                                                    className="mt-1"
-                                                />
-                                                <div 
-                                                    className="w-10 h-10 rounded-md flex items-center justify-center text-white text-lg flex-shrink-0"
-                                                    style={{ backgroundColor: category.color }}
-                                                >
-                                                    {category.icon}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-black text-sm uppercase tracking-tight text-foreground">
-                                                        {categoryName}
-                                                    </h4>
-                                                    <p className="text-[11px] text-muted-foreground font-medium mt-1">
-                                                        {newCount > 0 ? (
-                                                            <>
-                                                                <span className="text-primary font-bold">{newCount} nuevos</span> de {totalCount} templates
-                                                            </>
-                                                        ) : (
-                                                            <>Todos los templates ya están importados ({totalCount})</>
-                                                        )}
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-1 mt-2">
-                                                        {DEFAULT_TEMPLATES[categoryName].slice(0, 8).map((template, idx) => (
-                                                            <span
-                                                                key={idx}
-                                                                className="text-xs bg-muted px-2 py-0.5 rounded"
-                                                                title={template.name}
-                                                            >
-                                                                {template.icon} {template.name}
-                                                            </span>
-                                                        ))}
-                                                        {DEFAULT_TEMPLATES[categoryName].length > 8 && (
-                                                            <span className="text-xs text-muted-foreground px-2 py-0.5">
-                                                                +{DEFAULT_TEMPLATES[categoryName].length - 8} más
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </ScrollArea>
-
-                        <DialogFooter className="flex items-center justify-between">
-                            <div className="text-sm text-muted-foreground">
-                                {selectedCategories.length > 0 && (
-                                    <span className="font-bold">
-                                        {totalNewTemplates} templates serán importados
+                        return (
+                            <div key={group.category.name}>
+                                {/* Category separator */}
+                                <div className="flex items-center gap-2 mb-2.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleCollapse(group.category.name)}
+                                        className="text-muted-foreground hover:text-foreground transition-colors"
+                                    >
+                                        {isCollapsed
+                                            ? <ChevronRight className="h-3.5 w-3.5" />
+                                            : <ChevronDown className="h-3.5 w-3.5" />
+                                        }
+                                    </button>
+                                    <span className="text-base leading-none">{group.category.icon}</span>
+                                    <span
+                                        className="text-[10px] font-black uppercase tracking-widest flex-1"
+                                        style={{ color: group.category.color }}
+                                    >
+                                        {group.category.name}
                                     </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleGroup(group.category.name, group.templates)}
+                                        className={cn(
+                                            'text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border transition-colors',
+                                            allGroupSel
+                                                ? 'border-primary/30 bg-primary/5 text-primary'
+                                                : someGroupSel
+                                                    ? 'border-primary/20 text-primary/60'
+                                                    : 'border-border text-muted-foreground hover:border-primary/30 hover:text-primary',
+                                        )}
+                                    >
+                                        {allGroupSel ? 'Quitar todos' : 'Todos'}
+                                    </button>
+                                </div>
+
+                                {/* Template cards */}
+                                {!isCollapsed && (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 ml-5">
+                                        {group.templates.map((t) => {
+                                            const key = makeKey(group.category.name, t.name);
+                                            const isSel = selected.has(key);
+                                            return (
+                                                <button
+                                                    key={t.name}
+                                                    type="button"
+                                                    onClick={() => toggleTemplate(group.category.name, t.name)}
+                                                    className={cn(
+                                                        'flex items-center gap-2.5 px-3 py-2.5 rounded-md border transition-all text-left group',
+                                                        isSel
+                                                            ? 'border-primary bg-primary/5'
+                                                            : 'border-border bg-background hover:border-primary/40 hover:bg-slate-50/50',
+                                                    )}
+                                                >
+                                                    <span className={cn(
+                                                        'text-lg leading-none transition-transform group-hover:scale-110',
+                                                        !isSel && 'grayscale group-hover:grayscale-0',
+                                                    )}>
+                                                        {t.icon}
+                                                    </span>
+                                                    <span className={cn(
+                                                        'text-xs font-bold uppercase tracking-tight flex-1 truncate',
+                                                        isSel ? 'text-primary' : 'text-foreground',
+                                                    )}>
+                                                        {t.name}
+                                                    </span>
+                                                    <div className={cn(
+                                                        'w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
+                                                        isSel ? 'bg-primary border-primary' : 'border-border group-hover:border-primary/40',
+                                                    )}>
+                                                        {isSel && <Check className="h-2.5 w-2.5 text-white stroke-[3]" />}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 )}
                             </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => onOpenChange(false)}
-                                    disabled={importing}
-                                    className="rounded-md h-10 text-xs font-black uppercase tracking-widest border-border shadow-none"
-                                >
-                                    Cancelar
-                                </Button>
-                                <Button
-                                    onClick={handleImport}
-                                    disabled={selectedCategories.length === 0 || importing || totalNewTemplates === 0}
-                                    className="bg-primary hover:bg-primary/90 text-white rounded-md h-10 text-xs font-black uppercase tracking-widest shadow-none"
-                                >
-                                    {importing ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                            Importando...
-                                        </>
-                                    ) : (
-                                        'Importar Templates'
-                                    )}
-                                </Button>
-                            </div>
-                        </DialogFooter>
-                    </>
-                )}
+                        );
+                    })}
+
+                    {filteredCatalogue.length === 0 && (
+                        <div className="text-center py-12">
+                            <p className="text-xs text-muted-foreground font-medium">
+                                No se encontraron subcategorías con "{searchTerm}"
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer */}
+                <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/10 flex items-center justify-between">
+                    <p className="text-[10px] text-muted-foreground font-medium">
+                        {selected.size === 0
+                            ? 'Selecciona al menos una subcategoría'
+                            : `${selected.size} subcategoría${selected.size !== 1 ? 's' : ''} seleccionada${selected.size !== 1 ? 's' : ''}`
+                        }
+                    </p>
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="outline"
+                            onClick={handleClose}
+                            disabled={isImporting}
+                            className="h-9 px-4 rounded-md text-xs font-black uppercase tracking-widest border-border shadow-none"
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={handleImport}
+                            disabled={selected.size === 0 || isImporting}
+                            className="h-9 px-5 rounded-md text-xs font-black uppercase tracking-widest shadow-none"
+                        >
+                            {isImporting ? (
+                                <>
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
+                                    Importando...
+                                </>
+                            ) : 'Importar seleccionadas'}
+                        </Button>
+                    </div>
+                </div>
             </DialogContent>
         </Dialog>
     );

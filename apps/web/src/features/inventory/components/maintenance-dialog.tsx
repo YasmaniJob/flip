@@ -334,14 +334,14 @@ export function MaintenanceDialog({
                         </Button>
                         <div className="flex gap-2">
                             {onSaveProgress && (
-                                <Button type="button" variant="jiraOutline"
+                                <Button type="button" variant="outline"
                                     className="px-4 font-black text-[10px] uppercase tracking-widest flex items-center gap-2"
                                     onClick={handleSaveProgress} disabled={isSubmitting}>
                                     {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                                     Guardar Avance
                                 </Button>
                             )}
-                            <Button type="button" variant="jira" onClick={handleSubmit}
+                            <Button type="button" variant="default" onClick={handleSubmit}
                                 disabled={!isValid || isSubmitting}
                                 className="px-5 font-black uppercase tracking-widest text-[10px] flex items-center gap-2 h-9">
                                 {isSubmitting

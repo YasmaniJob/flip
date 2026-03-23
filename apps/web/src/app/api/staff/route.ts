@@ -86,21 +86,43 @@ export async function GET(request: NextRequest) {
         dni: u.dni,
         email: u.email,
         phone: null,
-        area: 'Dirección',
+        area: null,
         role: u.isSuperAdmin ? 'SuperAdmin' : 'Admin',
         status: 'active',
         createdAt: u.createdAt,
       }));
 
-      // Deduplicate
-      const staffIds = new Set(staffData.map((s) => s.id));
-      const uniqueAdmins = mappedAdmins.filter((a) => !staffIds.has(a.id));
+      // Prioritize admins over staff if they have the same email
+      const staffByEmailMap = new Map(staffData.map((s) => [s.email?.toLowerCase(), s]));
+      const staffByIdMap = new Map(staffData.map((s) => [s.id, s]));
+      const uniqueAdmins: any[] = [];
+      
+      mappedAdmins.forEach((admin) => {
+        const emailKey = admin.email?.toLowerCase();
+        if (emailKey && staffByEmailMap.has(emailKey)) {
+          // Update the staff entry with admin role
+          const staffEntry = staffByEmailMap.get(emailKey)!;
+          staffEntry.role = admin.role;
+        } else if (staffByIdMap.has(admin.id)) {
+          // Fallback to ID if email doesn't match but ID does
+          const staffEntry = staffByIdMap.get(admin.id)!;
+          staffEntry.role = admin.role;
+        } else {
+          uniqueAdmins.push(admin);
+        }
+      });
 
-      // Add admins to first page
+      // Avoid showing the same person twice if they are in both uniqueAdmins and staffData
+      // (though the logic above should handle it, let's be safe)
+      const uniqueAdminEmails = new Set(uniqueAdmins.map(a => a.email?.toLowerCase()));
+      const filteredStaffData = staffData.filter(s => !s.email || !uniqueAdminEmails.has(s.email.toLowerCase()));
+
       if (page === 1) {
-        mixedData = [...uniqueAdmins, ...staffData];
+        mixedData = [...uniqueAdmins, ...filteredStaffData];
+      } else {
+        mixedData = filteredStaffData;
       }
-      total += uniqueAdmins.length;
+      total = totalStaffResult[0].value + uniqueAdmins.length;
     }
 
     const totalPages = Math.ceil(total / limit);

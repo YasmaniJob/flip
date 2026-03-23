@@ -126,7 +126,7 @@ export function ResourceCard({ resource, onEdit, onDelete, onLoan, onFinishMaint
                 <div className="flex gap-1">
                     {resource.status === RESOURCE_STATUS.MANTENIMIENTO ? (
                         <Button
-                            variant="jira"
+                            variant="default"
                             size="sm"
                             onClick={() => onFinishMaintenance?.(resource)}
                             className="bg-amber-600 hover:bg-amber-700 text-[10px] font-black tracking-widest uppercase h-8 px-3"
@@ -135,7 +135,7 @@ export function ResourceCard({ resource, onEdit, onDelete, onLoan, onFinishMaint
                         </Button>
                     ) : (
                         <Button
-                            variant="jira"
+                            variant="default"
                             size="sm"
                             onClick={() => onLoan?.(resource)}
                             disabled={resource.status === RESOURCE_STATUS.PRESTADO || resource.status === RESOURCE_STATUS.BAJA}

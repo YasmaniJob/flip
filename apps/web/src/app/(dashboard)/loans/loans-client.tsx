@@ -4,13 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { useLoans, type Loan } from '@/features/loans/hooks/use-loans';
-import { Button } from '@/components/atoms/button';
-import { Plus, Clock } from 'lucide-react';
+import { Clock, Loader2 } from 'lucide-react';
 import { LoanCard } from '@/features/loans/components/loan-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserRole } from '@/hooks/use-user-role';
-
-import { Loader2 } from 'lucide-react';
+import { PageHeader } from '@/components/layout/page-header';
 
 const LoanWizard = dynamic(
     () => import('@/features/loans/components/wizard/loan-wizard').then(m => m.LoanWizard),
@@ -110,17 +108,14 @@ export function LoansClient() {
 
     return (
         <div className="p-8 max-w-[1600px] mx-auto min-h-screen">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
-                <div>
-                    <h1 className="text-3xl font-black tracking-tighter text-foreground">Gestión de Préstamos</h1>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button onClick={() => setIsWizardOpen(true)} variant="jira" size="lg">
-                        <Plus className="h-5 w-5 mr-2" />
-                        Nuevo Préstamo
-                    </Button>
-                </div>
-            </div>
+            <PageHeader
+                title="Gestión de Préstamos"
+                primaryAction={{
+                    label: "Nuevo Préstamo",
+                    onClick: () => setIsWizardOpen(true)
+                }}
+                className="mb-8"
+            />
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent gap-6 mb-6">

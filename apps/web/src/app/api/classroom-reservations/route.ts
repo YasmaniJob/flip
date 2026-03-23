@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   const start = Date.now();
   try {
     const { user } = await requireAuth(request);
-    const institutionId = getInstitutionId(user);
+    const institutionId = await getInstitutionId(user);
 
     const searchParams = Object.fromEntries(request.nextUrl.searchParams);
     const query = validateQuery(reservationsQuerySchema, searchParams);
@@ -55,11 +55,7 @@ export async function GET(request: NextRequest) {
       where: and(...conditions),
       with: {
         classroom: true,
-        staff: {
-          with: {
-            user: true,
-          },
-        },
+        staff: true,
         grade: true,
         section: true,
         curricularArea: true,
@@ -101,6 +97,7 @@ export async function GET(request: NextRequest) {
       total,
     });
   } catch (error) {
+    console.error('[ERROR] classroom-reservations GET:', error);
     console.log(`[TIMING] classroom-reservations GET ERROR: ${Date.now() - start}ms`);
     return errorResponse(error);
   }
@@ -110,7 +107,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request);
-    const institutionId = getInstitutionId(user);
+    const institutionId = await getInstitutionId(user);
 
     const body = await request.json();
     const data = validateBody(createReservationSchema, body);
@@ -192,11 +189,7 @@ export async function POST(request: NextRequest) {
       where: eq(classroomReservations.id, result.reservation.id),
       with: {
         classroom: true,
-        staff: {
-          with: {
-            user: true,
-          },
-        },
+        staff: true,
         grade: true,
         section: true,
         curricularArea: true,

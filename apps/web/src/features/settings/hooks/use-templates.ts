@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useApiClient } from "@/lib/api-client";
 
 export interface ResourceTemplate {
   id: string;
@@ -27,13 +27,14 @@ export interface UpdateTemplateInput {
 
 // Fetch all templates (optionally filtered by category)
 export function useTemplates(categoryId?: string) {
+  const api = useApiClient();
   return useQuery({
-    queryKey: categoryId ? ['templates', categoryId] : ['templates'],
+    queryKey: categoryId ? ["templates", categoryId] : ["templates"],
     queryFn: async () => {
-      const url = categoryId 
+      const url = categoryId
         ? `/api/resource-templates?categoryId=${categoryId}`
-        : '/api/resource-templates';
-      const response = await apiClient.get<ResourceTemplate[]>(url);
+        : "/api/resource-templates";
+      const response = await api.get<ResourceTemplate[]>(url);
       return response;
     },
   });
@@ -42,13 +43,14 @@ export function useTemplates(categoryId?: string) {
 // Create template
 export function useCreateTemplate() {
   const queryClient = useQueryClient();
+  const api = useApiClient();
 
   return useMutation({
     mutationFn: async (data: CreateTemplateInput) => {
-      return await apiClient.post<ResourceTemplate>('/api/resource-templates', data);
+      return await api.post<ResourceTemplate>("/api/resource-templates", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['templates'] });
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
     },
   });
 }
@@ -56,13 +58,17 @@ export function useCreateTemplate() {
 // Update template
 export function useUpdateTemplate() {
   const queryClient = useQueryClient();
+  const api = useApiClient();
 
   return useMutation({
     mutationFn: async ({ id, ...data }: UpdateTemplateInput) => {
-      return await apiClient.put<ResourceTemplate>(`/api/resource-templates/${id}`, data);
+      return await api.put<ResourceTemplate>(
+        `/api/resource-templates/${id}`,
+        data,
+      );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['templates'] });
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
     },
   });
 }
@@ -70,13 +76,14 @@ export function useUpdateTemplate() {
 // Delete template
 export function useDeleteTemplate() {
   const queryClient = useQueryClient();
+  const api = useApiClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      return await apiClient.delete(`/api/resource-templates/${id}`);
+      return await api.delete(`/api/resource-templates/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['templates'] });
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
     },
   });
 }

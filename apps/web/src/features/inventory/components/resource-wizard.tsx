@@ -4,77 +4,31 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { WizardStep1 } from './wizard-step-1';
-import { WizardStep2 } from './wizard-step-2';
 
 interface ResourceWizardProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSuccess?: () => void;
+    onSuccess?: (params?: { categoryId: string; templateId: string; templateName: string; templateIcon?: string }) => void;
 }
 
 export interface WizardData {
-    // Step 1
+    // Mode kept for compatibility but simplified
     mode: 'individual' | 'batch';
-    quantity: number;
-    categoryId?: string;
-    categoryName?: string;
     templateId?: string;
-    templateData?: {
-        name: string;
-        icon?: string;
-        defaultBrand?: string;
-        defaultModel?: string;
-    };
-
-    // Step 2
-    name: string;
-    brand?: string;
-    model?: string;
-    serialNumber?: string;
-    condition: string;
-    status: string;
-    notes?: string;
 }
 
 export function ResourceWizard({ open, onOpenChange, onSuccess }: ResourceWizardProps) {
-    const [currentStep, setCurrentStep] = useState(1);
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const [wizardData, setWizardData] = useState<Partial<WizardData>>({
-        mode: 'individual',
-        quantity: 1,
-        condition: 'bueno',
-        status: 'disponible',
+    const [wizardData] = useState<Partial<WizardData>>({
+        mode: 'individual'
     });
 
-    const handleStep1Complete = (data: Partial<WizardData>) => {
-        setWizardData({ ...wizardData, ...data });
-        setCurrentStep(2);
-    };
-
-    const handleBack = () => {
-        setCurrentStep(1);
-    };
-
-    const handleSuccess = () => {
-        setCurrentStep(1);
-        setWizardData({
-            mode: 'individual',
-            quantity: 1,
-            condition: 'bueno',
-            status: 'disponible',
-        });
-        onSuccess?.();
+    const handleSuccess = (params?: { categoryId: string; templateId: string; templateName: string; templateIcon?: string }) => {
+        onSuccess?.(params);
         onOpenChange(false);
     };
 
     const handleCancel = () => {
-        setCurrentStep(1);
-        setWizardData({
-            mode: 'individual',
-            quantity: 1,
-            condition: 'bueno',
-            status: 'disponible',
-        });
         onOpenChange(false);
     };
 
@@ -89,27 +43,14 @@ export function ResourceWizard({ open, onOpenChange, onSuccess }: ResourceWizard
                         : "sm:max-w-[1020px] w-[95vw] h-[85vh] rounded-none"
                 )}
             >
-                <DialogTitle className="sr-only">Asistente de Nuevo Recurso</DialogTitle>
-                {currentStep === 1 && (
-                    <WizardStep1
-                        data={wizardData}
-                        onNext={handleStep1Complete}
-                        onCancel={handleCancel}
-                        isFullscreen={isFullscreen}
-                        onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
-                    />
-                )}
-
-                {currentStep === 2 && (
-                    <WizardStep2
-                        data={wizardData}
-                        onBack={handleBack}
-                        onSuccess={handleSuccess}
-                        onCancel={handleCancel}
-                        isFullscreen={isFullscreen}
-                        onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
-                    />
-                )}
+                <DialogTitle className="sr-only">Configurar Subcategorías</DialogTitle>
+                <WizardStep1
+                    data={wizardData}
+                    onNext={handleSuccess}
+                    onCancel={handleCancel}
+                    isFullscreen={isFullscreen}
+                    onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+                />
             </DialogContent>
         </Dialog>
     );

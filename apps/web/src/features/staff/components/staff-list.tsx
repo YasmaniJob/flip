@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Upload, Search, Trash2, Edit2 } from "lucide-react";
+import { Plus, Search, Trash2, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStaff } from "../hooks/use-staff";
 import { AddStaffDialog } from "./add-staff-dialog";
 import { ImportStaffDialog } from "./import-staff-dialog";
 import { ConfirmDeleteDialog } from "@/components/molecules/confirm-delete-dialog";
+import { PageHeader } from "@/components/layout/page-header";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -27,7 +28,9 @@ interface StaffMember {
 const TH = "px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60";
 
 function roleLabel(role?: string | null) {
-    switch (role) {
+    if (!role) return "Docente";
+    const r = role.toLowerCase();
+    switch (r) {
         case "superadmin": return "Superadmin";
         case "admin":      return "Admin";
         case "pip":        return "PIP";
@@ -52,7 +55,12 @@ export function StaffList() {
         return () => clearTimeout(t);
     }, [search]);
 
-    const { staff, meta, isLoading, deleteStaff } = useStaff({ page, limit: 10, search: debouncedSearch });
+    const { staff, meta, isLoading, deleteStaff } = useStaff({ 
+        page, 
+        limit: 10, 
+        search: debouncedSearch,
+        includeAdmins: true 
+    });
 
     const openAdd  = () => { setEditingStaff(null); setIsAddOpen(true); };
     const openEdit = (person: StaffMember) => { setEditingStaff(person); setIsAddOpen(true); };
@@ -60,22 +68,20 @@ export function StaffList() {
     return (
         <div className="p-8 max-w-[1600px] mx-auto min-h-screen space-y-6">
 
-            {/* Header */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 className="text-3xl font-black tracking-tighter text-foreground">Personal</h1>
-                </div>
-                <div className="flex gap-2 shrink-0">
-                    <Button variant="jiraOutline" onClick={() => setIsImportOpen(true)}>
-                        <Upload className="h-3.5 w-3.5 mr-2" />
-                        Importar
-                    </Button>
-                    <Button variant="jira" onClick={openAdd}>
-                        <Plus className="h-3.5 w-3.5 mr-2" />
-                        Nuevo Personal
-                    </Button>
-                </div>
-            </div>
+            <PageHeader
+                title="Personal"
+                primaryAction={{
+                    label: "Nuevo Personal",
+                    onClick: openAdd
+                }}
+                secondaryActions={[
+                    {
+                        label: "Importar",
+                        onClick: () => setIsImportOpen(true),
+                        variant: "outline"
+                    }
+                ]}
+            />
 
             {/* Toolbar */}
             <div className="relative">
@@ -126,7 +132,7 @@ export function StaffList() {
                                                     Comienza agregando docentes o administrativos
                                                 </p>
                                             </div>
-                                            <Button variant="jiraOutline" size="sm" onClick={openAdd}>
+                                            <Button variant="outline" size="sm" onClick={openAdd}>
                                                 <Plus className="h-3.5 w-3.5 mr-2" />
                                                 Agregar el primero
                                             </Button>

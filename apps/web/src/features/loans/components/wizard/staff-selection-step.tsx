@@ -54,7 +54,7 @@ export function StaffSelectionStep({
     const [areaSearch, setAreaSearch] = useState("");
 
     // We use the hook's search capability
-    const { staff, isLoading: isLoadingStaff } = useStaff({ search: debouncedStaffSearch, limit: 20 });
+    const { staff, isLoading: isLoadingStaff } = useStaff({ search: debouncedStaffSearch, limit: 20, includeAdmins: true });
     const { data: recurrentStaff, isLoading: isLoadingRecurrent } = useRecurrentStaff(6);
 
     const { data: grades } = useGrades();

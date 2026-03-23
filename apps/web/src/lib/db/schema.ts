@@ -34,6 +34,8 @@ export const institutions = pgTable('institutions', {
     plan: text('plan').default('free'),
     isPlatformOwner: boolean('is_platform_owner').default(false),
     subscriptionStatus: text('subscription_status').default('trial'),
+    subscriptionPlan: text('subscription_plan').default('trial'), // 'trial' | 'mensual' | 'bimestral' | 'trimestral' | 'anual'
+    subscriptionStartDate: timestamp('subscription_start_date'),
     trialEndsAt: timestamp('trial_ends_at'),
     subscriptionEndsAt: timestamp('subscription_ends_at'),
     settings: jsonb('settings'),
@@ -41,6 +43,20 @@ export const institutions = pgTable('institutions', {
 }, (table) => ({
     slugIdx: index('idx_institution_slug').on(table.slug),
     codigoModularIdx: index('idx_institution_codigo').on(table.codigoModular),
+}));
+
+// ============================================
+// SUBSCRIPTION HISTORY
+// ============================================
+export const subscriptionHistory = pgTable('subscription_history', {
+    id: text('id').primaryKey(),
+    institutionId: text('institution_id').references(() => institutions.id).notNull(),
+    event: text('event').notNull(), // 'trial_started', 'trial_extended', 'activated', 'deactivated', 'plan_changed', 'reverted_to_trial'
+    details: text('details'),
+    plan: text('plan'),
+    date: timestamp('date').defaultNow().notNull(),
+}, (table) => ({
+    institutionIdx: index('idx_sub_history_institution').on(table.institutionId),
 }));
 
 // ============================================
@@ -466,6 +482,14 @@ export const institutionsRelations = relations(institutions, ({ many }) => ({
     staff: many(staff),
     loans: many(loans),
     meetings: many(meetings),
+    subscriptionHistory: many(subscriptionHistory),
+}));
+
+export const subscriptionHistoryRelations = relations(subscriptionHistory, ({ one }) => ({
+    institution: one(institutions, {
+        fields: [subscriptionHistory.institutionId],
+        references: [institutions.id],
+    }),
 }));
 
 export const usersRelations = relations(users, ({ one }) => ({

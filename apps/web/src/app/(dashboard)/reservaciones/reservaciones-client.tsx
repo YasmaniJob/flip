@@ -2,11 +2,9 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { 
-    ChevronLeft,
-    ChevronRight
-} from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/page-header";
 import { 
     useReservationsByDateRange, 
     useRescheduleBlock
@@ -241,12 +239,9 @@ export function ReservacionesClient() {
 
     return (
         <div className="p-6 sm:p-8 max-w-[1600px] mx-auto min-h-screen space-y-6 relative">
-            {/* Header STANDARD - Aligned with the rest of Flyp */}
-            <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 className="text-3xl font-black tracking-tighter text-foreground">Reservaciones del AIP</h1>
-                </div>
-            </header>
+            <PageHeader
+                title="Reservaciones del AIP"
+            />
 
             {/* Context Toolbar - Minimalist Underline Design */}
             <div className="flex items-center justify-between gap-12 border-b border-border/30 pb-0.5">
