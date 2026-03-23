@@ -51,7 +51,7 @@ export const auth = betterAuth({
       httpOnly: true,
     },
     crossSubDomainCookies: {
-      enabled: true,
+      enabled: false,
     },
     disableCSRFCheck: process.env.NODE_ENV === "production", // Disable CSRF in production (Vercel handles this)
   },
