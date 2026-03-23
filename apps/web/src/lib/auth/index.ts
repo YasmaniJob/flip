@@ -32,6 +32,7 @@ console.log(
 
 export const auth = betterAuth({
   baseURL,
+  trustedOrigins: [baseURL],
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
