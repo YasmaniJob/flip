@@ -59,20 +59,24 @@ export function ReservacionesClient() {
     // Data Fetching
     const { data: classrooms, isLoading: isLoadingClassrooms } = useClassrooms();
     
+    // Set defaults only once when data loads
     useEffect(() => {
-        if (!isLoadingDefaults && !isLoadingClassrooms && classrooms && classrooms.length > 0) {
-            if (defaults?.classroomId && !selectedClassroomId) {
-                setSelectedClassroomId(defaults.classroomId);
-            } else if (!selectedClassroomId) {
-                const primary = classrooms.find(c => c.isPrimary) || classrooms[0];
-                setSelectedClassroomId(primary.id);
+        if (isLoadingDefaults || isLoadingClassrooms) return;
+        
+        // Set classroom only if not already set
+        if (!selectedClassroomId && classrooms && classrooms.length > 0) {
+            const defaultClassroom = defaults?.classroomId 
+                ? classrooms.find(c => c.id === defaults.classroomId)
+                : classrooms.find(c => c.isPrimary) || classrooms[0];
+            
+            if (defaultClassroom) {
+                setSelectedClassroomId(defaultClassroom.id);
             }
         }
         
-        if (!isLoadingDefaults && defaults?.shift && !selectedShift) {
-            setSelectedShift(defaults.shift as Shift);
-        } else if (!selectedShift) {
-            setSelectedShift("mañana");
+        // Set shift only if not already set
+        if (!selectedShift) {
+            setSelectedShift((defaults?.shift as Shift) || "mañana");
         }
     }, [defaults, isLoadingDefaults, isLoadingClassrooms, classrooms, selectedClassroomId, selectedShift]);
 
@@ -81,6 +85,9 @@ export function ReservacionesClient() {
         d.setDate(d.getDate() + 5);
         return d;
   }, [currentWeekStart]);
+
+    // Only fetch when we have all required data
+    const shouldFetch = !!selectedClassroomId && !!selectedShift && !isLoadingDefaults && !isLoadingClassrooms;
 
     const { data: slots, isFetching: isFetchingSlots, error: errorSlots } = useReservationsByDateRange(
         currentWeekStart.toISOString().split('T')[0],

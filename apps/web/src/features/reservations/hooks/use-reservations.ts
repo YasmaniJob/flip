@@ -17,8 +17,8 @@ export function useReservationsByDateRange(startDate: string, endDate: string, c
     return useQuery({
         queryKey: reservationKeys.byDateRange(startDate, endDate, classroomId, shift),
         queryFn: () => ReservationsApi.getByDateRange(startDate, endDate, classroomId, shift),
-        staleTime: 1 * 60 * 1000,
-        enabled: !!startDate && !!endDate,
+        staleTime: 5 * 60 * 1000, // 5 minutos - las reservas no cambian tan rápido
+        enabled: !!startDate && !!endDate && !!classroomId,
         placeholderData: (previousData) => previousData,
     });
 }
