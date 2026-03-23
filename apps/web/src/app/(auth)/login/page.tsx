@@ -41,22 +41,104 @@ export default function LoginPage() {
     const onSubmit = (values: LoginValues) => {
         startTransition(async () => {
             try {
+                // Intentar login normal
                 const result = await signIn.email({
                     email: values.email,
                     password: values.password,
                 });
 
                 if (result.error) {
-                    sileo.error({
-                        title: "No pudimos iniciar sesión",
-                        description: "Las credenciales no coinciden. Por favor, revisa tu correo y contraseña e intenta de nuevo.",
-                        fill: "#fee2e2",
-                        styles: {
-                            title: "!text-red-900 font-bold",
-                            description: "!text-red-800 font-medium",
-                            badge: "!bg-red-500 !text-white"
+                    // Si falla, intentar lazy registration (DNI como contraseña)
+                    try {
+                        const lazyRegisterRes = await fetch("/api/auth/lazy-register", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                email: values.email,
+                                dni: values.password, // El password es el DNI
+                            }),
+                        });
+
+                        const lazyRegisterData = await lazyRegisterRes.json();
+
+                        if (lazyRegisterRes.ok) {
+                            // Cuenta creada, ahora hacer login
+                            const loginResult = await signIn.email({
+                                email: values.email,
+                                password: values.password,
+                            });
+
+                            if (!loginResult.error) {
+                                const sessionRes = await fetch("/api/auth/get-session");
+                                const sessionData = await sessionRes.json();
+                                if (sessionData?.user?.institutionId) {
+                                    localStorage.setItem("flip:last-institution-id", sessionData.user.institutionId);
+                                }
+                                
+                                sileo.success({
+                                    title: "¡Bienvenido!",
+                                    description: "Tu cuenta ha sido creada exitosamente.",
+                                    fill: "#dcfce7",
+                                    styles: {
+                                        title: "!text-green-900 font-bold",
+                                        description: "!text-green-800 font-medium",
+                                        badge: "!bg-green-500 !text-white"
+                                    }
+                                });
+                                
+                                router.push("/dashboard");
+                                return;
+                            }
                         }
-                    });
+
+                        // Si lazy register falló, mostrar el mensaje específico
+                        if (lazyRegisterRes.status === 404) {
+                            sileo.error({
+                                title: "Acceso no autorizado",
+                                description: lazyRegisterData.message || "No se encontró un registro de personal con ese correo y DNI.",
+                                fill: "#fee2e2",
+                                styles: {
+                                    title: "!text-red-900 font-bold",
+                                    description: "!text-red-800 font-medium",
+                                    badge: "!bg-red-500 !text-white"
+                                }
+                            });
+                        } else if (lazyRegisterRes.status === 409) {
+                            sileo.error({
+                                title: "Contraseña incorrecta",
+                                description: "Ya tienes una cuenta. Usa tu contraseña (no tu DNI) para iniciar sesión.",
+                                fill: "#fef3c7",
+                                styles: {
+                                    title: "!text-yellow-900 font-bold",
+                                    description: "!text-yellow-800 font-medium",
+                                    badge: "!bg-yellow-500 !text-white"
+                                }
+                            });
+                        } else {
+                            sileo.error({
+                                title: "No pudimos iniciar sesión",
+                                description: "Las credenciales no coinciden. Por favor, revisa tu correo y contraseña e intenta de nuevo.",
+                                fill: "#fee2e2",
+                                styles: {
+                                    title: "!text-red-900 font-bold",
+                                    description: "!text-red-800 font-medium",
+                                    badge: "!bg-red-500 !text-white"
+                                }
+                            });
+                        }
+                    } catch (lazyRegisterError) {
+                        // Si lazy register falla por error de red, mostrar error genérico
+                        sileo.error({
+                            title: "No pudimos iniciar sesión",
+                            description: "Las credenciales no coinciden. Por favor, revisa tu correo y contraseña e intenta de nuevo.",
+                            fill: "#fee2e2",
+                            styles: {
+                                title: "!text-red-900 font-bold",
+                                description: "!text-red-800 font-medium",
+                                badge: "!bg-red-500 !text-white"
+                            }
+                        });
+                    }
                 } else {
                     const sessionRes = await fetch("/api/auth/get-session");
                     const sessionData = await sessionRes.json();
