@@ -257,6 +257,7 @@ function NavItem({
                   <Link
                     key={subItem.href}
                     href={subItem.href}
+                    prefetch={false}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2 text-[13px] font-medium rounded-md transition-colors",
                       isSubActive
@@ -280,7 +281,7 @@ function NavItem({
     <div className="space-y-1">
       <div className="group relative flex items-center">
         <NavTooltip label={item.label} collapsed={collapsed}>
-          <Link href={item.href} className={itemClassName}>
+          <Link href={item.href} prefetch={false} className={itemClassName}>
             {navContent}
           </Link>
         </NavTooltip>
@@ -406,6 +407,7 @@ function ProfileDropdown({
               <div className="p-1.5 space-y-0.5">
                 <Link
                   href="/settings"
+                  prefetch={false}
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-foreground hover:bg-accent transition-colors w-full"
                 >
