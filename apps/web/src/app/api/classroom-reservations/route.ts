@@ -73,15 +73,18 @@ export async function GET(request: NextRequest) {
       offset,
     });
 
-    // Filter by shift if provided (keep in memory as it's on pedagogicalHour)
+    // Filter by shift if provided (calculate shift based on startTime)
     let filteredReservations = reservationsWithRelations;
     if (query.shift) {
       filteredReservations = reservationsWithRelations
         .map((reservation) => ({
           ...reservation,
-          slots: reservation.slots.filter(
-            (slot) => slot.pedagogicalHour?.shift === query.shift
-          ),
+          slots: reservation.slots.filter((slot) => {
+            if (!slot.pedagogicalHour) return false;
+            const isMorning = slot.pedagogicalHour.startTime < '13:00';
+            const shift = isMorning ? 'mañana' : 'tarde';
+            return shift === query.shift;
+          }),
         }))
         .filter((reservation) => reservation.slots.length > 0);
     }
