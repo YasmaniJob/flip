@@ -147,7 +147,7 @@ export function SettingsClient() {
     const handleSaveSettings = async () => {
         setIsSavingSettings(true);
         try {
-            const res = await fetch('/api/v1/users/me/settings', {
+            const res = await fetch('/api/users/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(settings)

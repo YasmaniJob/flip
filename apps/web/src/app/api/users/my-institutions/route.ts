@@ -19,21 +19,39 @@ export async function GET(request: NextRequest) {
 
     const user = session.user as any;
     const userDni = user.dni;
-
-    if (!userDni) {
-      return NextResponse.json(
-        { error: 'Usuario sin DNI registrado' },
-        { status: 400 }
-      );
-    }
+    const userEmail = user.email;
 
     // Buscar todas las instituciones donde trabaja este usuario
-    const staffRecords = await db.query.staff.findMany({
-      where: eq(staff.dni, userDni),
-      with: {
-        institution: true,
-      },
-    });
+    // Primero intentar por DNI, si no existe, buscar por email
+    let staffRecords = [];
+    
+    if (userDni) {
+      staffRecords = await db.query.staff.findMany({
+        where: eq(staff.dni, userDni),
+        with: {
+          institution: true,
+        },
+      });
+    }
+    
+    // Si no hay resultados por DNI, intentar por email
+    if (staffRecords.length === 0 && userEmail) {
+      staffRecords = await db.query.staff.findMany({
+        where: eq(staff.email, userEmail),
+        with: {
+          institution: true,
+        },
+      });
+    }
+
+    // Si aún no hay resultados, retornar array vacío (no es error)
+    if (staffRecords.length === 0) {
+      console.log('[My Institutions] No staff records found for user:', user.id);
+      return NextResponse.json({
+        institutions: [],
+        activeInstitutionId: user.institutionId || null,
+      });
+    }
 
     const institutions = staffRecords.map((s) => ({
       id: s.institutionId,
