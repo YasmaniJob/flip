@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ReservationsApi, ReservationSlot, CreateReservationData, ReservationAttendance, ReservationTask } from '../api/reservations.api';
-import { toast } from 'sonner';
+import { handleApiError, showSuccess } from '@/lib/error-handler';
 
 export type { ReservationSlot, CreateReservationData, ReservationAttendance, ReservationTask };
 
@@ -37,11 +37,10 @@ export function useCreateReservation() {
         mutationFn: ReservationsApi.create,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
-            toast.success('Reserva creada correctamente');
+            showSuccess('Reserva creada correctamente');
         },
-        onError: (error: any) => {
-            const message = error.response?.data?.message || error.message || 'Error al crear la reserva';
-            toast.error(message);
+        onError: (error) => {
+            handleApiError(error, 'No se pudo crear la reserva');
         },
     });
 }
@@ -52,10 +51,10 @@ export function useCancelReservation() {
         mutationFn: ReservationsApi.cancel,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
-            toast.success('Reserva cancelada');
+            showSuccess('Reserva cancelada');
         },
-        onError: (error: Error) => {
-            toast.error(error.message || 'Error al cancelar la reserva');
+        onError: (error) => {
+            handleApiError(error, 'No se pudo cancelar la reserva');
         },
     });
 }
@@ -66,10 +65,10 @@ export function useCancelSlot() {
         mutationFn: (slotId: string) => ReservationsApi.cancelSlot(slotId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
-            toast.success('Hora cancelada correctamente');
+            showSuccess('Hora cancelada correctamente');
         },
-        onError: (error: Error) => {
-            toast.error(error.message || 'Error al cancelar la hora');
+        onError: (error) => {
+            handleApiError(error, 'No se pudo cancelar la hora');
         },
     });
 }
@@ -81,10 +80,10 @@ export function useMarkAttendance() {
             ReservationsApi.markAttendance(slotId, attended),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
-            toast.success('Asistencia actualizada');
+            showSuccess('Asistencia actualizada');
         },
-        onError: (error: Error) => {
-            toast.error(error.message || 'Error al actualizar asistencia');
+        onError: (error) => {
+            handleApiError(error, 'No se pudo actualizar la asistencia');
         },
     });
 }
@@ -99,10 +98,10 @@ export function useRescheduleSlot() {
         }) => ReservationsApi.reschedule(slotId, newDate, newPedagogicalHourId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
-            toast.success('Reserva reprogramada correctamente');
+            showSuccess('Reserva reprogramada correctamente');
         },
-        onError: (error: Error) => {
-            toast.error(error.message || 'Error al reprogramar reserva');
+        onError: (error) => {
+            handleApiError(error, 'No se pudo reprogramar la reserva');
         },
     });
 }
@@ -115,12 +114,11 @@ export function useRescheduleBlock() {
             slots: { date: string; pedagogicalHourId: string }[];
         }) => ReservationsApi.rescheduleBlock(reservationId, slots),
         onSuccess: () => {
-            // Invalidate but don't wait - refetch happens in background
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
-            toast.success('Reprogramación exitosa');
+            showSuccess('Reprogramación exitosa');
         },
-        onError: (error: Error) => {
-            toast.error(error.message || 'Error al reprogramar');
+        onError: (error) => {
+            handleApiError(error, 'No se pudo reprogramar el bloque');
         },
     });
 }
@@ -144,10 +142,10 @@ export function useAddReservationAttendee() {
             ReservationsApi.addAttendee(reservationId, staffId),
         onSuccess: (_, vars) => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.attendance(vars.reservationId) });
-            toast.success('Participante agregado');
+            showSuccess('Participante agregado');
         },
-        onError: (error: Error) => {
-            toast.error(error.message || 'Error al agregar participante');
+        onError: (error) => {
+            handleApiError(error, 'No se pudo agregar el participante');
         },
     });
 }
@@ -160,6 +158,9 @@ export function useBulkUpdateReservationAttendance() {
         onSuccess: (_, vars) => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.attendance(vars.reservationId) });
         },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo actualizar la asistencia');
+        },
     });
 }
 
@@ -169,10 +170,10 @@ export function useRemoveReservationAttendee() {
         mutationFn: (attendanceId: string) => ReservationsApi.removeAttendee(attendanceId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
-            toast.success('Participante removido');
+            showSuccess('Participante removido');
         },
-        onError: (error: Error) => {
-            toast.error(error.message || 'Error al remover participante');
+        onError: (error) => {
+            handleApiError(error, 'No se pudo remover el participante');
         },
     });
 }
@@ -196,10 +197,10 @@ export function useCreateReservationTask() {
             ReservationsApi.createTask(reservationId, task),
         onSuccess: (_, vars) => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.tasks(vars.reservationId) });
-            toast.success('Acuerdo creado');
+            showSuccess('Acuerdo creado');
         },
-        onError: (error: Error) => {
-            toast.error(error.message || 'Error al crear acuerdo');
+        onError: (error) => {
+            handleApiError(error, 'No se pudo crear el acuerdo');
         },
     });
 }
@@ -212,6 +213,9 @@ export function useUpdateReservationTask() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
         },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo actualizar el acuerdo');
+        },
     });
 }
 
@@ -221,10 +225,10 @@ export function useDeleteReservationTask() {
         mutationFn: (taskId: string) => ReservationsApi.deleteTask(taskId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
-            toast.success('Acuerdo eliminado');
+            showSuccess('Acuerdo eliminado');
         },
-        onError: (error: Error) => {
-            toast.error(error.message || 'Error al eliminar acuerdo');
+        onError: (error) => {
+            handleApiError(error, 'No se pudo eliminar el acuerdo');
         },
     });
 }
