@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from '@/lib/api-client';
+import { handleApiError, showSuccess } from '@/lib/error-handler';
 
 export interface Category {
     id: string;
@@ -53,10 +54,11 @@ export function useCreateCategory() {
     return useMutation({
         mutationFn: (data: CreateCategoryData) => api.post<Category>('/categories', data),
         onSuccess: () => {
-            // Invalidate ALL category queries (any key variant) so the list refetches
             queryClient.invalidateQueries({ queryKey: categoryKeys.all });
+            showSuccess('Categoría creada correctamente');
         },
-        onError: () => {
+        onError: (error) => {
+            handleApiError(error, 'No se pudo crear la categoría');
             queryClient.invalidateQueries({ queryKey: categoryKeys.all });
         },
     });
@@ -73,8 +75,10 @@ export function useUpdateCategory() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: categoryKeys.all });
+            showSuccess('Categoría actualizada correctamente');
         },
-        onError: () => {
+        onError: (error) => {
+            handleApiError(error, 'No se pudo actualizar la categoría');
             queryClient.invalidateQueries({ queryKey: categoryKeys.all });
         },
     });
@@ -88,8 +92,10 @@ export function useDeleteCategory() {
         mutationFn: (id: string) => api.delete<boolean>(`/categories/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: categoryKeys.all });
+            showSuccess('Categoría eliminada correctamente');
         },
-        onError: () => {
+        onError: (error) => {
+            handleApiError(error, 'No se pudo eliminar la categoría');
             queryClient.invalidateQueries({ queryKey: categoryKeys.all });
         },
     });
@@ -118,10 +124,12 @@ export function useSeedCategories() {
                 .filter((r): r is PromiseFulfilledResult<Category> => r.status === 'fulfilled')
                 .map(r => r.value);
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: categoryKeys.all });
+            showSuccess(`${data.length} categorías importadas correctamente`);
         },
-        onError: () => {
+        onError: (error) => {
+            handleApiError(error, 'No se pudieron importar las categorías');
             queryClient.invalidateQueries({ queryKey: categoryKeys.all });
         },
     });

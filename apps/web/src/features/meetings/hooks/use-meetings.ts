@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { meetingsApi } from "../api/meetings.api";
-import { toast } from "sonner";
+import { handleApiError, showSuccess } from "@/lib/error-handler";
 
 const STALE_TIME = 1000 * 60 * 5; // 5 minutes cache
 
@@ -28,10 +28,10 @@ export function useCreateMeeting() {
         mutationFn: meetingsApi.create,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['meetings'] });
-            toast.success("Reunión creada exitosamente");
+            showSuccess("Reunión creada exitosamente");
         },
-        onError: (error: any) => {
-            toast.error(error.message || "Error al crear la reunión");
+        onError: (error) => {
+            handleApiError(error, "No se pudo crear la reunión");
         }
     });
 }
@@ -42,8 +42,11 @@ export function useRemoveMeeting() {
         mutationFn: meetingsApi.remove,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['meetings'] });
-            toast.success("Reunión eliminada");
+            showSuccess("Reunión eliminada");
         },
+        onError: (error) => {
+            handleApiError(error, "No se pudo eliminar la reunión");
+        }
     });
 }
 
@@ -53,10 +56,10 @@ export function useCreateTask() {
         mutationFn: ({ meetingId, task }: { meetingId: string, task: any }) => meetingsApi.createTask(meetingId, task),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['meetings', variables.meetingId] });
-            toast.success("Acuerdo registrado exitosamente");
+            showSuccess("Acuerdo registrado exitosamente");
         },
-        onError: (error: any) => {
-            toast.error(error.message || "Error al crear el acuerdo");
+        onError: (error) => {
+            handleApiError(error, "No se pudo crear el acuerdo");
         }
     });
 }
@@ -67,10 +70,10 @@ export function useUpdateTask() {
         mutationFn: ({ taskId, task }: { taskId: string, task: any }) => meetingsApi.updateTask(taskId, task),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['meetings'] });
-            toast.success("Acuerdo actualizado");
+            showSuccess("Acuerdo actualizado");
         },
-        onError: (error: any) => {
-            toast.error(error.message || "Error al actualizar el acuerdo");
+        onError: (error) => {
+            handleApiError(error, "No se pudo actualizar el acuerdo");
         }
     });
 }
@@ -81,10 +84,10 @@ export function useDeleteTask() {
         mutationFn: meetingsApi.deleteTask,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['meetings'] });
-            toast.success("Acuerdo eliminado");
+            showSuccess("Acuerdo eliminado");
         },
-        onError: (error: any) => {
-            toast.error(error.message || "Error al eliminar el acuerdo");
+        onError: (error) => {
+            handleApiError(error, "No se pudo eliminar el acuerdo");
         }
     });
 }

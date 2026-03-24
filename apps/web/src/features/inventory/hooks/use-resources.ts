@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api-client";
+import { handleApiError, showSuccess } from "@/lib/error-handler";
 
 export interface Resource {
   id: string;
@@ -105,6 +106,10 @@ export function useCreateResource() {
     mutationFn: (data: any) => api.post<Resource>("/resources", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: resourceKeys.all });
+      showSuccess('Recurso creado correctamente');
+    },
+    onError: (error) => {
+      handleApiError(error, 'No se pudo crear el recurso');
     },
   });
 }
@@ -119,8 +124,12 @@ export function useCreateBatchResources() {
       quantity: number;
       items?: { serialNumber?: string; condition?: string; status?: string }[];
     }) => api.post<Resource[]>("/resources/batch", data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: resourceKeys.all });
+      showSuccess(`${variables.quantity} recursos creados correctamente`);
+    },
+    onError: (error) => {
+      handleApiError(error, 'No se pudieron crear los recursos');
     },
   });
 }
@@ -168,6 +177,10 @@ export function useCreateTemplate() {
       queryClient.invalidateQueries({
         queryKey: ["templates"],
       });
+      showSuccess('Plantilla creada correctamente');
+    },
+    onError: (error) => {
+      handleApiError(error, 'No se pudo crear la plantilla');
     },
   });
 }

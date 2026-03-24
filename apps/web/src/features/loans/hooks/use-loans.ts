@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { LoansApi, type Loan, type CreateLoanData } from '../api/loans.api';
+import { handleApiError, showSuccess } from '@/lib/error-handler';
 
 export type { Loan, CreateLoanData };
 
@@ -35,6 +36,10 @@ export function useCreateLoan() {
             queryClient.invalidateQueries({ queryKey: loanKeys.list() });
             queryClient.invalidateQueries({ queryKey: ['resources'] });
             queryClient.invalidateQueries({ queryKey: ['available-resources'] });
+            showSuccess('Préstamo creado correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo crear el préstamo');
         },
     });
 }
@@ -48,6 +53,10 @@ export function useApproveLoan() {
             queryClient.invalidateQueries({ queryKey: loanKeys.list() });
             queryClient.invalidateQueries({ queryKey: ['resources'] });
             queryClient.invalidateQueries({ queryKey: ['available-resources'] });
+            showSuccess('Préstamo aprobado correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo aprobar el préstamo');
         },
     });
 }
@@ -61,6 +70,10 @@ export function useRejectLoan() {
             queryClient.invalidateQueries({ queryKey: loanKeys.list() });
             queryClient.invalidateQueries({ queryKey: ['resources'] });
             queryClient.invalidateQueries({ queryKey: ['available-resources'] });
+            showSuccess('Préstamo rechazado');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo rechazar el préstamo');
         },
     });
 }

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from '@/lib/api-client';
+import { handleApiError, showSuccess } from '@/lib/error-handler';
 
 export interface CurricularArea {
     id: string;
@@ -39,6 +40,10 @@ export function useCreateCurricularArea() {
             api.post<CurricularArea>('/curricular-areas', data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['curricular-areas'] });
+            showSuccess('Área curricular creada correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo crear el área curricular');
         },
     });
 }
@@ -52,6 +57,10 @@ export function useUpdateCurricularArea() {
             api.put<CurricularArea>(`/curricular-areas/${id}`, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['curricular-areas'] });
+            showSuccess('Área curricular actualizada correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo actualizar el área curricular');
         },
     });
 }
@@ -64,6 +73,10 @@ export function useDeleteCurricularArea() {
         mutationFn: (id: string) => api.delete<{ success: boolean; message: string }>(`/curricular-areas/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['curricular-areas'] });
+            showSuccess('Área curricular eliminada correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo eliminar el área curricular');
         },
     });
 }
@@ -75,8 +88,12 @@ export function useSeedStandardAreas() {
     return useMutation({
         mutationFn: (selectedAreas?: string[]) =>
             api.post<{ seeded: number }>('/curricular-areas/seed-standard', { selectedAreas }),
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['curricular-areas'] });
+            showSuccess(`${data.seeded} áreas curriculares agregadas correctamente`);
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudieron agregar las áreas curriculares');
         },
     });
 }

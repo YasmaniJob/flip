@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api-client";
+import { handleApiError, showSuccess } from "@/lib/error-handler";
 
 export interface ResourceTemplate {
   id: string;
@@ -51,6 +52,10 @@ export function useCreateTemplate() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["templates"] });
+      showSuccess('Plantilla creada correctamente');
+    },
+    onError: (error) => {
+      handleApiError(error, 'No se pudo crear la plantilla');
     },
   });
 }
@@ -69,6 +74,10 @@ export function useUpdateTemplate() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["templates"] });
+      showSuccess('Plantilla actualizada correctamente');
+    },
+    onError: (error) => {
+      handleApiError(error, 'No se pudo actualizar la plantilla');
     },
   });
 }
@@ -84,6 +93,10 @@ export function useDeleteTemplate() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["templates"] });
+      showSuccess('Plantilla eliminada correctamente');
+    },
+    onError: (error) => {
+      handleApiError(error, 'No se pudo eliminar la plantilla');
     },
   });
 }

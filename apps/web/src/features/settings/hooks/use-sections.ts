@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from '@/lib/api-client';
+import { handleApiError, showSuccess } from '@/lib/error-handler';
 
 export interface Section {
     id: string;
@@ -31,6 +32,10 @@ export function useCreateSection() {
         mutationFn: (data: Omit<Section, 'id'>) => api.post<Section>('/sections', data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sections'] });
+            showSuccess('Sección creada correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo crear la sección');
         },
     });
 }
@@ -44,6 +49,10 @@ export function useUpdateSection() {
             api.put<Section>(`/sections/${id}`, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sections'] });
+            showSuccess('Sección actualizada correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo actualizar la sección');
         },
     });
 }
@@ -56,6 +65,10 @@ export function useDeleteSection() {
         mutationFn: (id: string) => api.delete<{ success: boolean; message: string }>(`/sections/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sections'] });
+            showSuccess('Sección eliminada correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo eliminar la sección');
         },
     });
 }

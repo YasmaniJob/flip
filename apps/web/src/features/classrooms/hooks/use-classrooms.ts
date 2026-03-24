@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from '@/lib/api-client';
+import { handleApiError, showSuccess } from '@/lib/error-handler';
 
 export interface Classroom {
     id: string;
@@ -37,6 +38,10 @@ export function useCreateClassroom() {
             apiClient.post<Classroom>('/classrooms', data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: classroomKeys.list() });
+            showSuccess('Aula creada correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo crear el aula');
         },
     });
 }
@@ -50,6 +55,10 @@ export function useUpdateClassroom() {
             apiClient.put<Classroom>(`/classrooms/${id}`, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: classroomKeys.list() });
+            showSuccess('Aula actualizada correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo actualizar el aula');
         },
     });
 }
@@ -62,6 +71,10 @@ export function useDeleteClassroom() {
         mutationFn: (id: string) => apiClient.delete(`/classrooms/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: classroomKeys.list() });
+            showSuccess('Aula eliminada correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo eliminar el aula');
         },
     });
 }

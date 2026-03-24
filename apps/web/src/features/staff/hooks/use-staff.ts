@@ -1,7 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tantml:query";
 import { CreateStaffInput } from "@flip/shared";
 import { useApiClient } from "@/lib/api-client";
 import { useSession } from "@/lib/auth-client";
+import { handleApiError, showSuccess } from "@/lib/error-handler";
 
 type Staff = {
     id: string;
@@ -75,14 +76,22 @@ export const useStaff = (params: UseStaffParams = {}) => {
         mutationFn: (newStaff: CreateStaffInput) => api.post('/staff', newStaff),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['staff'] });
+            showSuccess('Personal creado correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo crear el personal');
         },
     });
 
     // Bulk Create Staff
     const bulkCreateStaff = useMutation({
         mutationFn: (staffList: CreateStaffInput[]) => api.post('/staff/bulk', { staff: staffList }),
-        onSuccess: () => {
+        onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['staff'] });
+            showSuccess(`${variables.length} personas importadas correctamente`);
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo importar el personal');
         },
     });
 
@@ -92,6 +101,10 @@ export const useStaff = (params: UseStaffParams = {}) => {
             api.patch(`/staff/${id}`, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['staff'] });
+            showSuccess('Personal actualizado correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo actualizar el personal');
         },
     });
 
@@ -100,6 +113,10 @@ export const useStaff = (params: UseStaffParams = {}) => {
         mutationFn: (id: string) => api.delete(`/staff/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['staff'] });
+            showSuccess('Personal eliminado correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo eliminar el personal');
         },
     });
 

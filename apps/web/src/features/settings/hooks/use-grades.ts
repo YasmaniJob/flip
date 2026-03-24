@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from '@/lib/api-client';
+import { handleApiError, showSuccess } from '@/lib/error-handler';
 
 export interface Grade {
     id: string;
@@ -31,6 +32,10 @@ export function useCreateGrade() {
         mutationFn: (data: Omit<Grade, 'id'>) => api.post<Grade>('/grades', data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['grades'] });
+            showSuccess('Grado creado correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo crear el grado');
         },
     });
 }
@@ -44,6 +49,10 @@ export function useUpdateGrade() {
             api.put<Grade>(`/grades/${id}`, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['grades'] });
+            showSuccess('Grado actualizado correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo actualizar el grado');
         },
     });
 }
@@ -56,6 +65,10 @@ export function useDeleteGrade() {
         mutationFn: (id: string) => api.delete<{ success: boolean; message: string }>(`/grades/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['grades'] });
+            showSuccess('Grado eliminado correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo eliminar el grado');
         },
     });
 }

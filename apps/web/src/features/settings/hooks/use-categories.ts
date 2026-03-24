@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api-client";
+import { handleApiError, showSuccess } from "@/lib/error-handler";
 
 export interface Category {
   id: string;
@@ -47,6 +48,10 @@ export function useCreateCategory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+      showSuccess('Categoría creada correctamente');
+    },
+    onError: (error) => {
+      handleApiError(error, 'No se pudo crear la categoría');
     },
   });
 }
@@ -62,6 +67,10 @@ export function useUpdateCategory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+      showSuccess('Categoría actualizada correctamente');
+    },
+    onError: (error) => {
+      handleApiError(error, 'No se pudo actualizar la categoría');
     },
   });
 }
@@ -77,6 +86,10 @@ export function useDeleteCategory() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+      showSuccess('Categoría eliminada correctamente');
+    },
+    onError: (error) => {
+      handleApiError(error, 'No se pudo eliminar la categoría');
     },
   });
 }
