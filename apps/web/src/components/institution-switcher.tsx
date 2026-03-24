@@ -113,7 +113,7 @@ export function InstitutionSwitcher() {
                     disabled={isSwitching}
                 >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="w-8 h-8 rounded-md bg-white border border-border flex items-center justify-center text-primary shrink-0">
+                        <div className="w-8 h-8 rounded-md bg-card border border-border flex items-center justify-center text-primary shrink-0">
                             <Building2 className="h-4 w-4" />
                         </div>
                         <div className="flex flex-col items-start min-w-0 flex-1">
@@ -150,7 +150,7 @@ export function InstitutionSwitcher() {
                                     institution.id === activeInstitutionId && "bg-muted/50"
                                 )}
                             >
-                                <div className="w-8 h-8 rounded-md bg-white border border-border flex items-center justify-center text-primary shrink-0">
+                                <div className="w-8 h-8 rounded-md bg-card border border-border flex items-center justify-center text-primary shrink-0">
                                     <Building2 className="h-4 w-4" />
                                 </div>
                                 <div className="flex flex-col items-start min-w-0 flex-1">

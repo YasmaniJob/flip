@@ -22,7 +22,7 @@ export function InstitutionHeader({
     return (
       <div className="flex flex-col items-center gap-1 py-3">
         {logoUrl ? (
-          <div className="h-10 w-10 rounded-lg overflow-hidden bg-white p-1">
+          <div className="h-10 w-10 rounded-lg overflow-hidden bg-card p-1">
             <Image
               src={logoUrl}
               alt={name}
@@ -47,7 +47,7 @@ export function InstitutionHeader({
   return (
     <div className="flex items-center gap-3 px-3 py-3">
       {logoUrl ? (
-        <div className="h-11 w-11 rounded-lg overflow-hidden bg-white p-1 border border-border/50 shrink-0">
+        <div className="h-11 w-11 rounded-lg overflow-hidden bg-card p-1 border border-border/50 shrink-0">
           <Image
             src={logoUrl}
             alt={name}
