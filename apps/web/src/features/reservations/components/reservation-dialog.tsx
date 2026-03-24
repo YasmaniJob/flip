@@ -347,7 +347,7 @@ export function ReservationDialog({
                     {viewState === 'CONTEXT' ? (
                         <div className="flex-1 flex overflow-hidden animate-in fade-in zoom-in-95 duration-300">
                              {/* Sidebar: Context & Responsibility (Left) */}
-                             <aside className="w-[320px] shrink-0 border-r border-border bg-slate-50/50 flex flex-col overflow-hidden">
+                             <aside className="w-[320px] shrink-0 border-r border-border bg-muted/20 flex flex-col overflow-hidden">
                                 <div className="p-6 space-y-8 flex-1 overflow-y-auto scrollbar-hide">
                                     {/* Teacher Chip */}
                                     <div className="space-y-4">
@@ -406,7 +406,7 @@ export function ReservationDialog({
                                                         "flex items-center gap-3 p-3 h-10 rounded-sm border transition-all text-left",
                                                         reservationType === t
                                                             ? "bg-primary text-primary-foreground border-primary shadow-none"
-                                                            : "bg-white border-border text-muted-foreground hover:bg-slate-100"
+                                                            : "bg-card border-border text-muted-foreground hover:bg-muted/30"
                                                     )}
                                                 >
                                                     {t === 'learning' ? <GraduationCap size={14} /> : t === 'workshop' ? <Users size={14} /> : <Building2 size={14} />}
@@ -446,9 +446,9 @@ export function ReservationDialog({
                                                     <button
                                                         key={s.id}
                                                         onClick={() => { setSelectedStaffId(s.id); setSelectedStaffName(s.name); }}
-                                                        className="group flex items-center gap-3 p-3 rounded-sm border border-border bg-background hover:border-primary/40 hover:bg-primary/[0.01] transition-all text-left"
+                                                        className="group flex items-center gap-3 p-3 rounded-sm border border-border bg-card hover:border-primary/40 hover:bg-primary/[0.02] transition-all text-left"
                                                     >
-                                                        <div className="w-10 h-10 rounded-sm flex items-center justify-center text-[11px] font-black shrink-0 border border-border bg-slate-50 group-hover:border-primary/20 transition-all">
+                                                        <div className="w-10 h-10 rounded-sm flex items-center justify-center text-[11px] font-black shrink-0 border border-border bg-muted group-hover:border-primary/20 transition-all">
                                                             {s.name[0]}
                                                         </div>
                                                         <div className="min-w-0 flex-1">
@@ -466,14 +466,14 @@ export function ReservationDialog({
                                                             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60">Docentes Frecuentes</span>
                                                             <div className="flex-1 h-px bg-border/50" />
                                                         </div>
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                             {recurrentStaff.map((s) => (
                                                                 <button
                                                                     key={s.id}
                                                                     onClick={() => { setSelectedStaffId(s.id); setSelectedStaffName(s.name); }}
-                                                                    className="group flex items-center gap-3 p-3 rounded-sm border border-border bg-background hover:border-primary/40 hover:bg-primary/[0.01] transition-all text-left"
+                                                                    className="group flex items-center gap-3 p-3 rounded-sm border border-border bg-card hover:border-primary/40 hover:bg-primary/[0.02] transition-all text-left"
                                                                 >
-                                                                    <div className="w-10 h-10 rounded-sm flex items-center justify-center text-[11px] font-black shrink-0 border border-primary/20 bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">
+                                                                    <div className="w-10 h-10 rounded-sm flex items-center justify-center text-[11px] font-black shrink-0 border border-primary/20 bg-primary/5 text-primary group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">
                                                                         {s.name[0]}
                                                                     </div>
                                                                     <div className="min-w-0 flex-1">
@@ -498,7 +498,7 @@ export function ReservationDialog({
                                             <div className="flex-1 flex flex-col overflow-hidden space-y-10">
                                                 <div className="space-y-4">
                                                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] block">Área Curricular</label>
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                         {curricularAreas?.map((area) => (
                                                             <button
                                                                 key={area.id}
@@ -507,7 +507,7 @@ export function ReservationDialog({
                                                                     "flex items-center gap-3 p-3 rounded-sm min-h-[44px] transition-all text-left border overflow-hidden",
                                                                     curricularAreaId === area.id
                                                                         ? "bg-primary text-primary-foreground border-primary shadow-none"
-                                                                        : "bg-background text-muted-foreground border-border hover:border-primary/30 hover:bg-slate-50"
+                                                                        : "bg-card text-muted-foreground border-border hover:border-primary/30 hover:bg-muted/30"
                                                                 )}
                                                             >
                                                                 <BookOpen size={12} className={cn("shrink-0", curricularAreaId === area.id ? "text-primary-foreground" : "text-muted-foreground/40")} />
@@ -524,7 +524,7 @@ export function ReservationDialog({
                                                             <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] block">Grado Académico</label>
                                                             <div className="flex flex-wrap gap-1">
                                                                 {grades === undefined ? (
-                                                                    <div className="h-9 w-full flex items-center justify-center border border-dashed border-border/30 rounded-sm bg-slate-50/30 animate-pulse">
+                                                                    <div className="h-9 w-full flex items-center justify-center border border-dashed border-border/30 rounded-sm bg-muted/30 animate-pulse">
                                                                         <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/20 italic">Cargando grados...</span>
                                                                     </div>
                                                                 ) : grades.length === 0 ? (
@@ -537,7 +537,7 @@ export function ReservationDialog({
                                                                             className={cn("h-9 w-12 text-[10px] font-black rounded-sm transition-all border uppercase",
                                                                                 gradeId === grade.id
                                                                                     ? "bg-primary text-primary-foreground border-primary"
-                                                                                    : "bg-background text-muted-foreground border-border hover:bg-slate-50"
+                                                                                    : "bg-card text-muted-foreground border-border hover:bg-muted/30"
                                                                             )}
                                                                         >{grade.name.replace('Grado', '').trim()}G</button>
                                                                     ))
@@ -550,7 +550,7 @@ export function ReservationDialog({
                                                             <div className="flex flex-wrap gap-1">
                                                                 {gradeId ? (
                                                                     sections === undefined ? (
-                                                                        <div className="h-9 w-full flex items-center justify-center border border-dashed border-border/30 rounded-sm bg-slate-50/30 animate-pulse">
+                                                                        <div className="h-9 w-full flex items-center justify-center border border-dashed border-border/30 rounded-sm bg-muted/30 animate-pulse">
                                                                             <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/20 italic">Cargando secciones...</span>
                                                                         </div>
                                                                     ) : sections.length === 0 ? (
@@ -563,13 +563,13 @@ export function ReservationDialog({
                                                                                 className={cn("h-9 w-9 text-[10px] font-black rounded-sm transition-all border uppercase",
                                                                                     sectionId === section.id
                                                                                         ? "bg-primary text-primary-foreground border-primary shadow-none"
-                                                                                        : "bg-background text-muted-foreground border-border hover:bg-slate-50"
+                                                                                        : "bg-card text-muted-foreground border-border hover:bg-muted/30"
                                                                                 )}
                                                                             >{section.name}</button>
                                                                         ))
                                                                     )
                                                                 ) : (
-                                                                    <div className="h-9 w-full flex items-center justify-center border border-dashed border-border/50 rounded-sm bg-slate-50/30">
+                                                                    <div className="h-9 w-full flex items-center justify-center border border-dashed border-border/50 rounded-sm bg-muted/30">
                                                                         <p className="text-[8px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">Elige un grado primero</p>
                                                                     </div>
                                                                 )}
@@ -587,7 +587,7 @@ export function ReservationDialog({
                                                             placeholder="EJ. TALLER DE ROBÓTICA..."
                                                             value={tallerTitle}
                                                             onChange={(e) => setTallerTitle(e.target.value)}
-                                                            className="w-full bg-slate-50 border border-border rounded-sm h-12 px-6 text-xs font-black text-foreground focus:border-primary focus:ring-0 outline-none transition-all placeholder:text-muted-foreground/20 uppercase tracking-widest"
+                                                            className="w-full bg-card border border-border rounded-sm h-12 px-6 text-xs font-black text-foreground focus:border-primary focus:ring-0 outline-none transition-all placeholder:text-muted-foreground/20 uppercase tracking-widest"
                                                         />
                                                     </div>
                                                 )}
