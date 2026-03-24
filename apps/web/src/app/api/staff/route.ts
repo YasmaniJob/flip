@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     const whereClause = and(...conditions);
 
-    // Get staff data
+    // Parallel queries for better performance
     const [staffData, totalStaffResult] = await Promise.all([
       db.query.staff.findMany({
         where: whereClause,
@@ -62,8 +62,8 @@ export async function GET(request: NextRequest) {
     let mixedData: any[] = staffData;
     let total = totalStaffResult[0].value;
 
-    // Include admins if requested
-    if (include_admins === 'true') {
+    // Include admins if requested - optimized to only run on first page
+    if (include_admins === 'true' && page === 1) {
       const adminConditions: any[] = [
         eq(users.institutionId, institutionId),
         or(eq(users.role, 'admin'), eq(users.isSuperAdmin, true)),
@@ -76,6 +76,16 @@ export async function GET(request: NextRequest) {
 
       const admins = await db.query.users.findMany({
         where: and(...adminConditions),
+        columns: {
+          id: true,
+          institutionId: true,
+          name: true,
+          dni: true,
+          email: true,
+          role: true,
+          isSuperAdmin: true,
+          createdAt: true,
+        },
       });
 
       // Map users to staff-like structure
@@ -92,36 +102,17 @@ export async function GET(request: NextRequest) {
         createdAt: u.createdAt,
       }));
 
-      // Prioritize admins over staff if they have the same email
-      const staffByEmailMap = new Map(staffData.map((s) => [s.email?.toLowerCase(), s]));
-      const staffByIdMap = new Map(staffData.map((s) => [s.id, s]));
-      const uniqueAdmins: any[] = [];
+      // Use Set for O(1) lookups instead of Map
+      const staffEmailSet = new Set(
+        staffData.map((s) => s.email?.toLowerCase()).filter(Boolean)
+      );
       
-      mappedAdmins.forEach((admin) => {
-        const emailKey = admin.email?.toLowerCase();
-        if (emailKey && staffByEmailMap.has(emailKey)) {
-          // Update the staff entry with admin role
-          const staffEntry = staffByEmailMap.get(emailKey)!;
-          staffEntry.role = admin.role;
-        } else if (staffByIdMap.has(admin.id)) {
-          // Fallback to ID if email doesn't match but ID does
-          const staffEntry = staffByIdMap.get(admin.id)!;
-          staffEntry.role = admin.role;
-        } else {
-          uniqueAdmins.push(admin);
-        }
-      });
+      // Filter out admins that already exist in staff
+      const uniqueAdmins = mappedAdmins.filter(
+        (admin) => !admin.email || !staffEmailSet.has(admin.email.toLowerCase())
+      );
 
-      // Avoid showing the same person twice if they are in both uniqueAdmins and staffData
-      // (though the logic above should handle it, let's be safe)
-      const uniqueAdminEmails = new Set(uniqueAdmins.map(a => a.email?.toLowerCase()));
-      const filteredStaffData = staffData.filter(s => !s.email || !uniqueAdminEmails.has(s.email.toLowerCase()));
-
-      if (page === 1) {
-        mixedData = [...uniqueAdmins, ...filteredStaffData];
-      } else {
-        mixedData = filteredStaffData;
-      }
+      mixedData = [...uniqueAdmins, ...staffData];
       total = totalStaffResult[0].value + uniqueAdmins.length;
     }
 

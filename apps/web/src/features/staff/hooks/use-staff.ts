@@ -61,6 +61,7 @@ export const useStaff = (params: UseStaffParams = {}) => {
             return api.get<PaginatedResponse<Staff>>(`/staff?${searchParams.toString()}`);
         },
         enabled: !!session,
+        staleTime: 2 * 60 * 1000, // 2 minutes - staff data doesn't change that often
         // Keep previous data while fetching next page for better UX
         placeholderData: (previousData) => previousData,
     });

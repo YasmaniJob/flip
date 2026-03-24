@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
 export const metadata: Metadata = {
-  title: "Flip - Sistema de Gestión para AIP",
-  description: "Gestiona tu Aula de Innovación Pedagógica de forma inteligente",
+  title: "Flip - Gestión Inteligente de Recursos Educativos",
+  description: "Optimiza el inventario, préstamos y reuniones de tu institución educativa con Flip. La herramienta definitiva para docentes y coordinadores.",
+  keywords: ["gestión de inventario", "préstamos de equipos", "coordinación escolar", "recursos educativos", "AIP"],
 };
 
 export default function RootLayout({
@@ -12,8 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body className="antialiased">
+    <html lang="es" className="scroll-smooth">
+      <body className={`${inter.variable} font-sans antialiased min-h-screen bg-background text-foreground`}>
         {children}
       </body>
     </html>

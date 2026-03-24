@@ -8,6 +8,7 @@ import { useBrandColor } from "@/components/brand-color-provider";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { getBrandColor } from "@/lib/brand-color";
+import { useInstitution } from "@/hooks/use-institution";
 import { createPortal } from "react-dom";
 import {
   Popover,
@@ -451,22 +452,13 @@ export function Sidebar() {
   const isSuperAdmin = user?.isSuperAdmin;
   const role = user?.role || "docente";
 
-  const [institution, setInstitution] = useState<any>(null);
+  const { data: institution } = useInstitution();
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("flip:sidebar-collapsed");
     if (saved === "true") setCollapsed(true);
   }, []);
-
-  useEffect(() => {
-    if (user?.institutionId) {
-      fetch("/api/institutions/my-institution")
-        .then((res) => res.json())
-        .then((data) => setInstitution(data))
-        .catch(() => {});
-    }
-  }, [user?.institutionId]);
 
   const toggleCollapsed = () => {
     setCollapsed((prev) => {

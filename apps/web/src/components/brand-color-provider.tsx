@@ -8,6 +8,7 @@ import {
   useCallback,
 } from "react";
 import { useSession } from "@/lib/auth-client";
+import { useInstitution } from "@/hooks/use-institution";
 
 interface BrandColorContextType {
   brandColor: string;
@@ -56,6 +57,7 @@ export function BrandColorProvider({
   children: React.ReactNode;
 }) {
   const { data: session } = useSession();
+  const { data: institution, isLoading: isLoadingInstitution } = useInstitution();
   const [brandColor, setBrandColorState] = useState<string>("");
   const [institutionName, setInstitutionName] = useState<string>();
   const [logoUrl, setLogoUrl] = useState<string | null>();
@@ -64,29 +66,22 @@ export function BrandColorProvider({
   useEffect(() => {
     if (session?.user) {
       const user = session.user as any;
-      if (user.institutionId) {
-        fetch(`/api/institutions/my-institution`)
-          .then((res) => res.json())
-          .then((data) => {
-            const color = data?.settings?.brandColor;
-            const name = data?.name;
-            const logo = data?.settings?.logoUrl;
+      if (user.institutionId && institution) {
+        const color = institution?.settings?.brandColor;
+        const name = institution?.name;
+        const logo = institution?.settings?.logoUrl;
 
-            setBrandColorState(color || "");
-            setInstitutionName(name);
-            setLogoUrl(logo);
+        setBrandColorState(color || "");
+        setInstitutionName(name);
+        setLogoUrl(logo);
 
-            setStoredBrand({
-              brandColor: color,
-              institutionName: name,
-              logoUrl: logo,
-            });
-            setIsLoading(false);
-          })
-          .catch(() => {
-            setIsLoading(false);
-          });
-      } else {
+        setStoredBrand({
+          brandColor: color,
+          institutionName: name,
+          logoUrl: logo,
+        });
+        setIsLoading(false);
+      } else if (!isLoadingInstitution) {
         setIsLoading(false);
       }
     } else {
@@ -98,7 +93,7 @@ export function BrandColorProvider({
       }
       setIsLoading(false);
     }
-  }, [session?.user]);
+  }, [session?.user, institution, isLoadingInstitution]);
 
   useEffect(() => {
     if (brandColor) {
