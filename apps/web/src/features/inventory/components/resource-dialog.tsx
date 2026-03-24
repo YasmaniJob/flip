@@ -86,7 +86,7 @@ export function ResourceDialog({ resource, categories = [], loading, onSave, onC
             <div className="w-full bg-background rounded-none border border-border overflow-hidden relative shadow-none">
                 <div className="p-4">
                     <div className="flex justify-center mb-4">
-                        <div className="w-14 h-14 rounded-none bg-slate-50 border border-border flex items-center justify-center text-2xl shadow-none">
+                        <div className="w-14 h-14 rounded-none bg-muted/20 border border-border flex items-center justify-center text-2xl shadow-none">
                             📦
                         </div>
                     </div>
@@ -111,7 +111,7 @@ export function ResourceDialog({ resource, categories = [], loading, onSave, onC
 
                         <div className="flex flex-wrap items-center justify-center gap-1.5">
                             {categoryName && (
-                                <div className="px-2 py-0.5 rounded-none bg-slate-50 border border-border text-[9px] font-black uppercase tracking-widest text-foreground flex items-center gap-1">
+                                <div className="px-2 py-0.5 rounded-none bg-muted/20 border border-border text-[9px] font-black uppercase tracking-widest text-foreground flex items-center gap-1">
                                     <Tag className="w-2.5 h-2.5" />
                                     {categoryName}
                                 </div>
@@ -125,8 +125,8 @@ export function ResourceDialog({ resource, categories = [], loading, onSave, onC
                             <div className={cn(
                                 "px-2 py-0.5 rounded-none border text-[9px] font-black uppercase tracking-widest flex items-center gap-1",
                                 formData.condition === 'nuevo' ? "bg-primary/5 border-primary/20 text-primary" :
-                                    formData.condition === 'bueno' ? "bg-slate-50 border-border text-foreground/60" :
-                                        "bg-amber-50 border-amber-200 text-amber-700"
+                                    formData.condition === 'bueno' ? "bg-muted/20 border-border text-foreground/60" :
+                                        "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800/50 dark:text-amber-300"
                             )}>
                                 <span className="text-[8px]">★</span>
                                 {RESOURCE_CONDITION_OPTIONS.find(c => c.value === formData.condition)?.label || formData.condition}
@@ -134,7 +134,7 @@ export function ResourceDialog({ resource, categories = [], loading, onSave, onC
                         </div>
 
                         {formData.notes && (
-                            <div className="p-2.5 rounded-none bg-slate-50/50 border border-border text-[10px] text-muted-foreground/60 leading-relaxed text-left font-medium">
+                            <div className="p-2.5 rounded-none bg-muted/10 border border-border text-[10px] text-muted-foreground/60 leading-relaxed text-left font-medium">
                                 <FileText className="w-2.5 h-2.5 mb-0.5 inline-block mr-1 text-muted-foreground/40" />
                                 <span className="italic">{formData.notes}</span>
                             </div>
@@ -156,7 +156,7 @@ export function ResourceDialog({ resource, categories = [], loading, onSave, onC
                     className="h-[85vh] sm:rounded-none"
                     contentClassName="rounded-none sticky"
                 >
-                    <div className="shrink-0 px-6 pt-5 pb-3 border-b border-border flex items-center justify-between bg-slate-50/30">
+                    <div className="shrink-0 px-6 pt-5 pb-3 border-b border-border flex items-center justify-between bg-muted/10">
                         <div>
                             <h3 className="text-sm font-black text-foreground uppercase tracking-tight">
                                 Información del Recurso
@@ -374,7 +374,7 @@ export function ResourceDialog({ resource, categories = [], loading, onSave, onC
                         </div>
                     </div>
 
-                    <div className="shrink-0 p-5 border-t border-border bg-slate-50/50 flex items-center gap-4 z-10 shadow-none">
+                    <div className="shrink-0 p-5 border-t border-border bg-muted/10 flex items-center gap-4 z-10 shadow-none">
                         <div className="flex-1 flex gap-2">
                             <Button
                                 variant="jiraOutline"

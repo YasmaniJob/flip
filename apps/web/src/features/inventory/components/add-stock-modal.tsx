@@ -183,27 +183,27 @@ export function AddStockModal({
       <DialogContent
         showCloseButton={false}
         className={cn(
-            "p-0 gap-0 overflow-hidden bg-white border border-border shadow-none rounded-lg transition-all duration-300",
+            "p-0 gap-0 overflow-hidden bg-background border border-border shadow-none rounded-lg transition-all duration-300",
             isBatchMode ? "sm:max-w-[900px] w-[95vw]" : "sm:max-w-[700px] w-[95vw]"
         )}
       >
         <DialogTitle className="sr-only">Añadir Unidades a {templateName}</DialogTitle>
 
         {/* ── Header ────────────────────────────────────────────────────────── */}
-        <div className="shrink-0 px-6 pt-6 pb-4 border-b border-border bg-slate-50 relative">
+        <div className="shrink-0 px-6 pt-6 pb-4 border-b border-border bg-muted/20 relative">
           <button 
             onClick={() => {
                 form.reset();
                 onOpenChange(false);
             }}
-            className="absolute right-4 top-4 p-2 rounded-full hover:bg-slate-200/50 text-slate-500 transition-colors"
+            className="absolute right-4 top-4 p-2 rounded-full hover:bg-muted/30 text-muted-foreground transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
           
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-md bg-white border border-border flex items-center justify-center text-xl shrink-0">
-                 {templateIcon || <PackagePlus className="w-5 h-5 text-slate-400" />}
+             <div className="w-10 h-10 rounded-md bg-card border border-border flex items-center justify-center text-xl shrink-0">
+                 {templateIcon || <PackagePlus className="w-5 h-5 text-muted-foreground/70" />}
              </div>
              <div>
                 <h3 className="text-lg font-black text-foreground tracking-tight">
@@ -222,13 +222,13 @@ export function AddStockModal({
             <form id="add-stock-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               
               {/* Type toggle */}
-              <div className="bg-slate-50/50 rounded-lg p-1 flex items-center border border-slate-100 shadow-sm max-w-xs">
+              <div className="bg-muted/20 rounded-lg p-1 flex items-center border border-border shadow-sm max-w-xs">
                 <button
                   type="button"
                   onClick={() => form.setValue("mode", "individual")}
                   className={cn(
                     "flex-1 text-[11px] font-black uppercase tracking-widest py-2 px-3 rounded-sm transition-all",
-                    !isBatchMode ? "bg-white text-primary border border-border" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                    !isBatchMode ? "bg-card text-primary border border-border" : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                   )}
                 >
                   Unidad Única
@@ -238,7 +238,7 @@ export function AddStockModal({
                   onClick={() => form.setValue("mode", "batch")}
                   className={cn(
                     "flex-1 text-[11px] font-black uppercase tracking-widest py-2 px-3 rounded-sm transition-all",
-                    isBatchMode ? "bg-white text-primary border border-border" : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                    isBatchMode ? "bg-card text-primary border border-border" : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                   )}
                 >
                   Lote (Múltiples)
@@ -252,11 +252,11 @@ export function AddStockModal({
                   name="name"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2 space-y-1">
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                         Nombre Descriptivo <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Laptop HP Core i5" className="h-9 shadow-none rounded-none text-sm font-bold border-slate-300 focus-visible:ring-primary/20" {...field} />
+                        <Input placeholder="Ej. Laptop HP Core i5" className="h-9 shadow-none rounded-none text-sm font-bold border-border focus-visible:ring-primary/20" {...field} />
                       </FormControl>
                       <FormMessage className="text-[10px]" />
                     </FormItem>
@@ -268,9 +268,9 @@ export function AddStockModal({
                   name="brand"
                   render={({ field }) => (
                     <FormItem className="space-y-1">
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-slate-500">Marca general</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Marca general</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. HP" className="h-9 shadow-none rounded-none text-sm border-slate-300 focus-visible:ring-primary/20" {...field} />
+                        <Input placeholder="Ej. HP" className="h-9 shadow-none rounded-none text-sm border-border focus-visible:ring-primary/20" {...field} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -281,9 +281,9 @@ export function AddStockModal({
                   name="model"
                   render={({ field }) => (
                     <FormItem className="space-y-1">
-                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-slate-500">Modelo general</FormLabel>
+                      <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Modelo general</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. ProBook 450" className="h-9 shadow-none rounded-none text-sm border-slate-300 focus-visible:ring-primary/20" {...field} />
+                        <Input placeholder="Ej. ProBook 450" className="h-9 shadow-none rounded-none text-sm border-border focus-visible:ring-primary/20" {...field} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -300,7 +300,7 @@ export function AddStockModal({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 py-4 border-t border-slate-100 mt-6"
+                    className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 py-4 border-t border-border mt-6"
                   >
                     <div className="md:col-span-2 text-[10px] font-black uppercase tracking-widest text-primary mb-[-10px]">
                         Detalles Específicos de la Unidad
@@ -311,9 +311,9 @@ export function AddStockModal({
                       name="singleItem.serialNumber"
                       render={({ field }) => (
                         <FormItem className="md:col-span-2 space-y-1">
-                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-slate-500">Número de Serie</FormLabel>
+                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Número de Serie</FormLabel>
                           <FormControl>
-                            <Input placeholder="SN XXXXXXXXXX" className="h-9 shadow-none rounded-none text-sm font-mono border-slate-300 uppercase focus-visible:ring-primary/20" {...field} />
+                            <Input placeholder="SN XXXXXXXXXX" className="h-9 shadow-none rounded-none text-sm font-mono border-border uppercase focus-visible:ring-primary/20" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -324,10 +324,10 @@ export function AddStockModal({
                       name="singleItem.condition"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-slate-500">Condición Física</FormLabel>
+                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Condición Física</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-9 shadow-none rounded-none text-sm border-slate-300 font-medium capitalize focus:ring-primary/20">
+                              <SelectTrigger className="h-9 shadow-none rounded-none text-sm border-border font-medium capitalize focus:ring-primary/20">
                                 <SelectValue placeholder="Seleccione..." />
                               </SelectTrigger>
                             </FormControl>
@@ -348,10 +348,10 @@ export function AddStockModal({
                       name="singleItem.status"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-slate-500">Estado Logístico</FormLabel>
+                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Estado Logístico</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-9 shadow-none rounded-none text-sm border-slate-300 font-medium focus:ring-primary/20">
+                              <SelectTrigger className="h-9 shadow-none rounded-none text-sm border-border font-medium focus:ring-primary/20">
                                 <SelectValue placeholder="Seleccione..." />
                               </SelectTrigger>
                             </FormControl>
@@ -372,9 +372,9 @@ export function AddStockModal({
                       name="singleItem.notes"
                       render={({ field }) => (
                         <FormItem className="md:col-span-2 space-y-1">
-                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-slate-500">Notas Adicionales</FormLabel>
+                          <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Notas Adicionales</FormLabel>
                           <FormControl>
-                            <Input placeholder="Ej. Incluye cargador y bolso" className="h-9 shadow-none rounded-none text-sm border-slate-300 focus-visible:ring-primary/20" {...field} />
+                            <Input placeholder="Ej. Incluye cargador y bolso" className="h-9 shadow-none rounded-none text-sm border-border focus-visible:ring-primary/20" {...field} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -388,14 +388,14 @@ export function AddStockModal({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="py-4 border-t border-slate-100 mt-6 space-y-4"
+                    className="py-4 border-t border-border mt-6 space-y-4"
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-slate-50/50 rounded-md border border-slate-100">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-muted/20 rounded-md border border-border">
                         <div className="text-[10px] font-black uppercase tracking-widest text-primary shrink-0">
                             Tabla de Unidades ({fields.length})
                         </div>
                         <div className="flex flex-1 items-center gap-4 max-w-sm ml-auto">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 shrink-0">Cantidad Total:</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground shrink-0">Cantidad Total:</span>
                             <Slider 
                                 value={[fields.length]} 
                                 min={1} max={50} step={1}
@@ -410,9 +410,9 @@ export function AddStockModal({
                         </div>
                     </div>
 
-                    <div className="border border-slate-200 overflow-visible rounded-sm bg-white">
+                    <div className="border border-border overflow-visible rounded-sm bg-card">
                         {/* Table Header */}
-                        <div className="grid grid-cols-[30px_1fr_120px_100px_120px_40px] gap-2 items-center px-2 py-2 border-b border-slate-200 bg-slate-50 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                        <div className="grid grid-cols-[30px_1fr_120px_100px_120px_40px] gap-2 items-center px-2 py-2 border-b border-border bg-muted/20 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                             <span className="text-center">#</span>
                             <span>Nombre</span>
                             <span>Número de Serie</span>
@@ -422,10 +422,10 @@ export function AddStockModal({
                         </div>
                         
                         {/* Table Body */}
-                        <div className="divide-y divide-slate-100">
+                        <div className="divide-y divide-border">
                             {fields.map((fieldItem, index) => (
-                                <div key={fieldItem.id} className="grid grid-cols-[30px_1fr_120px_100px_120px_40px] gap-2 items-center p-2 hover:bg-slate-50/50 transition-colors">
-                                    <span className="text-[10px] font-bold text-slate-400 text-center">{index + 1}</span>
+                                <div key={fieldItem.id} className="grid grid-cols-[30px_1fr_120px_100px_120px_40px] gap-2 items-center p-2 hover:bg-muted/10 transition-colors">
+                                    <span className="text-[10px] font-bold text-muted-foreground/70 text-center">{index + 1}</span>
                                     
                                     <FormField
                                         control={form.control}
@@ -503,7 +503,7 @@ export function AddStockModal({
         </div>
 
         {/* ── Footer ────────────────────────────────────────────────────────── */}
-        <div className="shrink-0 p-5 border-t border-border bg-slate-50 flex items-center justify-between">
+        <div className="shrink-0 p-5 border-t border-border bg-muted/20 flex items-center justify-between">
           <Button
             type="button"
             variant="ghost"
@@ -511,7 +511,7 @@ export function AddStockModal({
                 form.reset();
                 onOpenChange(false);
             }}
-            className="font-black uppercase tracking-widest text-[10px] h-10 px-6 text-slate-500 hover:text-slate-700"
+            className="font-black uppercase tracking-widest text-[10px] h-10 px-6 text-muted-foreground hover:text-foreground"
           >
             Cancelar
           </Button>
