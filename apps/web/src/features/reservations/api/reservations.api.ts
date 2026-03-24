@@ -72,7 +72,14 @@ const BASE_URL = '/api/classroom-reservations';
 async function handleResponse<T>(res: Response): Promise<T> {
     if (!res.ok) {
         const error = await res.json().catch(() => ({}));
-        throw new Error(error.message || 'Error en la solicitud');
+        const errorMessage = error.message || error.error || `Error ${res.status}: ${res.statusText}`;
+        console.error('[Reservations API] Error:', {
+            url: res.url,
+            status: res.status,
+            statusText: res.statusText,
+            error: errorMessage,
+        });
+        throw new Error(errorMessage);
     }
     if (res.status === 204) return {} as T;
     const text = await res.text();

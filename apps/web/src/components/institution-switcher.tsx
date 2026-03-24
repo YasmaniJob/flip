@@ -69,6 +69,9 @@ export function InstitutionSwitcher() {
                 // Sincronizar con localStorage
                 localStorage.setItem('flip_last_institution_id', institutionId);
                 
+                // Delay para asegurar que la BD se actualice antes de recargar
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
                 // Recargar la página para actualizar toda la data
                 window.location.href = '/dashboard';
             } else {
