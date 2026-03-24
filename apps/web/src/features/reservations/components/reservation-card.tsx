@@ -55,12 +55,12 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
               ? "bg-orange-500/10 border-orange-500/30"
               : isToday
                 ? "bg-orange-500/[0.04] border-orange-500/10 hover:bg-orange-500/[0.08]"
-                : "bg-orange-50/40 border-slate-100 hover:bg-orange-50/60",
+                : "bg-orange-100/40 dark:bg-orange-900/20 border-orange-200/50 dark:border-orange-800/50 hover:bg-orange-100/60 dark:hover:bg-orange-900/30",
           )}
         >
           <div className="flex items-start gap-3">
             <div className="bg-orange-500/10 p-2 rounded-xl shrink-0 group-hover/card:scale-110 transition-transform">
-              <Users className="w-4 h-4 text-orange-500" />
+              <Users className="w-4 h-4 text-orange-500 dark:text-orange-400" />
             </div>
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-2">
@@ -71,7 +71,7 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
                   <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shrink-0" />
                 )}
               </div>
-              <span className="text-[10px] font-black text-orange-600/60 truncate mt-1 uppercase tracking-widest">
+              <span className="text-[10px] font-black text-orange-600 dark:text-orange-400 truncate mt-1 uppercase tracking-widest">
                 {slot.staff?.name}
               </span>
             </div>
@@ -83,16 +83,16 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
     const cardStyles = slot.attended
       ? isLive
         ? "bg-emerald-500/10 border-emerald-500/30"
-        : "bg-emerald-50/50 text-emerald-700 border-emerald-100/50 hover:bg-emerald-50"
+        : "bg-emerald-100/50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200/50 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
       : isInstitutional
         ? isLive
-          ? "bg-slate-200/80 border-slate-300"
-          : "bg-slate-100/40 text-slate-600 border-slate-200 hover:bg-slate-100/60"
+          ? "bg-muted border-border"
+          : "bg-muted/40 text-muted-foreground border-border hover:bg-muted/60"
         : isLive
           ? "bg-primary/10 border-primary/30"
           : isToday
             ? "bg-primary/[0.04] border-primary/10 hover:bg-primary/[0.08]"
-            : "bg-slate-50/30 text-foreground border-slate-100 hover:bg-slate-50/60";
+            : "bg-card/50 text-foreground border-border hover:bg-card";
 
     return (
       <div
@@ -108,9 +108,9 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
                 className={cn(
                   "p-2 rounded-xl shrink-0 border border-transparent transition-transform group-hover/card:scale-110",
                   slot.attended
-                    ? "bg-emerald-500/10 text-emerald-600"
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                     : isInstitutional
-                      ? "bg-slate-200/50 text-slate-600"
+                      ? "bg-muted/50 text-muted-foreground"
                       : "bg-primary/10 text-primary transition-all",
                 )}
               >
@@ -127,7 +127,7 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
                   <span
                     className={cn(
                       "text-sm font-black truncate leading-tight tracking-tight",
-                      slot.attended ? "text-emerald-900" : "text-foreground",
+                      slot.attended ? "text-emerald-900 dark:text-emerald-100" : "text-foreground",
                     )}
                   >
                     {slot.staff?.name}

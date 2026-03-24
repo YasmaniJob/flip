@@ -289,10 +289,10 @@ export function ReservacionesClient() {
 
             {/* Main Calendar Container - BOXED to match other pages */}
             <main className={cn(
-                "bg-white border border-border rounded-lg overflow-hidden transition-all",
+                "bg-card border border-border rounded-lg overflow-hidden transition-all",
                 isFetchingSlots && "opacity-50 grayscale-[0.5]"
             )}>
-                <div className="px-6 py-4 border-b border-border bg-slate-50/10 flex items-center justify-between select-none">
+                <div className="px-6 py-4 border-b border-border bg-muted/10 flex items-center justify-between select-none">
                     <Button 
                         variant="ghost" 
                         size="sm" 
@@ -328,19 +328,19 @@ export function ReservacionesClient() {
                 <div className="overflow-x-auto scrollbar-hide">
                     <table className="w-full border-spacing-0 border-collapse">
                         <thead>
-                            <tr className="bg-slate-50/5">
+                            <tr className="bg-muted/5">
                                 <th className="p-5 w-24 border-r border-border text-left">
                                     <span className="text-[9px] font-black text-muted-foreground/20 uppercase tracking-[0.2em]">H/D</span>
                                 </th>
                                 {weekDates.map((date, i) => {
                                     const isToday = date.toDateString() === todayDateString;
                                     return (
-                                        <th key={i} className={cn("p-4 text-center border-border/80", i !== weekDates.length - 1 && "border-r", isToday && "bg-primary/[0.02]")}>
+                                        <th key={i} className={cn("p-4 text-center border-border", i !== weekDates.length - 1 && "border-r", isToday && "bg-primary/[0.02]")}>
                                             <div className="inline-flex flex-col items-center">
-                                                <span className={cn("text-[9px] font-black uppercase tracking-[0.2em]", isToday ? "text-primary" : "text-muted-foreground/40")}>
+                                                <span className={cn("text-[9px] font-black uppercase tracking-[0.2em]", isToday ? "text-primary" : "text-muted-foreground")}>
                                                     {WEEKDAYS[i].slice(0, 3)}
                                                 </span>
-                                                <div className={cn("text-2xl font-black mt-1 tabular-nums tracking-tighter", isToday ? "text-primary" : "text-foreground/80")}>
+                                                <div className={cn("text-2xl font-black mt-1 tabular-nums tracking-tighter", isToday ? "text-primary" : "text-foreground")}>
                                                     {date.getDate()}
                                                 </div>
                                             </div>
@@ -354,9 +354,9 @@ export function ReservacionesClient() {
                                 const isLiveRow = isCurrentHour(hour.startTime, hour.endTime);
                                 return (
                                     <tr key={hour.id} className="group">
-                                        <td className={cn("px-4 py-7 border-t border-r border-border bg-slate-50/20 group-hover:bg-slate-50/40 transition-colors relative", isLiveRow && "bg-primary/[0.04]")}>
+                                        <td className={cn("px-4 py-7 border-t border-r border-border bg-muted/10 group-hover:bg-muted/20 transition-colors relative", isLiveRow && "bg-primary/[0.04]")}>
                                             <div className="flex flex-col items-end gap-1">
-                                                <span className={cn("text-[10px] font-black uppercase tracking-widest leading-none", isLiveRow ? "text-primary" : "text-muted-foreground/30")}>
+                                                <span className={cn("text-[10px] font-black uppercase tracking-widest leading-none", isLiveRow ? "text-primary" : "text-muted-foreground")}>
                                                     {hour.name}
                                                 </span>
                                             </div>
@@ -372,7 +372,7 @@ export function ReservacionesClient() {
                                             const isLastCol = i === weekDates.length - 1;
 
                                             if (hour.isBreak) return (
-                                                <td key={i} className={cn("p-2 border-t border-border/50 bg-slate-50/[0.08]", !isLastCol && "border-r")}>
+                                                <td key={i} className={cn("p-2 border-t border-border", !isLastCol && "border-r")}>
                                                     <div className="h-full flex items-center justify-center opacity-10 font-black text-xs tracking-[1em] uppercase -rotate-90 text-muted-foreground/50">RECESO</div>
                                                 </td>
                                             );
@@ -380,7 +380,7 @@ export function ReservacionesClient() {
                                             if (slot) {
                                                 const canDrag = canManage || (user?.id === slot.staff?.id);
                                                 return (
-                                                    <td key={i} className={cn("p-2 border-t border-border/50", !isLastCol && "border-r", isToday && "bg-primary/[0.02]")}>
+                                                    <td key={i} className={cn("p-2 border-t border-border", !isLastCol && "border-r", isToday && "bg-primary/[0.02]")}>
                                                         <ReservationCard 
                                                             slot={slot}
                                                             isToday={isToday}
