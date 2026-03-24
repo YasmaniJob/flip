@@ -308,7 +308,7 @@ export function WizardStep1({
       onToggleFullscreen={onToggleFullscreen}
     >
       {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div className="shrink-0 px-8 pt-5 pb-3 border-b border-border bg-slate-50/30">
+      <div className="shrink-0 px-8 pt-5 pb-3 border-b border-border bg-muted/10">
         <div className="flex items-center justify-between mb-3">
           <div>
             <h3 className="text-sm font-black text-foreground uppercase tracking-tight">
@@ -329,7 +329,7 @@ export function WizardStep1({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar subcategoría..."
-            className="w-full h-9 pl-9 pr-9 text-xs bg-white border border-border rounded-none shadow-none focus:outline-none focus:border-primary/40 placeholder:text-muted-foreground/50 font-medium"
+            className="w-full h-9 pl-9 pr-9 text-xs bg-card border border-border rounded-none shadow-none focus:outline-none focus:border-primary/40 placeholder:text-muted-foreground/50 font-medium"
           />
           {searchQuery && (
             <button
@@ -395,9 +395,9 @@ export function WizardStep1({
                               ? "border-primary bg-primary/5"
                               : item.inDb
                                 // In DB but not selected: subtle green tint, solid border
-                                ? "border-emerald-200 bg-emerald-50/40 hover:border-primary/30 hover:bg-primary/5"
+                                ? "border-emerald-200 bg-emerald-50/40 dark:border-emerald-800/50 dark:bg-emerald-900/20 hover:border-primary/30 hover:bg-primary/5"
                                 // Not in DB: dashed border, muted
-                                : "border-dashed border-border bg-white/50 hover:border-primary/40 hover:bg-slate-50/30",
+                                : "border-dashed border-border bg-card/50 hover:border-primary/40 hover:bg-muted/20",
                           )}
                         >
                           {/* Top-right indicator */}
@@ -413,7 +413,7 @@ export function WizardStep1({
                             </div>
                           ) : (
                             // Not in DB: empty box hint on hover
-                            <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-none border border-border bg-white opacity-0 group-hover:opacity-100 transition-opacity shadow-none" />
+                            <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-none border border-border bg-card opacity-0 group-hover:opacity-100 transition-opacity shadow-none" />
                           )}
 
                           <div className="flex flex-col items-center gap-1.5 pt-1">
@@ -423,7 +423,7 @@ export function WizardStep1({
                                 isSelected
                                   ? "bg-primary/10 border-primary/20"
                                   : item.inDb
-                                    ? "bg-emerald-50 border-emerald-200"
+                                    ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800/50"
                                     : "bg-muted/40 border-border/50",
                               )}
                             >
@@ -447,7 +447,7 @@ export function WizardStep1({
                                 seleccionado
                               </span>
                             ) : item.inDb ? (
-                              <span className="text-[7px] font-black uppercase tracking-widest text-emerald-600">
+                              <span className="text-[7px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
                                 ● activo
                               </span>
                             ) : null}
@@ -473,7 +473,7 @@ export function WizardStep1({
       </div>
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <div className="shrink-0 p-5 border-t border-border bg-slate-50/50 flex items-center justify-between z-10">
+      <div className="shrink-0 p-5 border-t border-border bg-muted/10 flex items-center justify-between z-10">
         <Button
           variant="outline"
           onClick={onCancel}
@@ -489,7 +489,7 @@ export function WizardStep1({
               </span>
               <button
                 onClick={clearSelection}
-                className="p-1 hover:bg-slate-100 transition-colors"
+                className="p-1 hover:bg-muted/30 transition-colors"
                 title="Limpiar selección"
               >
                 <X className="h-3 w-3 text-muted-foreground" />
