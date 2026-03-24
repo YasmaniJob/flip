@@ -31,7 +31,7 @@ export function useCategories() {
   return useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
-      const response = await api.get<Category[]>("/api/categories");
+      const response = await api.get<Category[]>("/categories");
       return response;
     },
   });
@@ -44,7 +44,7 @@ export function useCreateCategory() {
 
   return useMutation({
     mutationFn: async (data: CreateCategoryInput) => {
-      return await api.post<Category>("/api/categories", data);
+      return await api.post<Category>("/categories", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
@@ -63,7 +63,7 @@ export function useUpdateCategory() {
 
   return useMutation({
     mutationFn: async ({ id, ...data }: UpdateCategoryInput) => {
-      return await api.put<Category>(`/api/categories/${id}`, data);
+      return await api.put<Category>(`/categories/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
@@ -82,7 +82,7 @@ export function useDeleteCategory() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      return await api.delete(`/api/categories/${id}`);
+      return await api.delete(`/categories/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });

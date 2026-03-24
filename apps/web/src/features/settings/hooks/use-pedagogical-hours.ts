@@ -18,7 +18,7 @@ export function usePedagogicalHours() {
     const api = useApiClient();
     return useQuery<PedagogicalHour[]>({
         queryKey: ['pedagogical-hours'],
-        queryFn: () => api.get<PedagogicalHour[]>('/api/pedagogical-hours'),
+        queryFn: () => api.get<PedagogicalHour[]>('/pedagogical-hours'),
         staleTime: 30 * 60 * 1000, // 30 minutes - pedagogical hours rarely change
         gcTime: 60 * 60 * 1000, // 1 hour in cache
     });
@@ -30,7 +30,7 @@ export function useCreatePedagogicalHour() {
 
     return useMutation({
         mutationFn: (data: Omit<PedagogicalHour, 'id' | 'active'>) =>
-            api.post<PedagogicalHour>('/api/pedagogical-hours', data),
+            api.post<PedagogicalHour>('/pedagogical-hours', data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['pedagogical-hours'] });
             showSuccess('Hora pedagógica creada correctamente');
@@ -47,7 +47,7 @@ export function useUpdatePedagogicalHour() {
 
     return useMutation({
         mutationFn: ({ id, ...data }: Partial<PedagogicalHour> & { id: string }) =>
-            api.put<PedagogicalHour>(`/api/pedagogical-hours/${id}`, data),
+            api.put<PedagogicalHour>(`/pedagogical-hours/${id}`, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['pedagogical-hours'] });
             showSuccess('Hora pedagógica actualizada correctamente');
@@ -63,7 +63,7 @@ export function useDeletePedagogicalHour() {
     const api = useApiClient();
 
     return useMutation({
-        mutationFn: (id: string) => api.delete(`/api/pedagogical-hours/${id}`),
+        mutationFn: (id: string) => api.delete(`/pedagogical-hours/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['pedagogical-hours'] });
             showSuccess('Hora pedagógica eliminada correctamente');

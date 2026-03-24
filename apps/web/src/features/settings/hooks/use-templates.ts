@@ -33,8 +33,8 @@ export function useTemplates(categoryId?: string) {
     queryKey: categoryId ? ["templates", categoryId] : ["templates"],
     queryFn: async () => {
       const url = categoryId
-        ? `/api/resource-templates?categoryId=${categoryId}`
-        : "/api/resource-templates";
+        ? `/resource-templates?categoryId=${categoryId}`
+        : "/resource-templates";
       const response = await api.get<ResourceTemplate[]>(url);
       return response;
     },
@@ -48,7 +48,7 @@ export function useCreateTemplate() {
 
   return useMutation({
     mutationFn: async (data: CreateTemplateInput) => {
-      return await api.post<ResourceTemplate>("/api/resource-templates", data);
+      return await api.post<ResourceTemplate>("/resource-templates", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["templates"] });
@@ -68,7 +68,7 @@ export function useUpdateTemplate() {
   return useMutation({
     mutationFn: async ({ id, ...data }: UpdateTemplateInput) => {
       return await api.put<ResourceTemplate>(
-        `/api/resource-templates/${id}`,
+        `/resource-templates/${id}`,
         data,
       );
     },
@@ -89,7 +89,7 @@ export function useDeleteTemplate() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      return await api.delete(`/api/resource-templates/${id}`);
+      return await api.delete(`/resource-templates/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["templates"] });
