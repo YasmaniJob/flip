@@ -278,7 +278,7 @@ export function ResourceDialog({ resource, categories = [], loading, onSave, onC
                                                         "flex items-center justify-center gap-2 py-2 px-3 rounded-none border transition-all duration-200",
                                                         isSelected
                                                             ? selectedColorClass
-                                                            : "bg-background border-border text-muted-foreground/60 hover:border-primary/50 hover:bg-slate-50"
+                                                            : "bg-background border-border text-muted-foreground/60 hover:border-primary/50 hover:bg-muted/20"
                                                     )}
                                                 >
                                                     <span className={cn(
@@ -331,7 +331,7 @@ export function ResourceDialog({ resource, categories = [], loading, onSave, onC
                                                         "flex-1 flex flex-col items-center justify-center gap-1 py-1.5 px-2 rounded-none border transition-all duration-200",
                                                         isSelected
                                                             ? selectedColorClass
-                                                            : "bg-background border-border text-muted-foreground/60 hover:border-primary/50 hover:bg-slate-50"
+                                                            : "bg-background border-border text-muted-foreground/60 hover:border-primary/50 hover:bg-muted/20"
                                                     )}
                                                 >
                                                     <div className="flex gap-0.5">

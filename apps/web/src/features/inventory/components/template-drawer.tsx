@@ -71,12 +71,12 @@ export function TemplateDrawer({
                 animate={{ x: 0, boxShadow: "-10px 0 30px rgba(0,0,0,0.1)" }}
                 exit={{ x: "100%", boxShadow: "-10px 0 30px rgba(0,0,0,0)" }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="fixed inset-y-0 right-0 z-50 w-full md:w-[85vw] lg:w-[75vw] xl:w-[65vw] max-w-6xl bg-white border-l border-border flex flex-col shadow-2xl"
+                className="fixed inset-y-0 right-0 z-50 w-full md:w-[85vw] lg:w-[75vw] xl:w-[65vw] max-w-6xl bg-card border-l border-border flex flex-col shadow-2xl"
             >
                 {/* ── Header ────────────────────────────────────────────────── */}
-                <div className="shrink-0 px-6 py-5 border-b border-border bg-slate-50 flex items-start justify-between gap-4">
+                <div className="shrink-0 px-6 py-5 border-b border-border bg-muted/20 flex items-start justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center justify-center text-2xl shrink-0">
+                        <div className="w-12 h-12 rounded-lg bg-card border border-border shadow-sm flex items-center justify-center text-2xl shrink-0">
                             {template.templateIcon || template.categoryIcon || '📦'}
                         </div>
                         <div>
@@ -105,7 +105,7 @@ export function TemplateDrawer({
                                 <span className="text-[9px] uppercase tracking-widest opacity-60">Total Unidades</span>
                                 <span className="text-lg text-foreground leading-none">{template.totalStock}</span>
                             </div>
-                            <div className="h-8 w-px bg-slate-200" />
+                            <div className="h-8 w-px bg-border" />
                             <div className="flex flex-col items-end">
                                 <span className="text-[9px] uppercase tracking-widest opacity-60">Disponibles</span>
                                 <span className="text-lg text-emerald-600 leading-none">{template.available}</span>
@@ -122,7 +122,7 @@ export function TemplateDrawer({
 
                         <button 
                             onClick={onClose}
-                            className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-slate-200/50 text-slate-500 transition-colors ml-2"
+                            className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-muted/50 text-muted-foreground transition-colors ml-2"
                         >
                             <X className="h-5 w-5" />
                         </button>
@@ -130,7 +130,7 @@ export function TemplateDrawer({
                 </div>
 
                 {/* ── Content ───────────────────────────────────────────────── */}
-                <div className="flex-1 overflow-hidden flex flex-col bg-white">
+                <div className="flex-1 overflow-hidden flex flex-col bg-card">
                     {isLoading ? (
                         <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/50 gap-4">
                             <Package className="w-12 h-12 animate-pulse" />
@@ -140,8 +140,8 @@ export function TemplateDrawer({
                         </div>
                     ) : templateResources.length === 0 ? (
                         <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                            <div className="w-20 h-20 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mb-6">
-                                <FileText className="w-8 h-8 text-slate-300" />
+                            <div className="w-20 h-20 bg-muted/20 border border-border rounded-full flex items-center justify-center mb-6">
+                                <FileText className="w-8 h-8 text-muted-foreground/40" />
                             </div>
                             <h3 className="text-lg font-black text-foreground mb-2">No hay unidades registradas</h3>
                             <p className="text-sm text-muted-foreground max-w-md mb-8 leading-relaxed">

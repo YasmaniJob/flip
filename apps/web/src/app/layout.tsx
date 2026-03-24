@@ -42,7 +42,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className={`${nunito.variable} font-sans antialiased bg-slate-50`}>
+      <body className={`${nunito.variable} font-sans antialiased bg-background`}>
         <QueryProvider>
           <ThemeProvider>
             <BrandColorProvider>

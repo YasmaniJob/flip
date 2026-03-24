@@ -21,7 +21,7 @@ export function InventoryStats({ resources }: InventoryStatsProps) {
     const retiredPercent = (stats.retired / stats.total) * 100 || 0;
 
     return (
-        <div className="flex flex-col md:flex-row items-stretch bg-white border border-border rounded-none mb-6 h-auto md:h-16 divide-y md:divide-y-0 md:divide-x divide-border overflow-hidden">
+        <div className="flex flex-col md:flex-row items-stretch bg-card border border-border rounded-none mb-6 h-auto md:h-16 divide-y md:divide-y-0 md:divide-x divide-border overflow-hidden">
             {/* Left: Total */}
             <div className="px-6 py-3 flex flex-col justify-center min-w-[140px]">
                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 leading-none mb-1.5">Recursos</span>
@@ -32,8 +32,8 @@ export function InventoryStats({ resources }: InventoryStatsProps) {
             </div>
 
             {/* Middle: Sparkline Bar */}
-            <div className="flex-1 px-8 py-4 flex flex-col justify-center min-w-[200px] bg-slate-50/30">
-                <div className="h-2.5 w-full bg-slate-100 rounded-none overflow-hidden flex gap-[1px]">
+            <div className="flex-1 px-8 py-4 flex flex-col justify-center min-w-[200px] bg-muted/20">
+                <div className="h-2.5 w-full bg-muted/30 rounded-none overflow-hidden flex gap-[1px]">
                     <div
                         className="h-full bg-emerald-500 transition-all duration-500"
                         style={{ width: `${availablePercent}%` }}
