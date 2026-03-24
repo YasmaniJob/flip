@@ -13,7 +13,7 @@ export async function DELETE(
 ) {
   try {
     const { user } = await requireAuth(request);
-    const institutionId = getInstitutionId(user);
+    const institutionId = await getInstitutionId(user);
     const { attendanceId } = await params;
 
     // Get attendance with reservation to verify institution

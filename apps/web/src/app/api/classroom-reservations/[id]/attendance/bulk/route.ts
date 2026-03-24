@@ -15,7 +15,7 @@ export async function PUT(
 ) {
   try {
     const { user } = await requireAuth(request);
-    const institutionId = getInstitutionId(user);
+    const institutionId = await getInstitutionId(user);
     const { id } = await params;
 
     const body = await request.json();

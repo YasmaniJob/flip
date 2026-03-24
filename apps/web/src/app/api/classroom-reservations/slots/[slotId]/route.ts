@@ -14,7 +14,7 @@ export async function DELETE(
 ) {
   try {
     const { user } = await requireAuth(request);
-    const institutionId = getInstitutionId(user);
+    const institutionId = await getInstitutionId(user);
     const { slotId } = await params;
 
     // Get slot with reservation
