@@ -68,21 +68,27 @@ export async function POST(request: NextRequest) {
       targetInstitutionId = staffRecords[0].institutionId;
       console.log('[Lazy Register] Single institution detected:', targetInstitutionId);
     } else if (selectedInstitutionId) {
-      // Usuario ya eligió institución
+      // Usuario proporcionó un ID (desde localStorage o modal)
+      // VALIDACIÓN DE SEGURIDAD: Verificar que el ID sea válido para este usuario
       const validSelection = staffRecords.find(
         (s) => s.institutionId === selectedInstitutionId
       );
       
       if (!validSelection) {
-        console.error('[Lazy Register] Invalid institution selection');
-        return NextResponse.json(
-          { error: 'Institución seleccionada no válida' },
-          { status: 400 }
-        );
+        // ID inválido o manipulado - ignorar y requerir selección manual
+        console.warn('[Lazy Register] Invalid or outdated institution ID, requiring selection');
+        return NextResponse.json({
+          requiresSelection: true,
+          institutions: staffRecords.map((s) => ({
+            id: s.institutionId,
+            name: s.institution.name,
+            nivel: s.institution.nivel,
+          })),
+        });
       }
       
       targetInstitutionId = selectedInstitutionId;
-      console.log('[Lazy Register] Institution selected by user:', targetInstitutionId);
+      console.log('[Lazy Register] Valid institution ID from preference:', targetInstitutionId);
     } else {
       // Múltiples instituciones, requiere selección
       console.log('[Lazy Register] Multiple institutions, requiring selection');

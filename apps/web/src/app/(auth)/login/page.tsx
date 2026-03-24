@@ -74,6 +74,9 @@ export default function LoginPage() {
                     localStorage.setItem("flip:last-institution-id", lazyRegisterData.user.institutionId);
                 }
                 
+                // Guardar preferencia de institución seleccionada
+                localStorage.setItem('flip_last_institution_id', institutionId);
+                
                 sileo.success({
                     title: "¡Bienvenido!",
                     description: "Acceso verificado correctamente.",
@@ -131,12 +134,16 @@ export default function LoginPage() {
                 if (result.error) {
                     // Si falla, intentar lazy registration (DNI como contraseña)
                     try {
+                        // Leer preferencia de institución guardada
+                        const savedInstitutionId = localStorage.getItem('flip_last_institution_id');
+                        
                         const lazyRegisterRes = await fetch("/api/auth/lazy-register", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
                                 email: values.email,
-                                dni: values.password, // El password es el DNI
+                                dni: values.password,
+                                selectedInstitutionId: savedInstitutionId || undefined,
                             }),
                         });
 
