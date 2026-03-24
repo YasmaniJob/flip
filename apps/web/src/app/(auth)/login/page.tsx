@@ -15,12 +15,25 @@ import { AuthHeader } from "@/components/auth/AuthHeader";
 import { SocialAuth } from "@/components/auth/SocialAuth";
 import { loginSchema, LoginValues } from "@/lib/auth-schemas";
 import { useAuthBranding } from "@/lib/use-auth-branding";
+import { InstitutionSelectorModal } from "@/components/auth/institution-selector-modal";
+
+interface Institution {
+    id: string;
+    name: string;
+    nivel?: string;
+}
 
 export default function LoginPage() {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [showPassword, setShowPassword] = useState(false);
     const { brand, institutionName, logoUrl } = useAuthBranding();
+    
+    // Estado para el modal de selección de institución
+    const [showInstitutionSelector, setShowInstitutionSelector] = useState(false);
+    const [institutions, setInstitutions] = useState<Institution[]>([]);
+    const [pendingCredentials, setPendingCredentials] = useState<{ email: string; dni: string } | null>(null);
+    const [isSelectingInstitution, setIsSelectingInstitution] = useState(false);
 
     const subtitle = institutionName 
         ? `Bienvenido a ${institutionName}` 
@@ -37,6 +50,74 @@ export default function LoginPage() {
             password: "",
         },
     });
+
+    const handleInstitutionSelect = async (institutionId: string) => {
+        if (!pendingCredentials) return;
+
+        setIsSelectingInstitution(true);
+
+        try {
+            const lazyRegisterRes = await fetch("/api/auth/lazy-register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: pendingCredentials.email,
+                    dni: pendingCredentials.dni,
+                    selectedInstitutionId: institutionId,
+                }),
+            });
+
+            const lazyRegisterData = await lazyRegisterRes.json();
+
+            if (lazyRegisterRes.ok && lazyRegisterData.success) {
+                if (lazyRegisterData.user?.institutionId) {
+                    localStorage.setItem("flip:last-institution-id", lazyRegisterData.user.institutionId);
+                }
+                
+                sileo.success({
+                    title: "¡Bienvenido!",
+                    description: "Acceso verificado correctamente.",
+                    fill: "#dcfce7",
+                    styles: {
+                        title: "!text-green-900 font-bold",
+                        description: "!text-green-800 font-medium",
+                        badge: "!bg-green-500 !text-white"
+                    }
+                });
+                
+                await new Promise(resolve => setTimeout(resolve, 100));
+                window.location.href = lazyRegisterData.redirectTo || "/dashboard";
+            } else {
+                setIsSelectingInstitution(false);
+                setShowInstitutionSelector(false);
+                
+                sileo.error({
+                    title: "Error al seleccionar institución",
+                    description: lazyRegisterData.error || "No se pudo completar el acceso.",
+                    fill: "#fee2e2",
+                    styles: {
+                        title: "!text-red-900 font-bold",
+                        description: "!text-red-800 font-medium",
+                        badge: "!bg-red-500 !text-white"
+                    }
+                });
+            }
+        } catch (error) {
+            setIsSelectingInstitution(false);
+            setShowInstitutionSelector(false);
+            
+            sileo.error({
+                title: "Error de conexión",
+                description: "No se pudo completar la selección. Intenta nuevamente.",
+                fill: "#fee2e2",
+                styles: {
+                    title: "!text-red-900 font-bold",
+                    description: "!text-red-800 font-medium",
+                    badge: "!bg-red-500 !text-white"
+                }
+            });
+        }
+    };
 
     const onSubmit = (values: LoginValues) => {
         startTransition(async () => {
@@ -61,24 +142,18 @@ export default function LoginPage() {
 
                         const lazyRegisterData = await lazyRegisterRes.json();
 
-                        // PROBLEMA 2 CORREGIDO: Manejar caso de múltiples instituciones
+                        // Manejar caso de múltiples instituciones
                         if (lazyRegisterData.requiresSelection) {
-                            // TODO: mostrar modal selector de institución
-                            // Por ahora, mostrar mensaje informativo
-                            sileo.error({
-                                title: "Múltiples instituciones detectadas",
-                                description: "Contacta al administrador para configurar tu acceso principal.",
-                                fill: "#fef3c7",
-                                styles: {
-                                    title: "!text-yellow-900 font-bold",
-                                    description: "!text-yellow-800 font-medium",
-                                    badge: "!bg-yellow-500 !text-white"
-                                }
+                            setPendingCredentials({
+                                email: values.email,
+                                dni: values.password,
                             });
+                            setInstitutions(lazyRegisterData.institutions || []);
+                            setShowInstitutionSelector(true);
                             return;
                         }
 
-                        // PROBLEMA 1 CORREGIDO: No hacer segundo signIn, la sesión ya está creada
+                        // Si solo hay una institución, proceder normalmente
                         if (lazyRegisterRes.ok && lazyRegisterData.success) {
                             // La sesión ya está creada por el endpoint
                             if (lazyRegisterData.user?.institutionId) {
@@ -105,7 +180,6 @@ export default function LoginPage() {
                         }
 
                         // Si lazy register falló, mostrar el mensaje específico
-                        // PROBLEMA 3 CORREGIDO: Usar .error en lugar de .message
                         if (lazyRegisterRes.status === 404) {
                             sileo.error({
                                 title: "Acceso no autorizado",
@@ -299,6 +373,13 @@ export default function LoginPage() {
                 <span className="text-xs text-muted-foreground/30">·</span>
                 <span className="text-xs text-muted-foreground/50">v0.0.1</span>
             </div>
+
+            <InstitutionSelectorModal
+                open={showInstitutionSelector}
+                institutions={institutions}
+                onSelect={handleInstitutionSelect}
+                isLoading={isSelectingInstitution}
+            />
         </div>
     );
 }
