@@ -166,7 +166,7 @@ export function TemplatesSettings() {
                     <Button
                         variant="outline"
                         onClick={() => setShowImportDialog(true)}
-                        className="bg-white hover:bg-muted/50 text-foreground border-border rounded-md shadow-none font-black uppercase tracking-widest text-[11px] h-9"
+                        className="bg-card hover:bg-muted/50 text-foreground border-border rounded-md shadow-none font-black uppercase tracking-widest text-[11px] h-9"
                     >
                         <Sparkles className="h-3.5 w-3.5 mr-2 text-primary" />
                         Importar Templates
@@ -210,7 +210,7 @@ export function TemplatesSettings() {
                         <Button
                             variant="outline"
                             onClick={() => setShowImportDialog(true)}
-                            className="bg-white border-border text-foreground hover:bg-muted/50 rounded-md shadow-none font-black uppercase tracking-widest text-[11px] h-10 px-6"
+                            className="bg-card border-border text-foreground hover:bg-muted/50 rounded-md shadow-none font-black uppercase tracking-widest text-[11px] h-10 px-6"
                         >
                             <Sparkles className="h-3.5 w-3.5 mr-2 text-primary" />
                             Importar Predeterminados

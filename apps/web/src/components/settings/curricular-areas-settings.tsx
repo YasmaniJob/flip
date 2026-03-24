@@ -158,7 +158,7 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
                 <Button
                     variant="outline"
                     onClick={() => setShowImportDialog(true)}
-                    className="bg-white hover:bg-muted/50 text-foreground border-border rounded-md shadow-none font-black uppercase tracking-widest text-[11px] h-9"
+                    className="bg-card hover:bg-muted/50 text-foreground border-border rounded-md shadow-none font-black uppercase tracking-widest text-[11px] h-9"
                 >
                     <Sparkles className="h-3.5 w-3.5 mr-2 text-primary" />
                     Importar Áreas
@@ -188,7 +188,7 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
                         <Button
                             variant="outline"
                             onClick={() => setShowImportDialog(true)}
-                            className="bg-white border-border text-foreground hover:bg-muted/50 rounded-md shadow-none font-black uppercase tracking-widest text-[11px] h-10 px-6"
+                            className="bg-card border-border text-foreground hover:bg-muted/50 rounded-md shadow-none font-black uppercase tracking-widest text-[11px] h-10 px-6"
                         >
                             <Sparkles className="h-3.5 w-3.5 mr-2 text-primary" />
                             Importar CNEB
@@ -211,7 +211,7 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
                         >
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-md bg-white border border-border flex items-center justify-center text-primary shadow-none">
+                                    <div className="w-9 h-9 rounded-md bg-card border border-border flex items-center justify-center text-primary shadow-none">
                                         <BookOpen className="h-4 w-4" />
                                     </div>
                                     <div className="space-y-1">

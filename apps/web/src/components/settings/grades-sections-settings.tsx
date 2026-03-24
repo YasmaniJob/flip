@@ -166,7 +166,7 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
                     )}
                 >
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-md bg-white border border-border shadow-none text-primary">
+                        <div className="p-2 rounded-md bg-card border border-border shadow-none text-primary">
                             <GraduationCap className="h-4 w-4" />
                         </div>
                         <span className="font-black text-sm uppercase tracking-tight text-foreground">{levelLabel}</span>
