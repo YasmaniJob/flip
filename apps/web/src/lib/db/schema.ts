@@ -343,8 +343,10 @@ export const classrooms = pgTable('classrooms', {
 // ============================================
 // CLASSROOM RESERVATIONS
 // ============================================
+// CLASSROOM RESERVATIONS
+// ============================================
 export const classroomReservations = pgTable('classroom_reservations', {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
     institutionId: text('institution_id').references(() => institutions.id).notNull(),
     classroomId: text('classroom_id').references(() => classrooms.id).notNull(),
     staffId: text('staff_id').references(() => staff.id).notNull(),
@@ -367,7 +369,7 @@ export const classroomReservations = pgTable('classroom_reservations', {
 // RESERVATION SLOTS (date + pedagogical hour)
 // ============================================
 export const reservationSlots = pgTable('reservation_slots', {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
     reservationId: text('reservation_id').references(() => classroomReservations.id).notNull(),
     institutionId: text('institution_id').references(() => institutions.id).notNull(),
     classroomId: text('classroom_id').references(() => classrooms.id).notNull(),

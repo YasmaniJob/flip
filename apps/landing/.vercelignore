@@ -1,0 +1,7 @@
+# Ignore everything outside this app
+../../*
+!../../pnpm-workspace.yaml
+!../../pnpm-lock.yaml
+!../../package.json
+!../../node_modules
+!../../apps/landing

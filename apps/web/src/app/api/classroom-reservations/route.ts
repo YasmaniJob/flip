@@ -18,6 +18,7 @@ import { successResponse, paginatedResponse, errorResponse } from '@/lib/utils/r
 import { NotFoundError } from '@/lib/utils/errors';
 import { validateSlotsNoConflicts, normalizeDate } from '@/lib/utils/reservations';
 import { eq, desc, and, asc, gte, lte, sql } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
 
 // GET /api/classroom-reservations - List reservations with filters
 // Updated: 2026-03-22 12:30 - Optimized with single query using Drizzle relations
@@ -153,6 +154,7 @@ export async function POST(request: NextRequest) {
       const [reservation] = await tx
         .insert(classroomReservations)
         .values({
+          id: randomUUID(),
           institutionId,
           staffId: data.staffId,
           classroomId: data.classroomId,
@@ -168,6 +170,7 @@ export async function POST(request: NextRequest) {
 
       // Insert slots
       const slotsData = data.slots.map((slot) => ({
+        id: randomUUID(),
         reservationId: reservation.id,
         institutionId,
         classroomId: data.classroomId!,
