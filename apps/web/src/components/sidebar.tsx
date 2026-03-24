@@ -42,6 +42,7 @@ import {
   School,
 } from "lucide-react";
 import { InstitutionHeader } from "@/components/institution-header";
+import { InstitutionSwitcher } from "@/components/institution-switcher";
 
 interface MenuItem {
   icon: LucideIcon;
@@ -509,6 +510,13 @@ export function Sidebar() {
             brandColor={getBrandColor(brandColor)}
             collapsed={collapsed}
           />
+        </div>
+      )}
+
+      {/* Institution Switcher */}
+      {!collapsed && user?.institutionId && (
+        <div className="border-b border-sidebar-border/60 p-2">
+          <InstitutionSwitcher />
         </div>
       )}
 
