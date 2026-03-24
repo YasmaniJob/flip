@@ -42,8 +42,13 @@ export async function hasSlotConflict(
   pedagogicalHourId: string,
   excludeReservationId?: string
 ): Promise<boolean> {
-  const normalizedDate = new Date(date);
-  normalizedDate.setHours(0, 0, 0, 0);
+  // Ensure date is normalized to UTC midnight
+  const normalizedDate = new Date(Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    0, 0, 0, 0
+  ));
 
   const conditions = [
     eq(reservationSlots.classroomId, classroomId),
@@ -94,10 +99,21 @@ export async function validateSlotsNoConflicts(
 }
 
 /**
- * Normalize date string to Date object with time set to 00:00:00
+ * Normalize date string to Date object with time set to 00:00:00 UTC
+ * Handles both ISO 8601 full format and simple YYYY-MM-DD format
  */
 export function normalizeDate(dateStr: string): Date {
+  // Extract just the date part if it's ISO format
+  const dateMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  
+  if (dateMatch) {
+    const [, year, month, day] = dateMatch.map(Number);
+    // Create date in UTC to avoid timezone issues
+    return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+  }
+  
+  // Fallback for other formats
   const date = new Date(dateStr);
-  date.setHours(0, 0, 0, 0);
+  date.setUTCHours(0, 0, 0, 0);
   return date;
 }

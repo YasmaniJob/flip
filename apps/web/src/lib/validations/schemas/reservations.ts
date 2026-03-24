@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isoDateTimeSchema, optionalIsoDateTimeSchema, optionalSimpleDateSchema } from '../date-schemas';
+import { isoDateTimeSchema, flexibleDateSchema, optionalIsoDateTimeSchema, optionalSimpleDateSchema } from '../date-schemas';
 
 // Reservation type enum
 export const reservationTypeEnum = z.enum(['class', 'workshop']);
@@ -16,7 +16,7 @@ export const taskStatusEnum = z.enum(['pending', 'completed']);
 // Slot schema (for creating reservation)
 export const slotSchema = z.object({
   pedagogicalHourId: z.string().uuid('ID de hora pedagógica inválido'),
-  date: isoDateTimeSchema,
+  date: flexibleDateSchema,
 });
 
 // Create reservation
@@ -44,7 +44,7 @@ export const reservationsQuerySchema = z.object({
 
 // Reschedule single slot
 export const rescheduleSlotSchema = z.object({
-  newDate: isoDateTimeSchema,
+  newDate: flexibleDateSchema,
   newPedagogicalHourId: z.string().uuid('ID de hora pedagógica inválido'),
 });
 

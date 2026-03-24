@@ -17,7 +17,7 @@ export function useReservationsByDateRange(startDate: string, endDate: string, c
     return useQuery({
         queryKey: reservationKeys.byDateRange(startDate, endDate, classroomId, shift),
         queryFn: () => ReservationsApi.getByDateRange(startDate, endDate, classroomId, shift),
-        staleTime: 5 * 60 * 1000, // 5 minutos - las reservas no cambian tan rápido
+        staleTime: 10 * 60 * 1000, // 10 minutos - las reservas no cambian tan rápido
         enabled: !!startDate && !!endDate && !!classroomId,
         placeholderData: (previousData) => previousData,
     });
@@ -115,11 +115,12 @@ export function useRescheduleBlock() {
             slots: { date: string; pedagogicalHourId: string }[];
         }) => ReservationsApi.rescheduleBlock(reservationId, slots),
         onSuccess: () => {
+            // Invalidate but don't wait - refetch happens in background
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
-            toast.success('Reprogramación de bloque exitosa');
+            toast.success('Reprogramación exitosa');
         },
         onError: (error: Error) => {
-            toast.error(error.message || 'Error al reprogramar el bloque');
+            toast.error(error.message || 'Error al reprogramar');
         },
     });
 }

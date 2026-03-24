@@ -52,25 +52,39 @@ export async function GET(request: NextRequest) {
     }
 
     // Get reservations WITH all nested relations in a single query
+    // Only select active reservations to reduce data
+    conditions.push(eq(classroomReservations.status, 'active'));
+    
     const reservationsWithRelations = await db.query.classroomReservations.findMany({
       where: and(...conditions),
       with: {
-        classroom: true,
-        staff: true,
-        grade: true,
-        section: true,
-        curricularArea: true,
+        classroom: {
+          columns: { id: true, name: true }
+        },
+        staff: {
+          columns: { id: true, name: true }
+        },
+        grade: {
+          columns: { id: true, name: true }
+        },
+        section: {
+          columns: { id: true, name: true }
+        },
+        curricularArea: {
+          columns: { id: true, name: true }
+        },
         slots: {
           where: slotsWhereConditions.length > 0 ? and(...slotsWhereConditions) : undefined,
           with: {
-            pedagogicalHour: true,
+            pedagogicalHour: {
+              columns: { id: true, name: true, startTime: true, endTime: true, isBreak: true, sortOrder: true }
+            },
           },
           orderBy: [asc(reservationSlots.date)],
         },
       },
       orderBy: [desc(classroomReservations.createdAt)],
-      limit,
-      offset,
+      limit: 1000, // Increase limit to avoid pagination issues
     });
 
     // Filter by shift if provided (calculate shift based on startTime)

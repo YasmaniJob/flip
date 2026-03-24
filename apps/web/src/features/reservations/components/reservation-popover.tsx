@@ -76,55 +76,55 @@ export function ReservationPopover({ slot, children }: ReservationPopoverProps) 
                 </PopoverTrigger>
                 <PopoverContent className="w-72 p-0" align="start">
                     {/* Header */}
-                    <div className="p-4 border-b border-slate-100">
+                    <div className="p-4 border-b border-border">
                         <div className="flex items-center gap-2 mb-1">
                             <div className={`w-2 h-2 rounded-full ${slot.attended ? 'bg-emerald-500' : 'bg-blue-500'}`} />
-                            <span className="text-xs font-medium text-slate-500">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 {slot.attended ? 'Asistencia confirmada' : 'Pendiente'}
                             </span>
                         </div>
-                        <h3 className="font-semibold text-slate-900">{slot.staff?.name || 'Sin docente'}</h3>
+                        <h3 className="font-semibold text-foreground">{slot.staff?.name || 'Sin docente'}</h3>
                     </div>
 
                     {/* Content */}
                     <div className="p-4 space-y-3">
                         <div className="flex items-center gap-3 text-sm">
-                            <Calendar className="h-4 w-4 text-slate-400" />
-                            <span className="text-slate-600">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-foreground">
                                 {formatDateLocal(slotDate)}
                             </span>
                         </div>
                         <div className="flex items-center gap-3 text-sm">
-                            <Clock className="h-4 w-4 text-slate-400" />
-                            <span className="text-slate-600">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-foreground">
                                 {slot.pedagogicalHour.name}
                             </span>
                         </div>
                         {slot.grade && (
                             <div className="flex items-center gap-3 text-sm">
-                                <BookOpen className="h-4 w-4 text-slate-400" />
-                                <span className="text-slate-600">
+                                <BookOpen className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-foreground">
                                     {slot.grade.name} {slot.section?.name || ''}
                                 </span>
                             </div>
                         )}
                         {slot.curricularArea && (
                             <div className="flex items-center gap-3 text-sm">
-                                <BookOpen className="h-4 w-4 text-slate-400" />
-                                <span className="text-slate-600">
+                                <BookOpen className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-foreground">
                                     Área: {slot.curricularArea.name}
                                 </span>
                             </div>
                         )}
                         {slot.purpose && (
-                            <div className="pt-2 border-t border-slate-100">
-                                <p className="text-xs text-slate-500">{slot.purpose}</p>
+                            <div className="pt-2 border-t border-border">
+                                <p className="text-xs text-muted-foreground">{slot.purpose}</p>
                             </div>
                         )}
                     </div>
 
                     {/* Actions */}
-                    <div className="p-3 border-t border-slate-100 bg-slate-50 space-y-2">
+                    <div className="p-3 border-t border-border bg-muted/30 space-y-2">
                         {/* Attendance Toggle - visible for all roles */}
                         <Button
                             variant={slot.attended ? 'outline' : 'default'}
@@ -167,7 +167,7 @@ export function ReservationPopover({ slot, children }: ReservationPopoverProps) 
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="w-full justify-start gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                className="w-full justify-start gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30"
                                 onClick={() => setConfirmCancelOpen(true)}
                             >
                                 <Trash2 className="h-4 w-4" />

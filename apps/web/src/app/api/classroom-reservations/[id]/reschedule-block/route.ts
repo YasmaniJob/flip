@@ -5,7 +5,7 @@ import { requireAuth, getInstitutionId } from '@/lib/auth/helpers';
 import { validateBody } from '@/lib/validations/helpers';
 import { rescheduleBlockSchema } from '@/lib/validations/schemas/reservations';
 import { successResponse, errorResponse } from '@/lib/utils/response';
-import { NotFoundError } from '@/lib/utils/errors';
+import { NotFoundError, ValidationError } from '@/lib/utils/errors';
 import { requireModifyPermission, validateSlotsNoConflicts, normalizeDate } from '@/lib/utils/reservations';
 import { eq, and } from 'drizzle-orm';
 
@@ -20,7 +20,10 @@ export async function PUT(
     const { id } = await params;
 
     const body = await request.json();
+    console.log('[Reschedule Block] Received payload:', JSON.stringify(body, null, 2));
+    
     const data = validateBody(rescheduleBlockSchema, body);
+    console.log('[Reschedule Block] Validated data:', JSON.stringify(data, null, 2));
 
     // Get reservation
     const reservation = await db.query.classroomReservations.findFirst({
@@ -67,30 +70,27 @@ export async function PUT(
         attended: false,
       }));
 
+      console.log('[Reschedule Block] Inserting slots:', JSON.stringify(newSlotsData.map(s => ({
+        ...s,
+        date: s.date.toISOString()
+      })), null, 2));
+
       await tx.insert(reservationSlots).values(newSlotsData);
     });
 
-    // Return updated reservation with new slots
-    const updatedReservation = await db.query.classroomReservations.findFirst({
-      where: eq(classroomReservations.id, id),
-      with: {
-        classroom: true,
-        staff: {
-          with: {
-            user: true,
-          },
-        },
-        slots: {
-          with: {
-            pedagogicalHour: true,
-          },
-          orderBy: (slots, { asc }) => [asc(slots.date)],
-        },
-      },
-    });
-
-    return successResponse(updatedReservation, 'Reserva reprogramada exitosamente');
+    // Return success (frontend will refetch via React Query invalidation)
+    return successResponse({ id, success: true }, 'Reserva reprogramada exitosamente');
   } catch (error) {
+    console.error('[Reschedule Block] Error:', error);
+    if (error instanceof ValidationError) {
+      console.error('[Reschedule Block] Validation errors:', JSON.stringify(error.errors, null, 2));
+      return errorResponse(error);
+    }
+    // Log the full error for debugging
+    if (error instanceof Error) {
+      console.error('[Reschedule Block] Error message:', error.message);
+      console.error('[Reschedule Block] Error stack:', error.stack);
+    }
     return errorResponse(error);
   }
 }

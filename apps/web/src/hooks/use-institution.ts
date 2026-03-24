@@ -23,7 +23,7 @@ export function useInstitution() {
       return res.json() as Promise<Institution>;
     },
     enabled: !!user?.institutionId,
-    staleTime: 5 * 60 * 1000, // 5 minutes - institutions don't change often
-    gcTime: 10 * 60 * 1000, // 10 minutes in cache
+    staleTime: 30 * 60 * 1000, // 30 minutes - institutions don't change often
+    gcTime: 60 * 60 * 1000, // 1 hour in cache
   });
 }

@@ -20,6 +20,8 @@ export function usePedagogicalHours() {
             if (!res.ok) throw new Error('Error al cargar horarios');
             return res.json();
         },
+        staleTime: 30 * 60 * 1000, // 30 minutes - pedagogical hours rarely change
+        gcTime: 60 * 60 * 1000, // 1 hour in cache
     });
 }
 

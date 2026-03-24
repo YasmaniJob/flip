@@ -147,7 +147,7 @@ export function ReservacionesClient() {
     }, []);
 
     const handleCellClick = useCallback((date: Date, hour: { id: string; isBreak?: boolean }) => {
-        if (hour.isBreak || isFetchingSlots) return;
+        if (hour.isBreak) return;
 
         const key = `${date.toDateString()}-${hour.id}`;
         const existingSlot = slotMap.get(key);
@@ -167,7 +167,7 @@ export function ReservacionesClient() {
             }
             return [...prev, { date, pedagogicalHourId: hour.id }];
         });
-    }, [slotMap, isFetchingSlots, canManage]);
+    }, [slotMap, canManage]);
 
     const handleDragStart = useCallback((e: React.DragEvent, slot: ReservationSlot) => {
         if (!canManage && user?.id !== slot.staff?.id) return;
@@ -211,7 +211,7 @@ export function ReservacionesClient() {
             newDate.setDate(newDate.getDate() + dateOffset);
 
             return {
-                date: newDate.toISOString().split('T')[0],
+                date: newDate.toISOString(),
                 pedagogicalHourId: newHour.id
             };
         });
@@ -288,10 +288,7 @@ export function ReservacionesClient() {
             </div>
 
             {/* Main Calendar Container - BOXED to match other pages */}
-            <main className={cn(
-                "bg-card border border-border rounded-lg overflow-hidden transition-all",
-                isFetchingSlots && "opacity-50 grayscale-[0.5]"
-            )}>
+            <main className="bg-card border border-border rounded-lg overflow-hidden transition-all">
                 <div className="px-6 py-4 border-b border-border bg-muted/10 flex items-center justify-between select-none">
                     <Button 
                         variant="ghost" 

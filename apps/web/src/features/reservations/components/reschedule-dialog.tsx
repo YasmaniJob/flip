@@ -192,8 +192,8 @@ export function RescheduleDialog({ slot, open, onOpenChange }: RescheduleDialogP
                         <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-slate-400" />
-                        <span className="font-medium text-sm text-slate-700">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium text-sm text-foreground">
                             {format(currentWeekStart, "d 'de' MMMM", { locale: es })}
                             {' - '}
                             {format(addDays(currentWeekStart, 4), "d 'de' MMMM 'de' yyyy", { locale: es })}
@@ -210,15 +210,15 @@ export function RescheduleDialog({ slot, open, onOpenChange }: RescheduleDialogP
                 </div>
 
                 {/* Calendar Grid */}
-                <div className="border rounded-xl overflow-hidden">
+                <div className="border border-border rounded-xl overflow-hidden">
                     <table className="w-full border-collapse">
                         <thead>
-                            <tr className="bg-slate-50">
-                                <th className="p-2 w-24 border-r border-slate-100 text-left text-xs font-medium text-slate-500">Hora</th>
+                            <tr className="bg-muted/30">
+                                <th className="p-2 w-24 border-r border-border text-left text-xs font-medium text-muted-foreground">Hora</th>
                                 {weekDatesData.map((dObj, i) => (
-                                    <th key={i} className="p-2 text-center border-r last:border-r-0 border-slate-100">
-                                        <div className="text-[10px] font-medium text-slate-400 uppercase">{dObj.name.slice(0, 3)}</div>
-                                        <div className="text-sm font-semibold text-slate-700">{dObj.day}</div>
+                                    <th key={i} className="p-2 text-center border-r last:border-r-0 border-border">
+                                        <div className="text-[10px] font-medium text-muted-foreground uppercase">{dObj.name.slice(0, 3)}</div>
+                                        <div className="text-sm font-semibold text-foreground">{dObj.day}</div>
                                     </th>
                                 ))}
                             </tr>
@@ -226,8 +226,8 @@ export function RescheduleDialog({ slot, open, onOpenChange }: RescheduleDialogP
                         <tbody>
                             {pedagogicalHours.map(hour => (
                                 <tr key={hour.id}>
-                                    <td className="px-2 py-1.5 border-t border-r border-slate-100">
-                                        <span className="text-xs font-medium text-slate-400">{hour.name}</span>
+                                    <td className="px-2 py-1.5 border-t border-r border-border">
+                                        <span className="text-xs font-medium text-muted-foreground">{hour.name}</span>
                                     </td>
                                     {weekDatesData.map((dObj, i) => {
                                         const isCurrent = isCurrentSlot(dObj.key, hour.id);
@@ -237,7 +237,7 @@ export function RescheduleDialog({ slot, open, onOpenChange }: RescheduleDialogP
 
                                         if (hour.isBreak) {
                                             return (
-                                                <td key={i} className="p-1 border-t border-r last:border-r-0 border-slate-100">
+                                                <td key={i} className="p-1 border-t border-r last:border-r-0 border-border">
                                                     <div className="h-8 flex items-center justify-center">
                                                         <span className="text-[10px] text-amber-500">—</span>
                                                     </div>
@@ -248,17 +248,17 @@ export function RescheduleDialog({ slot, open, onOpenChange }: RescheduleDialogP
                                         return (
                                             <td
                                                 key={i}
-                                                className={`p-1 border-t border-r last:border-r-0 border-slate-100 ${!isReserved && !isCurrent ? 'cursor-pointer select-none' : ''}`}
+                                                className={`p-1 border-t border-r last:border-r-0 border-border ${!isReserved && !isCurrent ? 'cursor-pointer select-none' : ''}`}
                                                 onMouseDown={() => handleMouseDown(dObj.date, dObj.key, hour.id, hour.isBreak, isReserved)}
                                                 onMouseEnter={() => handleMouseEnter(dObj.date, hour.id, hour.isBreak, isReserved)}
                                             >
                                                 <div className={`rounded-lg py-1.5 px-2 text-[10px] font-medium text-center transition-all ${isCurrent
-                                                    ? 'bg-slate-200 text-slate-500'
+                                                    ? 'bg-muted text-muted-foreground'
                                                     : isReserved
-                                                        ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                                        ? 'bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900'
                                                         : isSlotSelected
-                                                            ? 'bg-primary text-white'
-                                                            : 'text-slate-400 hover:bg-slate-50'
+                                                            ? 'bg-primary text-primary-foreground'
+                                                            : 'text-muted-foreground hover:bg-muted/50'
                                                     }`}>
                                                     {isCurrent
                                                         ? 'Actual'
