@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tantml:query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CreateStaffInput } from "@flip/shared";
 import { useApiClient } from "@/lib/api-client";
 import { useSession } from "@/lib/auth-client";
