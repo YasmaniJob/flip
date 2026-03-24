@@ -61,41 +61,55 @@ export default function LoginPage() {
 
                         const lazyRegisterData = await lazyRegisterRes.json();
 
-                        if (lazyRegisterRes.ok) {
-                            // Cuenta creada, ahora hacer login
-                            const loginResult = await signIn.email({
-                                email: values.email,
-                                password: values.password,
-                            });
-
-                            if (!loginResult.error) {
-                                const sessionRes = await fetch("/api/auth/get-session");
-                                const sessionData = await sessionRes.json();
-                                if (sessionData?.user?.institutionId) {
-                                    localStorage.setItem("flip:last-institution-id", sessionData.user.institutionId);
+                        // PROBLEMA 2 CORREGIDO: Manejar caso de múltiples instituciones
+                        if (lazyRegisterData.requiresSelection) {
+                            // TODO: mostrar modal selector de institución
+                            // Por ahora, mostrar mensaje informativo
+                            sileo.error({
+                                title: "Múltiples instituciones detectadas",
+                                description: "Contacta al administrador para configurar tu acceso principal.",
+                                fill: "#fef3c7",
+                                styles: {
+                                    title: "!text-yellow-900 font-bold",
+                                    description: "!text-yellow-800 font-medium",
+                                    badge: "!bg-yellow-500 !text-white"
                                 }
-                                
-                                sileo.success({
-                                    title: "¡Bienvenido!",
-                                    description: "Tu cuenta ha sido creada exitosamente.",
-                                    fill: "#dcfce7",
-                                    styles: {
-                                        title: "!text-green-900 font-bold",
-                                        description: "!text-green-800 font-medium",
-                                        badge: "!bg-green-500 !text-white"
-                                    }
-                                });
-                                
-                                router.push("/dashboard");
-                                return;
+                            });
+                            return;
+                        }
+
+                        // PROBLEMA 1 CORREGIDO: No hacer segundo signIn, la sesión ya está creada
+                        if (lazyRegisterRes.ok && lazyRegisterData.success) {
+                            // La sesión ya está creada por el endpoint
+                            if (lazyRegisterData.user?.institutionId) {
+                                localStorage.setItem("flip:last-institution-id", lazyRegisterData.user.institutionId);
                             }
+                            
+                            sileo.success({
+                                title: "¡Bienvenido!",
+                                description: "Acceso verificado correctamente.",
+                                fill: "#dcfce7",
+                                styles: {
+                                    title: "!text-green-900 font-bold",
+                                    description: "!text-green-800 font-medium",
+                                    badge: "!bg-green-500 !text-white"
+                                }
+                            });
+                            
+                            // Pequeño delay para asegurar que la cookie se procese
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            
+                            // Redirección dura para forzar recarga completa y evitar caché
+                            window.location.href = lazyRegisterData.redirectTo || "/dashboard";
+                            return;
                         }
 
                         // Si lazy register falló, mostrar el mensaje específico
+                        // PROBLEMA 3 CORREGIDO: Usar .error en lugar de .message
                         if (lazyRegisterRes.status === 404) {
                             sileo.error({
                                 title: "Acceso no autorizado",
-                                description: lazyRegisterData.message || "No se encontró un registro de personal con ese correo y DNI.",
+                                description: lazyRegisterData.error || "No se encontró un registro de personal con ese correo y DNI.",
                                 fill: "#fee2e2",
                                 styles: {
                                     title: "!text-red-900 font-bold",
@@ -117,7 +131,7 @@ export default function LoginPage() {
                         } else {
                             sileo.error({
                                 title: "No pudimos iniciar sesión",
-                                description: "Las credenciales no coinciden. Por favor, revisa tu correo y contraseña e intenta de nuevo.",
+                                description: lazyRegisterData.error || "Las credenciales no coinciden. Por favor, revisa tu correo y contraseña e intenta de nuevo.",
                                 fill: "#fee2e2",
                                 styles: {
                                     title: "!text-red-900 font-bold",

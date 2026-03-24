@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { BrandColorProvider } from "@/components/brand-color-provider";
+import { QueryProvider } from "@/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Toaster as SileoToaster } from "sileo";
 import "./globals.css";
@@ -42,13 +43,15 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className={`${nunito.variable} font-sans antialiased bg-slate-50`}>
-        <ThemeProvider>
-          <BrandColorProvider>
-            {children}
-            <Toaster />
-            <SileoToaster position="top-center" theme="system" />
-          </BrandColorProvider>
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider>
+            <BrandColorProvider>
+              {children}
+              <Toaster />
+              <SileoToaster position="top-center" theme="system" />
+            </BrandColorProvider>
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { nextCookies } from "better-auth/next-js";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { sendResetPasswordEmail } from "@/lib/email/resend";
@@ -22,6 +23,19 @@ export const auth = betterAuth({
       await sendResetPasswordEmail(user.email, url, user.name);
     },
   },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 5 minutes
+    },
+  },
+  advanced: {
+    cookiePrefix: "better-auth",
+    useSecureCookies: process.env.NODE_ENV === "production",
+  },
+  plugins: [
+    nextCookies(),
+  ],
   user: {
     additionalFields: {
       institutionId: { type: "string", required: false },

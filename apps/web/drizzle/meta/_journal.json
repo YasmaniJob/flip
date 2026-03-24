@@ -15,6 +15,13 @@
       "when": 1774234142615,
       "tag": "0001_aromatic_karma",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774323413979,
+      "tag": "0002_bored_infant_terrible",
+      "breakpoints": true
     }
   ]
 }

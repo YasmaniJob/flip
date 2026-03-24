@@ -1,100 +1,224 @@
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { staff, users } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { staff, users, sessions } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
 
-const lazyRegisterSchema = z.object({
-  email: z.string().email({ message: "Correo electrónico inválido" }),
-  dni: z.string().min(8, { message: "DNI debe tener al menos 8 caracteres" }),
-});
+type LazyRegisterRequest = {
+  email: string;
+  dni: string;
+  selectedInstitutionId?: string; // Para cuando el usuario ya eligió
+};
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const validation = lazyRegisterSchema.safeParse(body);
+    const body: LazyRegisterRequest = await request.json();
+    const { email, dni, selectedInstitutionId } = body;
 
-    if (!validation.success) {
+    console.log('[Lazy Register] Request received:', { email, dni: dni.slice(0, 3) + '***', selectedInstitutionId });
+
+    // Validación básica
+    if (!email || !dni) {
+      console.error('[Lazy Register] Missing email or dni');
       return NextResponse.json(
-        { error: "Datos inválidos", details: validation.error.errors },
+        { error: 'Email y DNI son requeridos' },
         { status: 400 }
       );
     }
 
-    const { email, dni } = validation.data;
+    // 1. Buscar en staff por DNI
+    const staffRecords = await db.query.staff.findMany({
+      where: eq(staff.dni, dni),
+      with: {
+        institution: true,
+      },
+    });
 
-    // 1. Buscar staff con email + DNI
-    const staffMember = await db
-      .select()
-      .from(staff)
-      .where(and(eq(staff.email, email), eq(staff.dni, dni)))
-      .limit(1);
+    console.log('[Lazy Register] Staff records found:', staffRecords.length);
 
-    if (staffMember.length === 0) {
+    // Si no hay registros con ese DNI
+    if (staffRecords.length === 0) {
+      console.error('[Lazy Register] DNI not found in any institution');
       return NextResponse.json(
-        { 
-          error: "No encontrado", 
-          message: "No se encontró un registro de personal con ese correo y DNI. Contacta al administrador de tu institución." 
-        },
+        { error: 'No encontrado en ninguna institución. Contacte al administrador.' },
         { status: 404 }
       );
     }
 
-    const staffData = staffMember[0];
+    // 2. Validar que el email coincida en al menos un registro
+    const matchingStaff = staffRecords.find(
+      (s) => s.email?.toLowerCase() === email.toLowerCase()
+    );
 
-    // 2. Verificar si el usuario ya existe en Better Auth
-    const existingUser = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
-
-    if (existingUser.length > 0) {
+    if (!matchingStaff) {
+      console.error('[Lazy Register] Email does not match DNI records');
       return NextResponse.json(
-        { 
-          error: "Usuario ya existe", 
-          message: "Ya existe una cuenta con este correo. Usa tu contraseña para iniciar sesión." 
-        },
-        { status: 409 }
+        { error: 'Los datos no coinciden. Verifique su email y DNI.' },
+        { status: 403 }
       );
     }
 
-    // 3. Crear usuario usando Better Auth API (maneja hashing automáticamente)
-    await auth.api.signUpEmail({
-      body: {
-        email: staffData.email!,
-        password: dni,
-        name: staffData.name,
-        // Better Auth custom fields
-        institutionId: staffData.institutionId,
-        role: staffData.role || "docente",
-      },
+    console.log('[Lazy Register] Email validated successfully');
+
+    // 3. Determinar institución
+    let targetInstitutionId: string;
+
+    if (staffRecords.length === 1) {
+      // Solo una institución
+      targetInstitutionId = staffRecords[0].institutionId;
+      console.log('[Lazy Register] Single institution detected:', targetInstitutionId);
+    } else if (selectedInstitutionId) {
+      // Usuario ya eligió institución
+      const validSelection = staffRecords.find(
+        (s) => s.institutionId === selectedInstitutionId
+      );
+      
+      if (!validSelection) {
+        console.error('[Lazy Register] Invalid institution selection');
+        return NextResponse.json(
+          { error: 'Institución seleccionada no válida' },
+          { status: 400 }
+        );
+      }
+      
+      targetInstitutionId = selectedInstitutionId;
+      console.log('[Lazy Register] Institution selected by user:', targetInstitutionId);
+    } else {
+      // Múltiples instituciones, requiere selección
+      console.log('[Lazy Register] Multiple institutions, requiring selection');
+      return NextResponse.json({
+        requiresSelection: true,
+        institutions: staffRecords.map((s) => ({
+          id: s.institutionId,
+          name: s.institution.name,
+          nivel: s.institution.nivel,
+        })),
+      });
+    }
+
+    // 4. Verificar si el usuario ya existe
+    const existingUser = await db.query.users.findFirst({
+      where: eq(users.email, email.toLowerCase()),
     });
 
-    // 4. Actualizar el DNI en la tabla users (no está en additionalFields de Better Auth)
-    await db
-      .update(users)
-      .set({ dni: staffData.dni })
-      .where(eq(users.email, staffData.email!));
+    let userId: string;
+    const staffRecord = staffRecords.find((s) => s.institutionId === targetInstitutionId)!;
 
-    return NextResponse.json({
-      success: true,
-      message: "Cuenta creada exitosamente",
-      user: {
-        email: staffData.email,
-        name: staffData.name,
-        institutionId: staffData.institutionId,
-        role: staffData.role,
-      },
-    });
+    if (existingUser) {
+      console.log('[Lazy Register] User already exists:', existingUser.id);
+      userId = existingUser.id;
+
+      // Actualizar institutionId si cambió
+      if (existingUser.institutionId !== targetInstitutionId) {
+        console.log('[Lazy Register] Updating user institutionId');
+        await db
+          .update(users)
+          .set({ 
+            institutionId: targetInstitutionId,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, userId));
+      }
+    } else {
+      // 5. Crear nuevo usuario con Better Auth
+      console.log('[Lazy Register] Creating new user account');
+      
+      // Generar password interno (nunca se muestra al usuario)
+      const internalPassword = `LAZY_${dni}_${targetInstitutionId.slice(-6)}`;
+      
+      try {
+        // Usar Better Auth para crear el usuario
+        const signUpResult = await auth.api.signUpEmail({
+          body: {
+            email: email.toLowerCase(),
+            password: internalPassword,
+            name: staffRecord.name,
+          },
+        });
+
+        if (!signUpResult) {
+          throw new Error('SignUp failed - no result returned');
+        }
+
+        // Extraer userId del resultado
+        userId = (signUpResult as any).user?.id;
+        
+        if (!userId) {
+          throw new Error('SignUp succeeded but no userId returned');
+        }
+
+        console.log('[Lazy Register] User created via Better Auth:', userId);
+
+        // Actualizar campos adicionales
+        await db
+          .update(users)
+          .set({
+            institutionId: targetInstitutionId,
+            dni: dni,
+            role: staffRecord.role || 'docente',
+            isSuperAdmin: false,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, userId));
+
+        console.log('[Lazy Register] User fields updated');
+      } catch (signUpError) {
+        console.error('[Lazy Register] Better Auth signUp failed:', signUpError);
+        return NextResponse.json(
+          { error: 'Error al crear la cuenta. Intente nuevamente.' },
+          { status: 500 }
+        );
+      }
+    }
+
+    // 6. Crear sesión con Better Auth usando nextCookies plugin
+    console.log('[Lazy Register] Creating session for user:', userId);
+    
+    try {
+      // Con nextCookies, Better Auth maneja las cookies de Next.js nativamente
+      await auth.api.signInEmail({
+        body: {
+          email: email.toLowerCase(),
+          password: `LAZY_${dni}_${targetInstitutionId.slice(-6)}`,
+        },
+      });
+
+      console.log('[Lazy Register] Session created successfully');
+
+      // 7. Actualizar activeInstitutionId en la sesión más reciente del usuario
+      await db
+        .update(sessions)
+        .set({ 
+          activeInstitutionId: targetInstitutionId,
+          updatedAt: new Date(),
+        })
+        .where(eq(sessions.userId, userId));
+
+      console.log('[Lazy Register] Session activeInstitutionId set:', targetInstitutionId);
+
+      // 8. Retornar éxito - nextCookies maneja las cookies automáticamente
+      return NextResponse.json({
+        success: true,
+        user: {
+          id: userId,
+          email: email.toLowerCase(),
+          name: staffRecord.name,
+          institutionId: targetInstitutionId,
+          role: staffRecord.role || 'docente',
+        },
+        redirectTo: '/dashboard',
+      });
+    } catch (signInError) {
+      console.error('[Lazy Register] Session creation failed:', signInError);
+      return NextResponse.json(
+        { error: 'Error al iniciar sesión. Intente nuevamente.' },
+        { status: 500 }
+      );
+    }
   } catch (error) {
-    console.error("Lazy register error:", error);
+    console.error('[Lazy Register] Unexpected error:', error);
     return NextResponse.json(
-      { 
-        error: "Error del servidor", 
-        message: "Ocurrió un error al procesar tu solicitud. Intenta de nuevo." 
-      },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     );
   }

@@ -90,6 +90,7 @@ export const sessions = pgTable('sessions', {
     expiresAt: timestamp('expires_at').notNull(),
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
+    activeInstitutionId: text('active_institution_id').references(() => institutions.id),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
 }, (table) => ({
@@ -219,8 +220,8 @@ export const staff = pgTable('staff', {
 }, (table) => ({
     institutionIdx: index('idx_staff_institution').on(table.institutionId),
     nameIdx: index('idx_staff_name').on(table.name),
-    dniIdx: index('idx_staff_dni').on(table.dni),
-    emailIdx: index('idx_staff_email').on(table.email),
+    staffDniInstitution: uniqueIndex('idx_staff_institution_dni').on(table.institutionId, table.dni),
+    staffEmailInstitution: uniqueIndex('idx_staff_institution_email').on(table.institutionId, table.email),
     roleIdx: index('idx_staff_role').on(table.role),
     statusIdx: index('idx_staff_status').on(table.status),
 }));
