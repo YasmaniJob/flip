@@ -33,19 +33,19 @@ export function WorkshopDetailSheet({ reservationId, title }: WorkshopDetailShee
     return (
         <div className="flex flex-col h-full">
             {/* Header */}
-            <div className="p-6 pb-4 border-b bg-white">
-                <h2 className="text-xl font-black text-slate-900">{title || 'Detalle del Taller'}</h2>
-                <p className="text-xs text-slate-500 mt-1">Gestiona la asistencia y acuerdos de este taller</p>
+            <div className="p-6 pb-4 border-b bg-card">
+                <h2 className="text-xl font-black text-foreground">{title || 'Detalle del Taller'}</h2>
+                <p className="text-xs text-muted-foreground mt-1">Gestiona la asistencia y acuerdos de este taller</p>
             </div>
 
             {/* Tabs */}
             <Tabs defaultValue="attendance" className="flex-1 flex flex-col overflow-hidden">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-100 rounded-none h-12 p-0 border-b">
-                    <TabsTrigger value="attendance" className="h-full rounded-none data-[state=active]:bg-white data-[state=active]:shadow-none gap-2 font-bold">
+                <TabsList className="grid w-full grid-cols-2 bg-muted/30 rounded-none h-12 p-0 border-b">
+                    <TabsTrigger value="attendance" className="h-full rounded-none data-[state=active]:bg-card data-[state=active]:shadow-none gap-2 font-bold">
                         <Users className="h-4 w-4" />
                         Asistencia
                     </TabsTrigger>
-                    <TabsTrigger value="tasks" className="h-full rounded-none data-[state=active]:bg-white data-[state=active]:shadow-none gap-2 font-bold">
+                    <TabsTrigger value="tasks" className="h-full rounded-none data-[state=active]:bg-card data-[state=active]:shadow-none gap-2 font-bold">
                         <ListChecks className="h-4 w-4" />
                         Acuerdos
                     </TabsTrigger>
@@ -81,7 +81,7 @@ function AttendanceTab({ reservationId }: { reservationId: string }) {
         return (
             <div className="flex flex-col items-center justify-center p-12 space-y-4">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-slate-500 font-medium">Cargando asistencia...</p>
+                <p className="text-muted-foreground font-medium">Cargando asistencia...</p>
             </div>
         );
     }
@@ -105,17 +105,17 @@ function AttendanceTab({ reservationId }: { reservationId: string }) {
     const filteredStaff = staff?.filter(s => !existingStaffIds.has(s.id));
 
     return (
-        <div className="flex flex-col h-full bg-slate-50/50">
+        <div className="flex flex-col h-full bg-muted/10">
             {/* Stats Header */}
-            <div className="p-6 bg-white border-b">
+            <div className="p-6 bg-card border-b">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <span className="text-sm font-bold text-slate-500 flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-muted-foreground flex items-center gap-1.5">
                             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                             {presentCount} Presentes
                         </span>
-                        <div className="h-1 w-1 rounded-full bg-slate-300" />
-                        <span className="text-sm font-bold text-slate-500">
+                        <div className="h-1 w-1 rounded-full bg-border" />
+                        <span className="text-sm font-bold text-muted-foreground">
                             {records.length} Total
                         </span>
                     </div>
@@ -132,41 +132,41 @@ function AttendanceTab({ reservationId }: { reservationId: string }) {
 
             {/* Search Panel */}
             {showSearch && (
-                <div className="p-4 bg-white border-b animate-in slide-in-from-top-2">
-                    <div className="bg-slate-100 p-2 rounded-2xl">
+                <div className="p-4 bg-card border-b animate-in slide-in-from-top-2">
+                    <div className="bg-muted/30 p-2 rounded-2xl">
                         <div className="flex items-center px-3 pt-1 pb-1 mb-2 gap-2">
-                            <Search className="h-4 w-4 shrink-0 text-slate-400" />
+                            <Search className="h-4 w-4 shrink-0 text-muted-foreground/70" />
                             <Input
                                 placeholder="Buscar personal..."
                                 value={staffSearch}
                                 onChange={(e) => setStaffSearch(e.target.value)}
-                                className="flex-1 h-auto py-1.5 border-none focus-visible:ring-0 px-0 text-sm bg-transparent placeholder:text-slate-400 font-medium text-slate-700"
+                                className="flex-1 h-auto py-1.5 border-none focus-visible:ring-0 px-0 text-sm bg-transparent placeholder:text-muted-foreground/70 font-medium text-foreground"
                                 autoFocus
                             />
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => { setShowSearch(false); setStaffSearch(''); }}
-                                className="h-7 px-2 text-xs text-slate-400 hover:text-slate-600 rounded-full"
+                                className="h-7 px-2 text-xs text-muted-foreground/70 hover:text-foreground rounded-full"
                             >
                                 <X className="h-3 w-3" />
                             </Button>
                         </div>
                         <div className="max-h-40 overflow-y-auto px-1 custom-scrollbar">
                             {isLoadingStaff ? (
-                                <div className="py-6 text-center text-xs text-slate-500">Cargando...</div>
+                                <div className="py-6 text-center text-xs text-muted-foreground">Cargando...</div>
                             ) : filteredStaff?.length === 0 ? (
-                                <div className="py-6 text-center text-xs text-slate-500">Sin resultados</div>
+                                <div className="py-6 text-center text-xs text-muted-foreground">Sin resultados</div>
                             ) : (
                                 <div className="space-y-0.5 pb-1">
                                     {filteredStaff?.map((person) => (
                                         <div
                                             key={person.id}
                                             onClick={() => handleAddStaff(person.id)}
-                                            className="cursor-pointer py-2 px-3 rounded-xl hover:bg-blue-100 flex items-center gap-2 transition-colors"
+                                            className="cursor-pointer py-2 px-3 rounded-xl hover:bg-primary/10 flex items-center gap-2 transition-colors"
                                         >
-                                            <User className="h-3.5 w-3.5 text-slate-400" />
-                                            <span className="text-sm font-medium text-slate-700">{person.name}</span>
+                                            <User className="h-3.5 w-3.5 text-muted-foreground/70" />
+                                            <span className="text-sm font-medium text-foreground">{person.name}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -179,17 +179,17 @@ function AttendanceTab({ reservationId }: { reservationId: string }) {
             {/* Attendance List */}
             <div className="flex-1 overflow-y-auto p-4">
                 {records.length === 0 ? (
-                    <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl">
-                        <Users className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                        <p className="text-slate-400 font-medium">No hay participantes registrados</p>
-                        <p className="text-xs text-slate-400 mt-1">Agrega participantes con el botón &quot;Agregar&quot;</p>
+                    <div className="text-center py-12 border-2 border-dashed border-border rounded-2xl">
+                        <Users className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                        <p className="text-muted-foreground/70 font-medium">No hay participantes registrados</p>
+                        <p className="text-xs text-muted-foreground/70 mt-1">Agrega participantes con el botón &quot;Agregar&quot;</p>
                     </div>
                 ) : (
                     <div className="space-y-2">
                         {records.map((record) => (
                             <div
                                 key={record.id}
-                                className="group flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-100 hover:border-slate-200 transition-all"
+                                className="group flex items-center gap-3 p-3 bg-card rounded-xl border border-border hover:border-border/80 transition-all"
                             >
                                 <button
                                     onClick={() => handleToggleStatus(record)}
@@ -199,16 +199,16 @@ function AttendanceTab({ reservationId }: { reservationId: string }) {
                                             ? "bg-emerald-500 border-emerald-500 text-white"
                                             : record.status === 'tardanza'
                                                 ? "bg-amber-500 border-amber-500 text-white"
-                                                : "border-slate-300 text-transparent hover:border-emerald-400"
+                                                : "border-border text-transparent hover:border-emerald-400"
                                     )}
                                 >
                                     <CheckCircle2 className="h-4 w-4" />
                                 </button>
 
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-slate-800 truncate">{record.staffName || 'Sin nombre'}</p>
+                                    <p className="text-sm font-semibold text-foreground truncate">{record.staffName || 'Sin nombre'}</p>
                                     {record.staffRole && (
-                                        <p className="text-xs text-slate-400">{record.staffRole}</p>
+                                        <p className="text-xs text-muted-foreground/70">{record.staffRole}</p>
                                     )}
                                 </div>
 
@@ -216,9 +216,9 @@ function AttendanceTab({ reservationId }: { reservationId: string }) {
                                     variant="secondary"
                                     className={cn(
                                         "text-[10px] font-bold uppercase rounded-lg",
-                                        record.status === 'presente' ? "bg-emerald-100 text-emerald-700" :
-                                            record.status === 'tardanza' ? "bg-amber-100 text-amber-700" :
-                                                "bg-slate-100 text-slate-500"
+                                        record.status === 'presente' ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" :
+                                            record.status === 'tardanza' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" :
+                                                "bg-muted/30 text-muted-foreground"
                                     )}
                                 >
                                     {record.status}
@@ -228,7 +228,7 @@ function AttendanceTab({ reservationId }: { reservationId: string }) {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => removeAttendee.mutate(record.id)}
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 text-muted-foreground/70 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                                 >
                                     <Trash2 className="h-3.5 w-3.5" />
                                 </Button>
@@ -258,7 +258,7 @@ function TasksTab({ reservationId }: { reservationId: string }) {
         return (
             <div className="flex flex-col items-center justify-center p-12 space-y-4">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-slate-500 font-medium">Cargando acuerdos...</p>
+                <p className="text-muted-foreground font-medium">Cargando acuerdos...</p>
             </div>
         );
     }
@@ -289,17 +289,17 @@ function TasksTab({ reservationId }: { reservationId: string }) {
     };
 
     return (
-        <div className="flex flex-col h-full bg-slate-50/50">
+        <div className="flex flex-col h-full bg-muted/10">
             {/* Header */}
-            <div className="p-6 bg-white border-b">
+            <div className="p-6 bg-card border-b">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <span className="text-sm font-bold text-slate-500 flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-muted-foreground flex items-center gap-1.5">
                             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                             {completedTasks.length} Completados
                         </span>
-                        <div className="h-1 w-1 rounded-full bg-slate-300" />
-                        <span className="text-sm font-bold text-slate-500 flex items-center gap-1.5">
+                        <div className="h-1 w-1 rounded-full bg-border" />
+                        <span className="text-sm font-bold text-muted-foreground flex items-center gap-1.5">
                             <Circle className="h-4 w-4 text-amber-500" />
                             {pendingTasks.length} Pendientes
                         </span>
@@ -319,13 +319,13 @@ function TasksTab({ reservationId }: { reservationId: string }) {
             <div className="flex-1 overflow-y-auto p-4">
                 {/* Create Form */}
                 {isCreating && (
-                    <div className="mb-4 p-4 bg-white rounded-2xl border border-primary/20 shadow-lg shadow-primary/5 animate-in slide-in-from-top-2">
-                        <h3 className="font-bold text-sm mb-3 text-slate-800">Nuevo Acuerdo</h3>
+                    <div className="mb-4 p-4 bg-card rounded-2xl border border-primary/20 shadow-lg shadow-primary/5 animate-in slide-in-from-top-2">
+                        <h3 className="font-bold text-sm mb-3 text-foreground">Nuevo Acuerdo</h3>
                         <Textarea
                             value={newDescription}
                             onChange={(e) => setNewDescription(e.target.value)}
                             placeholder="¿Qué acuerdo se estableció?"
-                            className="bg-slate-50 border-slate-200 min-h-[80px] resize-none text-sm"
+                            className="bg-muted/20 border-border min-h-[80px] resize-none text-sm"
                             autoFocus
                         />
                         <div className="flex justify-end gap-2 pt-3">
@@ -337,9 +337,9 @@ function TasksTab({ reservationId }: { reservationId: string }) {
 
                 {/* Tasks List */}
                 {allTasks.length === 0 && !isCreating ? (
-                    <div className="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl">
-                        <ListChecks className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                        <p className="text-slate-400 font-medium">No hay acuerdos registrados</p>
+                    <div className="text-center py-12 border-2 border-dashed border-border rounded-2xl">
+                        <ListChecks className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                        <p className="text-muted-foreground/70 font-medium">No hay acuerdos registrados</p>
                     </div>
                 ) : (
                     <div className="space-y-2">
@@ -347,10 +347,10 @@ function TasksTab({ reservationId }: { reservationId: string }) {
                             <div
                                 key={task.id}
                                 className={cn(
-                                    "group flex items-start gap-3 p-4 bg-white rounded-xl border transition-all",
+                                    "group flex items-start gap-3 p-4 bg-card rounded-xl border transition-all",
                                     task.status === 'completed'
-                                        ? "border-emerald-100 bg-emerald-50/30"
-                                        : "border-slate-100 hover:border-slate-200"
+                                        ? "border-emerald-100 bg-emerald-50/30 dark:border-emerald-900/30 dark:bg-emerald-900/10"
+                                        : "border-border hover:border-border/80"
                                 )}
                             >
                                 <button
@@ -359,7 +359,7 @@ function TasksTab({ reservationId }: { reservationId: string }) {
                                         "mt-0.5 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0",
                                         task.status === 'completed'
                                             ? "bg-emerald-500 border-emerald-500 text-white"
-                                            : "border-slate-300 text-transparent hover:border-emerald-400"
+                                            : "border-border text-transparent hover:border-emerald-400"
                                     )}
                                 >
                                     <CheckCircle2 className="h-4 w-4" />
@@ -367,13 +367,13 @@ function TasksTab({ reservationId }: { reservationId: string }) {
 
                                 <div className="flex-1 min-w-0">
                                     <p className={cn(
-                                        "text-sm font-medium text-slate-900 transition-all",
-                                        task.status === 'completed' && "text-slate-500 line-through decoration-slate-300"
+                                        "text-sm font-medium text-foreground transition-all",
+                                        task.status === 'completed' && "text-muted-foreground line-through decoration-muted-foreground/30"
                                     )}>
                                         {task.description}
                                     </p>
                                     {task.assignedStaffName && (
-                                        <Badge variant="secondary" className="mt-2 bg-slate-100 text-slate-600 gap-1.5 font-bold h-6 rounded-lg text-[10px]">
+                                        <Badge variant="secondary" className="mt-2 bg-muted/30 text-muted-foreground gap-1.5 font-bold h-6 rounded-lg text-[10px]">
                                             <User className="h-3 w-3 opacity-70" />
                                             {task.assignedStaffName}
                                         </Badge>
@@ -384,7 +384,7 @@ function TasksTab({ reservationId }: { reservationId: string }) {
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleDelete(task.id)}
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 text-slate-400 hover:text-red-500 hover:bg-red-50"
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 text-muted-foreground/70 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
                                 >
                                     <Trash2 className="h-3.5 w-3.5" />
                                 </Button>

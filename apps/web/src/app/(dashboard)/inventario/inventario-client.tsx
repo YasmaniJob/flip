@@ -93,13 +93,13 @@ export default function InventarioClient() {
                         placeholder="Buscar recursos..." 
                         value={search} 
                         onChange={(e) => setSearch(e.target.value)} 
-                        className="h-10 pl-9 w-full bg-white border-border rounded-md text-[13px] shadow-none focus-visible:ring-primary/20" 
+                        className="h-10 pl-9 w-full bg-card border-border rounded-md text-[13px] shadow-none focus-visible:ring-primary/20" 
                     />
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-2">
                     <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                        <SelectTrigger className="h-10 w-[180px] bg-white border-border rounded-md text-[11px] font-black uppercase tracking-widest shadow-none focus:ring-primary/20">
+                        <SelectTrigger className="h-10 w-[180px] bg-card border-border rounded-md text-[11px] font-black uppercase tracking-widest shadow-none focus:ring-primary/20">
                             <SelectValue placeholder="Categoría" />
                         </SelectTrigger>
                         <SelectContent className="border-border shadow-none">
@@ -109,7 +109,7 @@ export default function InventarioClient() {
                     </Select>
                     
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="h-10 w-[160px] bg-white border-border rounded-md text-[11px] font-black uppercase tracking-widest shadow-none focus:ring-primary/20">
+                        <SelectTrigger className="h-10 w-[160px] bg-card border-border rounded-md text-[11px] font-black uppercase tracking-widest shadow-none focus:ring-primary/20">
                             <SelectValue placeholder="Estado" />
                         </SelectTrigger>
                         <SelectContent className="border-border shadow-none">
@@ -128,7 +128,7 @@ export default function InventarioClient() {
                 </div>
             </div>
             {loadingTemplates ? (
-                <div className="bg-white border border-border h-[400px] flex items-center justify-center">
+                <div className="bg-card border border-border h-[400px] flex items-center justify-center">
                     <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/30 animate-pulse">Cargando catálogo...</span>
                 </div>
             ) : (

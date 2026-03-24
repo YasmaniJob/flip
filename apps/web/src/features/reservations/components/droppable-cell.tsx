@@ -25,11 +25,11 @@ export const DroppableCell: FC<DroppableCellProps> = memo(
         onDrop={onDrop}
         className={cn(
           "p-2 transition-all relative group h-[82px] select-none",
-          !isLast && "border-r border-slate-100/50",
-          "border-t border-slate-100/50",
+          !isLast && "border-r border-border/50",
+          "border-t border-border/50",
           isToday && "bg-primary/[0.015]",
           isSelected && "bg-primary/[0.04]",
-          !isSelected && "hover:bg-slate-50/50 cursor-pointer",
+          !isSelected && "hover:bg-muted/20 cursor-pointer",
         )}
       >
         {isSelected && (

@@ -137,7 +137,7 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
                       className={cn(
                         "w-1.5 h-1.5 rounded-full animate-pulse shrink-0",
                         isInstitutional
-                          ? "bg-slate-400"
+                          ? "bg-muted-foreground/70"
                           : slot.attended
                             ? "bg-emerald-500"
                             : "bg-primary",

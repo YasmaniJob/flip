@@ -55,7 +55,7 @@ export function InventoryHeader({ onAddResource, resources }: InventoryHeaderPro
                 </div>
             </div>
             
-            <div className="flex flex-col md:flex-row items-stretch bg-white border border-border rounded-lg overflow-hidden shadow-none">
+            <div className="flex flex-col md:flex-row items-stretch bg-card border border-border rounded-lg overflow-hidden shadow-none">
                 {/* Left Side: Stats */}
                 <div className="px-8 py-6 flex flex-col justify-center min-w-[260px] border-b md:border-b-0 md:border-r border-border bg-muted/5">
                     <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">

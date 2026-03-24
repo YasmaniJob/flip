@@ -287,7 +287,7 @@ export function ReservationDialog({
                                         ? <span className="flex items-center gap-2">
                                             Reserva
                                             <span className="text-muted-foreground font-bold">·</span>
-                                            <span className="text-primary">{selectedStaffName}</span>
+                                            <span className="text-primary dark:text-blue-400">{selectedStaffName}</span>
                                           </span>
                                         : viewState === 'CONTEXT' ? 'Contexto Pedagógico'
                                         : 'Programación de Horarios'
@@ -365,7 +365,7 @@ export function ReservationDialog({
                                                     />
                                                 </div>
                                             ) : (
-                                                <div className="flex items-center gap-3 p-3 rounded-sm border border-border bg-white group relative">
+                                                <div className="flex items-center gap-3 p-3 rounded-sm border border-border bg-card group relative">
                                                     <div className="w-8 h-8 rounded-sm bg-primary/10 text-primary flex items-center justify-center text-xs font-black shrink-0">
                                                         {selectedStaffName?.[0]}
                                                     </div>
@@ -382,8 +382,8 @@ export function ReservationDialog({
                                                 </div>
                                             )
                                         ) : (
-                                            <div className="flex items-center gap-3 p-3 rounded-sm border border-border bg-white">
-                                                <div className="w-8 h-8 rounded-sm bg-primary text-white flex items-center justify-center text-xs font-black shrink-0">
+                                            <div className="flex items-center gap-3 p-3 rounded-sm border border-border bg-card">
+                                                <div className="w-8 h-8 rounded-sm bg-primary text-primary-foreground flex items-center justify-center text-xs font-black shrink-0">
                                                     {user?.name?.[0]}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
@@ -425,7 +425,7 @@ export function ReservationDialog({
                                             placeholder="Detalles sobre el logro esperado..."
                                             value={purpose}
                                             onChange={(e) => setPurpose(e.target.value)}
-                                            className="w-full bg-white border border-border rounded-sm h-32 px-4 py-3 text-[11px] font-bold text-foreground focus:border-primary focus:ring-0 outline-none transition-all resize-none placeholder:text-muted-foreground/30 shadow-none scrollbar-hide"
+                                            className="w-full bg-card border border-border rounded-sm h-32 px-4 py-3 text-[11px] font-bold text-foreground focus:border-primary focus:ring-0 outline-none transition-all resize-none placeholder:text-muted-foreground/30 shadow-none scrollbar-hide"
                                         />
                                     </div>
                                 </div>

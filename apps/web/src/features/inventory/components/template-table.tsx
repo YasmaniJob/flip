@@ -35,7 +35,7 @@ export function TemplateTable({
     };
 
     return (
-        <div className="bg-white border border-border rounded-lg mt-6 mb-8 shadow-none transition-all">
+        <div className="bg-card border border-border rounded-lg mt-6 mb-8 shadow-none transition-all">
             <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                     <thead>
@@ -51,7 +51,7 @@ export function TemplateTable({
                             <th className="px-6 py-4 text-right text-[13px] font-semibold text-slate-500 capitalize">Acción</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-border">
                         {items.length === 0 ? (
                             <tr>
                                 <td colSpan={7} className="px-6 py-12 text-center">
@@ -86,14 +86,14 @@ export function TemplateTable({
                                                 isExpanded ? "bg-muted/[0.05]" : ""
                                             )}
                                         >
-                                            <td className="px-6 py-4 text-slate-400 group-hover:text-slate-600">
+                                            <td className="px-6 py-4 text-muted-foreground/70 group-hover:text-foreground transition-colors">
                                                 {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
                                             </td>
 
                                             {/* Nombre de Plantilla */}
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-md bg-white border border-border flex items-center justify-center text-xl shrink-0">
+                                                    <div className="w-10 h-10 rounded-md bg-card border border-border flex items-center justify-center text-xl shrink-0">
                                                         {item.templateIcon || '📦'}
                                                     </div>
                                                     <p className="text-[13px] font-black text-foreground uppercase tracking-tight">
@@ -162,7 +162,7 @@ export function TemplateTable({
                                             <tr className="border-b border-border bg-muted/5">
                                                 <td colSpan={7} className="p-0">
                                                     <div className="px-10 py-6 animate-in slide-in-from-top-2 duration-300">
-                                                        <div className="bg-white border border-border rounded-lg shadow-none">
+                                                        <div className="bg-card border border-border rounded-lg shadow-none">
                                                             <div className="flex items-center justify-between px-8 py-5 border-b border-border bg-muted/5">
                                                                 <div className="space-y-1">
                                                                     <h3 className="text-[11px] font-black text-foreground uppercase tracking-widest">Unidades Físicas</h3>

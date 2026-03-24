@@ -18,7 +18,7 @@ export const SelectionActionBar: FC<SelectionActionBarProps> = memo(
 
     return (
       <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-8 fade-in duration-500">
-        <div className="bg-white/90 backdrop-blur-xl border border-primary/20 px-3 py-2.5 flex items-center gap-4 rounded-[2rem] min-w-[320px]">
+        <div className="bg-card/90 backdrop-blur-xl border border-primary/20 px-3 py-2.5 flex items-center gap-4 rounded-[2rem] min-w-[320px]">
           {/* Selection Count Pill */}
           <div className="flex items-center gap-3 pl-3 pr-5 py-2 bg-primary/10 rounded-full border border-primary/10">
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-black text-white animate-in zoom-in-50 duration-300">
@@ -37,7 +37,7 @@ export const SelectionActionBar: FC<SelectionActionBarProps> = memo(
               variant="ghost"
               onClick={onClear}
               disabled={isPending}
-              className="h-10 w-10 rounded-full text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all border border-transparent hover:border-slate-200"
+              className="h-10 w-10 rounded-full text-muted-foreground/70 hover:text-foreground hover:bg-muted/30 transition-all border border-transparent hover:border-border"
             >
               <X className="w-4 h-4" />
             </Button>
