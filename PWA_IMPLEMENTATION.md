@@ -113,16 +113,75 @@ md: 768px   /* Tablet - ajustes intermedios */
 
 ---
 
+## ✅ Fase 2: Dashboard Móvil (COMPLETADO)
+
+### Componentes Creados
+
+**`apps/web/src/features/dashboard/components/mobile-dashboard-header.tsx`**
+- Header con saludo personalizado (Buenos días/tardes/noches)
+- Nombre del usuario (primer nombre)
+- Fecha actual en español
+- Avatar del usuario (derecha)
+- Badge de institución con punto verde animado
+
+**`apps/web/src/features/dashboard/components/mobile-metrics-grid.tsx`**
+- Grid 2x2 de métricas principales
+- Cards con íconos de colores (azul, verde, ámbar, púrpura)
+- Métricas: Reservas semana, Equipos inventario, Préstamos activos, Docentes staff
+- Links a cada módulo correspondiente
+- Hover states con border color #185FA5
+
+**`apps/web/src/features/dashboard/components/mobile-overdue-alert.tsx`**
+- Alerta naranja para préstamos que vencen hoy
+- Solo se muestra si count > 0
+- Ícono de advertencia
+- Link directo a préstamos con filtro overdue
+- Diseño con fondo ámbar y borde
+
+**`apps/web/src/features/dashboard/components/mobile-quick-actions.tsx`**
+- Fila de 4 acciones rápidas con íconos grandes
+- Botones circulares de colores (azul, verde, púrpura, ámbar)
+- Acciones: Nuevo préstamo, Buscar equipo, Reservar aula, Ver inventario
+- Tamaño táctil 56x56px (14x14 con padding)
+
+**`apps/web/src/features/dashboard/components/mobile-recent-activity.tsx`**
+- Lista de últimas 5 actividades
+- Íconos por tipo (préstamo, reserva, inventario, personal)
+- Timestamp relativo (hace X minutos/horas)
+- Separadores de 0.5px entre items
+- Mock data incluido para testing
+
+### Dashboard Page Actualizado
+
+**`apps/web/src/app/(dashboard)/dashboard/page.tsx`**
+- Versión móvil completamente separada (lg:hidden)
+- Versión desktop sin cambios (hidden lg:block)
+- Integra todos los componentes móviles
+- Stats dinámicos desde institution data
+- Responsive y optimizado para touch
+
+### Características Implementadas
+
+✅ Header con saludo personalizado según hora del día
+✅ Badge de institución con punto verde animado
+✅ Grid 2x2 de métricas con colores distintivos
+✅ Alerta naranja condicional para préstamos vencidos
+✅ 4 acciones rápidas con íconos grandes y táctiles
+✅ Lista de actividad reciente (últimas 5 acciones)
+✅ Separación completa entre móvil y desktop
+✅ Sin cambios en funcionalidad desktop existente
+
+---
+
 ## 🚀 Próximos Pasos
 
-### Fase 2: Dashboard Móvil
-- [ ] Header con saludo personalizado
-- [ ] Badge de institución con punto verde
-- [ ] Grid 2x2 de métricas
-- [ ] Alerta naranja para préstamos que vencen hoy
-- [ ] Acciones rápidas (4 íconos)
-- [ ] Lista de actividad reciente (últimas 5)
-- [ ] Integrar MobileTopbar con avatar
+### Fase 2: Dashboard Móvil ✅ COMPLETADO
+- [x] Header con saludo personalizado
+- [x] Badge de institución con punto verde
+- [x] Grid 2x2 de métricas
+- [x] Alerta naranja para préstamos que vencen hoy
+- [x] Acciones rápidas (4 íconos)
+- [x] Lista de actividad reciente (últimas 5)
 
 ### Fase 3: Reservas Móvil
 - [ ] Selector Mañana/Tarde (tabs pill)
