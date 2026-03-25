@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ const WEEKDAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado
 export type Shift = 'mañana' | 'tarde';
 
 export function ReservacionesClient() {
+    const router = useRouter();
     const { user, canManage } = useUserRole();
     const { data: defaults, isLoading: isLoadingDefaults } = useAcademicDefaults();
     
@@ -128,12 +130,20 @@ export function ReservacionesClient() {
     const slotMap = useMemo(() => {
         const map = new Map<string, ReservationSlot>();
         if (!slots) return map;
+        
         slots.forEach(slot => {
             if (slot.classroomId === selectedClassroomId) {
-                const dateKey = new Date(slot.date).toDateString();
+                // Parsear fecha sin conversión de zona horaria
+                // Extraer solo la parte de fecha del ISO string (YYYY-MM-DD)
+                const dateStr = slot.date.split('T')[0];
+                const [year, month, day] = dateStr.split('-').map(Number);
+                // Crear fecha en zona horaria local sin conversión UTC
+                const localDate = new Date(year, month - 1, day);
+                const dateKey = localDate.toDateString();
                 map.set(`${dateKey}-${slot.pedagogicalHour.id}`, slot);
             }
         });
+        
         return map;
     }, [slots, selectedClassroomId]);
 
@@ -243,7 +253,19 @@ export function ReservacionesClient() {
         }
     }, [dragState, pedagogicalHours, slotMap, rescheduleBlockMutation]);
 
-    const handleOpenDialog = () => setIsDialogOpen(true);
+    const handleOpenDialog = () => {
+        // En móvil, navegar a página dedicada
+        if (window.innerWidth < 1024) {
+            const params = new URLSearchParams({
+                classroomId: selectedClassroomId,
+                slots: encodeURIComponent(JSON.stringify(selectedSlots))
+            });
+            router.push(`/reservaciones/nueva?${params.toString()}`);
+        } else {
+            setIsDialogOpen(true);
+        }
+    };
+    
     const handleDialogClose = () => {
         setIsDialogOpen(false);
         setSelectedSlots([]);
@@ -323,7 +345,7 @@ export function ReservacionesClient() {
                                     Cancelar
                                 </button>
                                 <button
-                                    onClick={() => setIsDialogOpen(true)}
+                                    onClick={handleOpenDialog}
                                     className="px-4 py-2 bg-primary-foreground text-primary rounded-lg text-sm font-semibold hover:bg-primary-foreground/90 transition-colors"
                                 >
                                     Crear reserva
