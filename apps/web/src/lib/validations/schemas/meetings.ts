@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { isoDateTimeSchema, optionalIsoDateTimeSchema } from '../date-schemas';
+import { flexibleDateSchema, optionalIsoDateTimeSchema } from '../date-schemas';
 
 // Meeting type enum
-export const meetingTypeEnum = z.enum(['asistencia_tecnica', 'reunion_docentes', 'capacitacion', 'otro']);
+export const meetingTypeEnum = z.enum(['asistencia_tecnica', 'reunion_docentes', 'capacitacion', 'general', 'otro']);
 
 // Meeting status enum
 export const meetingStatusEnum = z.enum(['active', 'cancelled', 'completed']);
@@ -16,7 +16,7 @@ export const taskStatusEnum = z.enum(['pending', 'completed']);
 // Create meeting
 export const createMeetingSchema = z.object({
   title: z.string().min(1, 'El título es requerido'),
-  date: isoDateTimeSchema,
+  date: flexibleDateSchema,
   startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Formato de hora inválido (HH:mm)').optional(),
   endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Formato de hora inválido (HH:mm)').optional(),
   type: meetingTypeEnum.optional().default('asistencia_tecnica'),

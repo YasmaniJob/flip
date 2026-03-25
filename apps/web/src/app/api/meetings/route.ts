@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { meetings } from '@/lib/db/schema';
+import { meetings, meetingTasks } from '@/lib/db/schema';
 import { requireAuth, getInstitutionId } from '@/lib/auth/helpers';
 import { validateBody } from '@/lib/validations/helpers';
 import { createMeetingSchema } from '@/lib/validations/schemas/meetings';
@@ -81,6 +81,19 @@ export async function POST(request: NextRequest) {
         notes: data.notes,
       })
       .returning();
+
+    // Create tasks if provided
+    if (body.tasks && Array.isArray(body.tasks) && body.tasks.length > 0) {
+      await db.insert(meetingTasks).values(
+        body.tasks.map((task: any) => ({
+          meetingId: meeting.id,
+          description: task.description,
+          assignedStaffId: task.assignedStaffId,
+          dueDate: task.dueDate ? new Date(task.dueDate) : null,
+          status: task.status || 'pending',
+        }))
+      );
+    }
 
     return successResponse(meeting, 'Reunión creada exitosamente', 201);
   } catch (error) {

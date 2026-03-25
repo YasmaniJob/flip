@@ -389,7 +389,7 @@ export const reservationSlots = pgTable('reservation_slots', {
 // MEETINGS
 // ============================================
 export const meetings = pgTable('meetings', {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
     institutionId: text('institution_id').references(() => institutions.id).notNull(),
     title: text('title').notNull(),
     date: timestamp('date').notNull(),
@@ -428,7 +428,7 @@ export const meetingAttendance = pgTable('meeting_attendance', {
 // MEETING TASKS (Agreements)
 // ============================================
 export const meetingTasks = pgTable('meeting_tasks', {
-    id: text('id').primaryKey(),
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
     meetingId: text('meeting_id').references(() => meetings.id).notNull(),
     description: text('description').notNull(),
     assignedStaffId: text('assigned_staff_id').references(() => staff.id),
