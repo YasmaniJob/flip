@@ -62,16 +62,17 @@ export async function POST(request: NextRequest) {
 
     console.log('[Set Active Institution] Validated access for user:', user.id, 'to institution:', institutionId);
 
-    // Actualizar institutionId en la tabla users
+    // Actualizar institutionId Y role en la tabla users (el rol puede ser diferente por institución)
     await db
       .update(users)
       .set({
         institutionId,
+        role: staffRecord.role, // Actualizar el rol según el staff record de la nueva institución
         updatedAt: new Date(),
       })
       .where(eq(users.id, user.id));
 
-    console.log('[Set Active Institution] Updated users table');
+    console.log('[Set Active Institution] Updated users table with new role:', staffRecord.role);
 
     // Actualizar activeInstitutionId en la sesión actual
     await db
@@ -84,12 +85,14 @@ export async function POST(request: NextRequest) {
 
     console.log('[Set Active Institution] Updated sessions table');
 
+    // Invalidar el caché de sesión para forzar recarga
     // Better Auth maneja las cookies automáticamente con nextCookies plugin
     // La sesión se actualizará en la próxima petición
 
     return NextResponse.json({
       success: true,
       institutionId,
+      role: staffRecord.role, // Devolver el nuevo rol para confirmación
     });
   } catch (error) {
     console.error('[Set Active Institution] Error:', error);

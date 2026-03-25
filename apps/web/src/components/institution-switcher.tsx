@@ -66,14 +66,17 @@ export function InstitutionSwitcher() {
             });
 
             if (res.ok) {
+                const data = await res.json();
+                console.log('[Institution Switcher] Successfully switched to:', institutionId, 'with role:', data.role);
+                
                 // Sincronizar con localStorage
                 localStorage.setItem('flip_last_institution_id', institutionId);
                 
                 // Delay para asegurar que la BD se actualice antes de recargar
-                await new Promise(resolve => setTimeout(resolve, 300));
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
-                // Recargar la página para actualizar toda la data
-                window.location.href = '/dashboard';
+                // Hard reload para forzar recarga completa de la sesión
+                window.location.replace('/dashboard');
             } else {
                 const data = await res.json();
                 console.error('Error switching institution:', data.error);
