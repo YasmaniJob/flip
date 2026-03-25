@@ -16,6 +16,19 @@ export const metadata: Metadata = {
   title: "Flip - Gestión de Inventario",
   description:
     "Sistema de gestión de inventario y préstamos para instituciones educativas",
+  manifest: "/manifest.json",
+  themeColor: "#185FA5",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Flip",
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 // Script to prevent flash of wrong theme

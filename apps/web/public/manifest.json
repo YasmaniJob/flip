@@ -1,0 +1,48 @@
+{
+  "name": "Flip - Sistema de Gestión Educativa",
+  "short_name": "Flip",
+  "description": "Sistema de gestión de inventario, préstamos y reservas para instituciones educativas",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#185FA5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Inventario",
+      "short_name": "Inventario",
+      "description": "Ver inventario de equipos",
+      "url": "/inventory",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Préstamos",
+      "short_name": "Préstamos",
+      "description": "Gestionar préstamos",
+      "url": "/loans",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Reservas",
+      "short_name": "Reservas",
+      "description": "Ver reservas de aulas",
+      "url": "/reservations",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

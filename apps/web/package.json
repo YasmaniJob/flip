@@ -14,6 +14,7 @@
         "db:analyze": "dotenv -e .env.local -- tsx scripts/analyze-db-tables.ts"
     },
     "dependencies": {
+        "@ducanh2912/next-pwa": "^10.2.9",
         "@flip/shared": "workspace:*",
         "@hookform/resolvers": "^5.2.2",
         "@libsql/client": "^0.17.2",

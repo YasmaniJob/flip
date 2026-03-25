@@ -496,7 +496,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "bg-sidebar h-screen sticky top-0 flex flex-col border-r border-sidebar-border transition-all duration-200 ease-in-out shrink-0",
+        "hidden lg:flex bg-sidebar h-screen sticky top-0 flex-col border-r border-sidebar-border transition-all duration-200 ease-in-out shrink-0",
         collapsed ? "w-[60px]" : "w-60",
       )}
     >

@@ -1,12 +1,14 @@
 "use client";
 
 import { useSession } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { QueryProvider } from "@/providers/query-provider";
 import { Sparkles, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BottomNav } from "@/components/mobile/bottom-nav";
+import { MobileDrawer } from "@/components/mobile/mobile-drawer";
 
 export default function DashboardLayout({
     children,
@@ -14,10 +16,15 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
+    const pathname = usePathname();
     const { data: session, isPending } = useSession();
 
     const [institution, setInstitution] = useState<any>(null);
     const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+    const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+
+    // Determine if center button should show based on current route
+    const showCenterButton = pathname.startsWith("/inventory") || pathname.startsWith("/reservations") || pathname.startsWith("/loans");
 
     useEffect(() => {
         // Check if banner was dismissed in this session
@@ -178,11 +185,30 @@ export default function DashboardLayout({
                 )}
 
                 <div className="flex flex-1 min-h-0">
+                    {/* Desktop Sidebar */}
                     <Sidebar />
-                    <main className="flex-1 overflow-auto relative">
+                    
+                    {/* Mobile Drawer */}
+                    <MobileDrawer 
+                        open={isMobileDrawerOpen} 
+                        onClose={() => setIsMobileDrawerOpen(false)} 
+                    />
+                    
+                    {/* Main Content */}
+                    <main className="flex-1 overflow-auto relative pb-20 lg:pb-0">
                         {children}
                     </main>
                 </div>
+
+                {/* Mobile Bottom Navigation */}
+                <BottomNav 
+                    showCenterButton={showCenterButton}
+                    onCenterButtonClick={() => {
+                        // This will be handled by each page individually
+                        const event = new CustomEvent('mobile-center-button-click');
+                        window.dispatchEvent(event);
+                    }}
+                />
             </div>
         </QueryProvider>
     );
