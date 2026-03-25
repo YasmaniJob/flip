@@ -94,7 +94,7 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
     return (
-        <Suspense fallback={<div className="p-8 text-center text-slate-500">Cargando...</div>}>
+        <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Cargando...</div>}>
             <VerifyEmailContent />
         </Suspense>
     );

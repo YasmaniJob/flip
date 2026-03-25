@@ -48,7 +48,7 @@ export function TemplateTable({
                             <th className={TH_CLASS}>Prestados</th>
                             <th className={TH_CLASS}>En Stock</th>
                             <th className={TH_CLASS}>Estado</th>
-                            <th className="px-6 py-4 text-right text-[13px] font-semibold text-slate-500 capitalize">Acción</th>
+                            <th className="px-6 py-4 text-right text-[13px] font-semibold text-muted-foreground capitalize">Acción</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">

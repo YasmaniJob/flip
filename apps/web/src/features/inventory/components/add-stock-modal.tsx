@@ -487,7 +487,7 @@ export function AddStockModal({
                                         size="icon"
                                         onClick={() => fields.length > 1 && remove(index)}
                                         disabled={fields.length === 1}
-                                        className="h-8 w-8 rounded-none text-slate-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                        className="h-8 w-8 rounded-none text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-50"
                                     >
                                         <Trash2 className="h-3.5 w-3.5" />
                                     </Button>

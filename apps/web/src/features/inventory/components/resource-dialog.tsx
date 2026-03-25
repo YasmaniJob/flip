@@ -311,8 +311,8 @@ export function ResourceDialog({ resource, categories = [], loading, onSave, onC
                                                     selectedColorClass = "bg-blue-600 border-blue-600 text-white";
                                                     starColorClass = "text-blue-100";
                                                 } else if (option.value === 'bueno') {
-                                                    selectedColorClass = "bg-slate-700 border-slate-700 text-white";
-                                                    starColorClass = "text-slate-100";
+                                                    selectedColorClass = "bg-foreground/90 border-foreground/90 text-background";
+                                                    starColorClass = "text-background/80";
                                                 } else if (option.value === 'regular') {
                                                     selectedColorClass = "bg-amber-500 border-amber-500 text-white";
                                                     starColorClass = "text-amber-100";

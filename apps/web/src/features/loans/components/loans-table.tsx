@@ -19,9 +19,9 @@ function LoanStatusBadge({ status }: { status: string }) {
         case 'returned':
             return <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100"><CheckCircle2 className="w-3 h-3 mr-1" /> Devuelto</div>;
         case 'overdue':
-            return <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-100"><AlertCircle className="w-3 h-3 mr-1" /> Vencido</div>;
+            return <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-900/50"><AlertCircle className="w-3 h-3 mr-1" /> Vencido</div>;
         default:
-            return <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-100">{status}</div>;
+            return <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border">{status}</div>;
     }
 }
 

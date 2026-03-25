@@ -62,7 +62,7 @@ export function TemplateDrawer({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
+                className="fixed inset-0 z-40 bg-background/40 backdrop-blur-sm"
             />
 
             {/* Drawer */}
@@ -100,7 +100,7 @@ export function TemplateDrawer({
 
                     <div className="flex items-center gap-3">
                         {/* Quick Stats */}
-                        <div className="hidden sm:flex items-center gap-4 mr-4 text-xs font-bold text-slate-500">
+                        <div className="hidden sm:flex items-center gap-4 mr-4 text-xs font-bold text-muted-foreground">
                             <div className="flex flex-col items-end">
                                 <span className="text-[9px] uppercase tracking-widest opacity-60">Total Unidades</span>
                                 <span className="text-lg text-foreground leading-none">{template.totalStock}</span>

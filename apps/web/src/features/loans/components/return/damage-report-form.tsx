@@ -92,7 +92,7 @@ export function DamageReportForm({ resource, initialData, isExpanded, onToggleEx
             >
                 <div className="flex items-center gap-3">
                     <div className="flex flex-col">
-                        <span className="font-medium text-sm text-slate-900">{resource.name}</span>
+                        <span className="font-medium text-sm text-foreground">{resource.name}</span>
                         <span className="text-xs text-muted-foreground">{formattedId}</span>
                     </div>
                 </div>
@@ -104,7 +104,7 @@ export function DamageReportForm({ resource, initialData, isExpanded, onToggleEx
                             Reportado
                         </Badge>
                     )}
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground">
                         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </Button>
                 </div>
