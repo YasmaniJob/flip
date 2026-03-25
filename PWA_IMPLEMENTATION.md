@@ -173,25 +173,80 @@ md: 768px   /* Tablet - ajustes intermedios */
 
 ---
 
+## ✅ Fase 3: Reservas Móvil (COMPLETADO)
+
+### Componentes Creados
+
+**`apps/web/src/components/mobile/bottom-sheet.tsx`**
+- Componente base reutilizable para bottom sheets
+- Handle visual (barra gris 36x4px) para swipe
+- Swipe to dismiss con detección táctil
+- Max height configurable (default 85vh)
+- Border radius 16px 16px 0 0
+- Overlay oscuro con tap to close
+- Previene scroll del body cuando está abierto
+
+**`apps/web/src/features/reservations/components/mobile-shift-selector.tsx`**
+- Selector Mañana/Tarde con diseño pill
+- Tabs con fondo redondeado
+- Activo en color #185FA5
+- Transiciones suaves
+
+**`apps/web/src/features/reservations/components/mobile-week-strip.tsx`**
+- Strip horizontal de días de la semana
+- Scroll horizontal con auto-scroll a hoy
+- Navegación prev/next con flechas
+- Día actual destacado en #185FA5
+- Sticky top para mantener visible
+- Formato compacto: Lun 15, Mar 16, etc.
+
+**`apps/web/src/features/reservations/components/mobile-schedule-view.tsx`**
+- Vista vertical de horario por horas
+- Grid 3 columnas para días
+- Bloques de color por tipo:
+  - Azul: Sesión de clase
+  - Verde: Proyecto/Taller
+  - Ámbar: Gestión y otros
+- Celdas vacías muestran "Disponible"
+- Min-height 80px para touch
+- Ring indicator para día actual
+- Muestra staff y título en cada slot
+
+**`apps/web/src/features/reservations/components/mobile-new-reservation-sheet.tsx`**
+- Bottom sheet para nueva reserva
+- Chips táctiles seleccionables con checkmark
+- Secciones: Propósito, Área curricular, Grado, Sección
+- Botones de 44px min-height
+- Color #185FA5 para selección
+- Botón "Confirmar reserva" al fondo
+- Reset automático al cerrar
+
+### Características Implementadas
+
+✅ Selector Mañana/Tarde como tabs pill
+✅ Strip de días horizontal con scroll
+✅ Vista de horario vertical por horas
+✅ Bloques de color por tipo de reserva
+✅ Celdas vacías con estado "Disponible"
+✅ Bottom sheet con swipe to dismiss
+✅ Chips táctiles para selección
+✅ Botón confirmar al fondo del sheet
+✅ Touch-friendly (min 44px height)
+✅ Auto-scroll a día actual
+
+---
+
 ## 🚀 Próximos Pasos
 
-### Fase 2: Dashboard Móvil ✅ COMPLETADO
-- [x] Header con saludo personalizado
-- [x] Badge de institución con punto verde
-- [x] Grid 2x2 de métricas
-- [x] Alerta naranja para préstamos que vencen hoy
-- [x] Acciones rápidas (4 íconos)
-- [x] Lista de actividad reciente (últimas 5)
+### Fase 3: Reservas Móvil ✅ COMPLETADO
+- [x] Selector Mañana/Tarde (tabs pill)
+- [x] Strip horizontal de días (scroll)
+- [x] Vista de horario vertical
+- [x] Bloques de color por tipo (Azul/Verde/Ámbar)
+- [x] Bottom sheet para nueva reserva
+- [x] Chips táctiles para selección
 
-### Fase 3: Reservas Móvil
-- [ ] Selector Mañana/Tarde (tabs pill)
-- [ ] Strip horizontal de días (scroll)
-- [ ] Vista de horario vertical
-- [ ] Bloques de color por tipo (Azul/Verde/Ámbar)
-- [ ] Bottom sheet para nueva reserva
-- [ ] Chips táctiles para selección
-
-### Fase 4: Bottom Sheets
+### Fase 4: Bottom Sheets Globales
 - [ ] Componente base de bottom sheet
 - [ ] Handle visual (barra gris 36x4px)
 - [ ] Swipe to dismiss
