@@ -131,7 +131,7 @@ export function MeetingWizard({ isOpen, onClose }: MeetingWizardProps) {
                     description="Organiza y registra los detalles de tus reuniones institucionales."
                     onClose={handleClose}
                     className="h-full border-none"
-                    contentClassName="bg-slate-50/30"
+                    contentClassName="bg-muted/20"
                 >
                     {/* Header with Steps/Status if needed, or just spacers */}
                     <div className="shrink-0 px-8 pt-6 pb-4 border-b border-border bg-background flex items-center justify-between">

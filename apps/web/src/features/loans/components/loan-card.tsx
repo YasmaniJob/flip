@@ -200,7 +200,7 @@ export function LoanCard({ loan, onReturn: _onReturn, readOnly = false, canManag
                                                             </div>
                                                         )}
                                                         {loan.damageReports[resource.id].otherNotes && (
-                                                            <div className="text-sm text-muted-foreground italic bg-muted/50 p-2 rounded-md border border-border">
+                                                            <div className="text-sm text-muted-foreground italic bg-muted/30 p-2 rounded-md border border-border">
                                                                 &ldquo;{loan.damageReports[resource.id].otherNotes}&rdquo;
                                                             </div>
                                                         )}
@@ -238,7 +238,7 @@ export function LoanCard({ loan, onReturn: _onReturn, readOnly = false, canManag
                                                             </div>
                                                         )}
                                                         {loan.suggestionReports[resource.id].otherNotes && (
-                                                            <div className="text-sm text-muted-foreground italic bg-muted/50 p-2 rounded-md border border-border">
+                                                            <div className="text-sm text-muted-foreground italic bg-muted/30 p-2 rounded-md border border-border">
                                                                 &ldquo;{loan.suggestionReports[resource.id].otherNotes}&rdquo;
                                                             </div>
                                                         )}

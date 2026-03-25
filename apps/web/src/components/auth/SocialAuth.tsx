@@ -23,7 +23,7 @@ export function SocialAuth({ disabled = true }: SocialAuthProps) {
         disabled={disabled}
         title={disabled ? "Próximamente" : ""}
       >
-        <div className="flex items-center justify-center h-5 w-5 rounded-sm bg-white border border-border shadow-sm group-hover:scale-110 transition-transform">
+        <div className="flex items-center justify-center h-5 w-5 rounded-sm bg-card border border-border shadow-sm group-hover:scale-110 transition-transform">
           <svg
             viewBox="0 0 24 24"
             className="h-3 w-3"

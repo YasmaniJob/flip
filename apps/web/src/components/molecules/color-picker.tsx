@@ -67,25 +67,25 @@ export function ColorPicker({ value, onChange, className }: ColorPickerProps) {
                 <button
                     type="button"
                     className={cn(
-                        "h-12 w-full px-4 rounded-xl border border-gray-200 bg-white hover:border-gray-300 transition-colors flex items-center gap-3 outline-none focus:ring-2 focus:ring-emerald-500/20",
+                        "h-12 w-full px-4 rounded-xl border border-border bg-card hover:border-border/80 transition-colors flex items-center gap-3 outline-none focus:ring-2 focus:ring-primary/20",
                         className
                     )}
                 >
                     <div
-                        className="w-6 h-6 rounded-full ring-2 ring-gray-100"
+                        className="w-6 h-6 rounded-full ring-2 ring-border"
                         style={{ backgroundColor: value || '#64748b' }}
                     />
-                    <span className="text-base font-medium text-gray-700 flex-1 text-left">
+                    <span className="text-base font-medium text-foreground flex-1 text-left">
                         {selectedColor?.name || 'Color'}
                     </span>
-                    <ChevronDown className="h-4 w-4 text-gray-400" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuPortal>
                 <DropdownMenuContent
                     align="start"
                     sideOffset={5}
-                    className="z-[9999] w-[var(--radix-dropdown-menu-trigger-width)] min-w-[280px] bg-white rounded-xl border border-gray-200 p-3 animate-in fade-in-0 zoom-in-95"
+                    className="z-[9999] w-[var(--radix-dropdown-menu-trigger-width)] min-w-[280px] bg-card rounded-xl border border-border p-3 animate-in fade-in-0 zoom-in-95"
                 >
                     <ColorGrid value={value} onChange={onChange} />
                 </DropdownMenuContent>

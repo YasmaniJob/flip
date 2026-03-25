@@ -58,7 +58,7 @@ export function InventoryTable({
     onRestore,
 }: InventoryTableProps) {
     return (
-        <div className="bg-white border border-border rounded-md overflow-hidden shadow-none">
+        <div className="bg-card border border-border rounded-md overflow-hidden shadow-none">
             <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                     <thead>

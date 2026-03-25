@@ -58,16 +58,16 @@ export default function MeetingCheckInPage() {
     // Let's check api-client.ts to see how it's configured.
 
     if (isSessionLoading) {
-        return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+        return <div className="min-h-screen flex items-center justify-center bg-muted/20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
 
     if (!session) return null;
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-            <Card className="w-full max-w-md shadow-xl border-slate-200">
+        <div className="min-h-screen flex items-center justify-center bg-muted/20 p-4">
+            <Card className="w-full max-w-md shadow-xl border-border">
                 <CardHeader className="text-center pb-2">
-                    <CardTitle className="text-2xl font-black text-slate-900">Registro de Asistencia</CardTitle>
+                    <CardTitle className="text-2xl font-black text-foreground">Registro de Asistencia</CardTitle>
                     <CardDescription>
                         Hola <strong>{session.user.name}</strong>, confirma tu asistencia a la reunión.
                     </CardDescription>
@@ -99,21 +99,21 @@ export default function MeetingCheckInPage() {
 
                     {status === 'success' && (
                         <div className="flex flex-col items-center animate-in zoom-in-50 duration-300">
-                            <div className="h-20 w-20 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                            <div className="h-20 w-20 bg-emerald-100 dark:bg-emerald-950/30 rounded-full flex items-center justify-center mb-4">
                                 <CheckCircle2 className="h-10 w-10 text-emerald-600" />
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-2">¡Registrado!</h3>
-                            <p className="text-slate-500 text-center mb-6">Tu asistencia ha sido confirmada exitosamente.</p>
+                            <h3 className="text-xl font-bold text-foreground mb-2">¡Registrado!</h3>
+                            <p className="text-muted-foreground text-center mb-6">Tu asistencia ha sido confirmada exitosamente.</p>
                         </div>
                     )}
 
                     {status === 'error' && (
                         <div className="flex flex-col items-center animate-in zoom-in-50 duration-300">
-                            <div className="h-20 w-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                            <div className="h-20 w-20 bg-red-100 dark:bg-red-950/30 rounded-full flex items-center justify-center mb-4">
                                 <AlertCircle className="h-10 w-10 text-red-600" />
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-2">Error</h3>
-                            <p className="text-slate-500 text-center mb-6">No se pudo registrar tu asistencia. Inténtalo de nuevo.</p>
+                            <h3 className="text-xl font-bold text-foreground mb-2">Error</h3>
+                            <p className="text-muted-foreground text-center mb-6">No se pudo registrar tu asistencia. Inténtalo de nuevo.</p>
                             <Button onClick={() => setStatus('idle')}>
                                 Intentar de nuevo
                             </Button>

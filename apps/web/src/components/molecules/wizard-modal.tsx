@@ -77,13 +77,13 @@ export function WizardModalSidebar({
     return (
         <div className="w-72 shrink-0 bg-primary text-primary-foreground p-6 flex flex-col relative overflow-hidden">
             {/* Decorative circles */}
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-32 -left-10 w-32 h-32 bg-white/5 rounded-full" />
+            <div className="absolute top-0 right-0 w-40 h-40 bg-background/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-32 -left-10 w-32 h-32 bg-background/5 rounded-full" />
 
             {/* Header */}
             <div className="relative z-10 mb-2">
                 {icon && (
-                    <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-6">
+                    <div className="w-14 h-14 rounded-2xl bg-background/20 flex items-center justify-center mb-6">
                         <span className="text-3xl">{icon}</span>
                     </div>
                 )}
@@ -104,24 +104,24 @@ export function WizardModalSidebar({
             {/* Bottom Summary */}
             <div className="mt-4 shrink-0 relative z-10">
                 {summary.length > 0 ? (
-                    <div className="bg-white/10 rounded-2xl p-5 backdrop-blur-sm border border-white/10">
+                    <div className="bg-background/10 rounded-2xl p-5 backdrop-blur-sm border border-white/10">
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="h-0.5 w-3 bg-white/50 rounded-full"></div>
+                            <div className="h-0.5 w-3 bg-background/50 rounded-full"></div>
                             <span className="text-[10px] font-bold uppercase tracking-widest text-white/90">Resumen</span>
                         </div>
 
                         <div className="relative space-y-4">
                             {/* Vertical Line */}
-                            <div className="absolute left-3 top-2 bottom-6 w-0.5 bg-white/15 rounded-full"></div>
+                            <div className="absolute left-3 top-2 bottom-6 w-0.5 bg-background/15 rounded-full"></div>
 
                             {summary.map((item, idx) => (
                                 <div key={idx} className="relative flex items-center gap-4 group">
-                                    <div className="relative z-10 w-6 h-6 rounded-full bg-white flex items-center justify-center text-xs ring-2 ring-white/30 group-hover:scale-110 transition-transform duration-200">
+                                    <div className="relative z-10 w-6 h-6 rounded-full bg-background flex items-center justify-center text-xs ring-2 ring-white/30 group-hover:scale-110 transition-transform duration-200">
                                         {item.icon}
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-primary-foreground/70 uppercase tracking-wide font-medium">{item.label}</p>
-                                        <p className="text-sm font-bold text-white leading-tight">{item.value}</p>
+                                        <p className="text-sm font-bold text-primary-foreground leading-tight">{item.value}</p>
                                     </div>
                                 </div>
                             ))}
@@ -301,7 +301,7 @@ export function WizardModalContent({
                                             {footerStyle === 'wizard' && (
                                                 <div className={cn(
                                                     "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
-                                                    canSubmit ? 'bg-white/20' : 'bg-muted'
+                                                    canSubmit ? 'bg-background/20' : 'bg-muted'
                                                 )}>
                                                     <ChevronRight className="h-5 w-5" />
                                                 </div>

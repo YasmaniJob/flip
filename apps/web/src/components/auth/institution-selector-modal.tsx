@@ -65,7 +65,7 @@ export function InstitutionSelectorModal({
                                     : "border-border bg-card/40"
                             )}
                         >
-                            <div className="w-12 h-12 rounded-lg bg-white border border-border flex items-center justify-center text-primary shadow-none shrink-0">
+                            <div className="w-12 h-12 rounded-lg bg-card border border-border flex items-center justify-center text-primary shadow-none shrink-0">
                                 <Building2 className="h-6 w-6" />
                             </div>
                             

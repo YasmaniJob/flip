@@ -337,7 +337,7 @@ export function ImportTemplatesDialog({ open, onOpenChange, categories, onSucces
                                                         'flex items-center gap-2.5 px-3 py-2.5 rounded-md border transition-all text-left group',
                                                         isSel
                                                             ? 'border-primary bg-primary/5'
-                                                            : 'border-border bg-background hover:border-primary/40 hover:bg-slate-50/50',
+                                                            : 'border-border bg-background hover:border-primary/40 hover:bg-muted/20',
                                                     )}
                                                 >
                                                     <span className={cn(
