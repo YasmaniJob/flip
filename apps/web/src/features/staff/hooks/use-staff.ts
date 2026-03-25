@@ -99,9 +99,18 @@ export const useStaff = (params: UseStaffParams = {}) => {
     const updateStaff = useMutation({
         mutationFn: ({ id, data }: { id: string; data: Partial<CreateStaffInput> }) =>
             api.patch(`/staff/${id}`, data),
-        onSuccess: () => {
+        onSuccess: (response: any) => {
             queryClient.invalidateQueries({ queryKey: ['staff'] });
-            showSuccess('Personal actualizado correctamente');
+            
+            // Verificar si se invalidaron sesiones (cambio de rol)
+            if (response?._meta?.sessionsInvalidated) {
+                showSuccess(
+                    response._meta.message || 
+                    'Personal actualizado. El usuario deberá iniciar sesión nuevamente para ver los cambios.'
+                );
+            } else {
+                showSuccess('Personal actualizado correctamente');
+            }
         },
         onError: (error) => {
             handleApiError(error, 'No se pudo actualizar el personal');

@@ -5,7 +5,7 @@ import { validateBody } from '@/lib/validations/helpers';
 import { updateStaffSchema } from '@/lib/validations/schemas/staff';
 import { NotFoundError, ForbiddenError } from '@/lib/utils/errors';
 import { db } from '@/lib/db';
-import { staff } from '@/lib/db/schema';
+import { staff, users, sessions } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 // PATCH /api/staff/:id - Update staff member
@@ -48,6 +48,38 @@ export async function PATCH(
       })
       .where(eq(staff.id, id))
       .returning();
+
+    // Si el staff tiene email, sincronizar rol en tabla users
+    if (data.role && updatedStaff.email) {
+      // Buscar el usuario con ese email
+      const userToUpdate = await db.query.users.findFirst({
+        where: eq(users.email, updatedStaff.email),
+      });
+
+      if (userToUpdate) {
+        // Actualizar el rol en la tabla users
+        await db
+          .update(users)
+          .set({ role: data.role })
+          .where(eq(users.email, updatedStaff.email));
+
+        // Invalidar todas las sesiones del usuario para forzar re-login
+        // Esto asegura que el usuario vea su nuevo rol inmediatamente
+        await db
+          .delete(sessions)
+          .where(eq(sessions.userId, userToUpdate.id));
+
+        // Retornar información adicional sobre la sincronización
+        return successResponse({
+          ...updatedStaff,
+          _meta: {
+            userAccountUpdated: true,
+            sessionsInvalidated: true,
+            message: 'El rol se actualizó correctamente. El usuario deberá iniciar sesión nuevamente para ver los cambios.',
+          },
+        });
+      }
+    }
 
     return successResponse(updatedStaff);
   } catch (error) {

@@ -27,7 +27,7 @@ export function handleApiError(error: unknown, context?: string): void {
         if (error.status === 401) {
             // Session expired - redirect to login after a delay
             setTimeout(() => {
-                window.location.href = '/login';
+                window.location.href = '/login?session_expired=true';
             }, 2000);
         }
 

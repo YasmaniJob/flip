@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useTransition, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "@/lib/auth-client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, GraduationCap } from "lucide-react";
+import { Eye, EyeOff, GraduationCap, Info } from "lucide-react";
 import { useState } from "react";
 import { sileo } from "sileo";
 import { AuthHeader } from "@/components/auth/AuthHeader";
@@ -25,9 +25,14 @@ interface Institution {
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [isPending, startTransition] = useTransition();
     const [showPassword, setShowPassword] = useState(false);
     const { brand, institutionName, logoUrl } = useAuthBranding();
+    
+    // Detectar si viene por sesión expirada
+    const sessionExpired = searchParams.get('session_expired') === 'true';
+    const roleChanged = searchParams.get('role_changed') === 'true';
     
     // Estado para el modal de selección de institución
     const [showInstitutionSelector, setShowInstitutionSelector] = useState(false);
@@ -38,6 +43,24 @@ export default function LoginPage() {
     const subtitle = institutionName 
         ? `Bienvenido a ${institutionName}` 
         : "Sistema de Gestión y Préstamos";
+
+    // Mostrar mensaje de sesión expirada
+    useEffect(() => {
+        if (sessionExpired || roleChanged) {
+            sileo.info({
+                title: roleChanged ? "Tu rol ha cambiado" : "Sesión expirada",
+                description: roleChanged 
+                    ? "Un administrador actualizó tu rol. Por favor, inicia sesión nuevamente para ver los cambios."
+                    : "Tu sesión ha expirado. Por favor, inicia sesión nuevamente.",
+                fill: "#dbeafe",
+                styles: {
+                    title: "!text-blue-900 font-bold",
+                    description: "!text-blue-800 font-medium",
+                    badge: "!bg-blue-500 !text-white"
+                }
+            });
+        }
+    }, [sessionExpired, roleChanged]);
 
     const {
         register,
@@ -259,6 +282,26 @@ export default function LoginPage() {
 
     return (
         <div className="bg-background border border-border/30 shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-8 md:p-10 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[400px] w-full rounded-lg relative z-10 font-sans">
+
+            {/* Banner de información cuando viene por cambio de rol */}
+            {(sessionExpired || roleChanged) && (
+                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 rounded-lg animate-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-start gap-3">
+                        <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                            <h3 className="text-sm font-bold text-blue-900 dark:text-blue-100 mb-1">
+                                {roleChanged ? "Tu rol ha cambiado" : "Sesión expirada"}
+                            </h3>
+                            <p className="text-xs text-blue-800 dark:text-blue-200 leading-relaxed">
+                                {roleChanged 
+                                    ? "Un administrador actualizó tu rol. Inicia sesión para ver tus nuevos permisos."
+                                    : "Por seguridad, tu sesión ha expirado. Por favor, inicia sesión nuevamente."
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <AuthHeader 
                 title="Flip"

@@ -71,17 +71,25 @@ const BASE_URL = '/api/classroom-reservations';
 
 async function handleResponse<T>(res: Response): Promise<T> {
     if (!res.ok) {
-        const error = await res.json().catch(() => ({}));
-        const errorMessage = error.message || error.error || `Error ${res.status}: ${res.statusText}`;
-        console.error('[Reservations API] Error:', {
+        // Intentar parsear el error como JSON, si falla usar null
+        const error = await res.json().catch(() => null);
+        
+        // Construir mensaje de error con fallbacks
+        const errorMessage = error?.message || error?.error || `Error ${res.status}: ${res.statusText || 'Error desconocido'}`;
+        
+        // Log más detallado para debugging
+        console.error('[Reservations API] Error:', errorMessage, {
             url: res.url,
             status: res.status,
             statusText: res.statusText,
-            error: errorMessage,
+            errorBody: error,
         });
+        
         throw new Error(errorMessage);
     }
+    
     if (res.status === 204) return {} as T;
+    
     const text = await res.text();
     return text ? JSON.parse(text) : ({} as T);
 }
