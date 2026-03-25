@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useTransition, useEffect } from "react";
+import { useTransition, useEffect, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "@/lib/auth-client";
@@ -23,7 +23,7 @@ interface Institution {
     nivel?: string;
 }
 
-export default function LoginPage() {
+function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isPending, startTransition] = useTransition();
@@ -431,5 +431,17 @@ export default function LoginPage() {
                 isLoading={isSelectingInstitution}
             />
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="bg-background border border-border/30 shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-8 md:p-10 max-w-[400px] w-full rounded-lg relative z-10 font-sans">
+                <div className="animate-pulse text-center text-muted-foreground">Cargando...</div>
+            </div>
+        }>
+            <LoginForm />
+        </Suspense>
     );
 }
