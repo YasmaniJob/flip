@@ -39,10 +39,10 @@ export function ReunionesClient() {
         <div className="p-8 max-w-[1600px] mx-auto min-h-screen">
             {/* Header — same pattern as Inventario */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-                <div>
+                <div className="hidden lg:block">
                     <h1 className="text-3xl font-black tracking-tighter text-foreground">Reuniones</h1>
                 </div>
-                <Button onClick={() => setIsWizardOpen(true)} variant="jira" size="lg">
+                <Button onClick={() => setIsWizardOpen(true)} variant="jira" size="lg" className="lg:ml-auto">
                     <Plus className="h-5 w-5 mr-2" />
                     Nueva Reunión
                 </Button>

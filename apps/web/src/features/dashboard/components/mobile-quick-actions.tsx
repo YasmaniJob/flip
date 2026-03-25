@@ -50,19 +50,19 @@ export function MobileQuickActions() {
         <QuickAction
           label="Buscar equipo"
           icon={Search}
-          href="/inventory"
+          href="/inventario"
           color="green"
         />
         <QuickAction
           label="Reservar aula"
           icon={Calendar}
-          href="/reservations"
+          href="/reservaciones"
           color="purple"
         />
         <QuickAction
           label="Ver inventario"
           icon={Package}
-          href="/inventory"
+          href="/inventario"
           color="amber"
         />
       </div>

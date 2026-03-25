@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Menu } from "lucide-react";
 
 interface MobileDashboardHeaderProps {
   userName: string;
@@ -26,11 +27,23 @@ export function MobileDashboardHeader({ userName, institutionName }: MobileDashb
     .toUpperCase()
     .slice(0, 2) || "U";
 
+  const handleMenuClick = () => {
+    window.dispatchEvent(new Event('open-mobile-drawer'));
+  };
+
   return (
     <div className="lg:hidden px-4 pt-6 pb-4">
       {/* Greeting */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex-1">
+        <button
+          onClick={handleMenuClick}
+          className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors"
+          aria-label="Abrir menú"
+        >
+          <Menu className="h-6 w-6 text-foreground" />
+        </button>
+        
+        <div className="flex-1 ml-2">
           <h1 className="text-2xl font-bold text-foreground mb-1">
             {greeting}, {firstName}
           </h1>
@@ -38,6 +51,7 @@ export function MobileDashboardHeader({ userName, institutionName }: MobileDashb
             {format(now, "EEEE, d 'de' MMMM", { locale: es })}
           </p>
         </div>
+        
         <Avatar className="h-12 w-12">
           <AvatarFallback className="bg-[#185FA5] text-white text-sm font-semibold">
             {userInitials}

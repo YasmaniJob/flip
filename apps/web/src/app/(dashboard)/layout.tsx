@@ -8,7 +8,8 @@ import { QueryProvider } from "@/providers/query-provider";
 import { Sparkles, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BottomNav } from "@/components/mobile/bottom-nav";
-import { MobileDrawer } from "@/components/mobile/mobile-drawer";
+import { NotionTopbar } from "@/components/mobile/notion-topbar";
+import { NotionMenu } from "@/components/mobile/notion-menu";
 
 export default function DashboardLayout({
     children,
@@ -21,17 +22,23 @@ export default function DashboardLayout({
 
     const [institution, setInstitution] = useState<any>(null);
     const [isBannerDismissed, setIsBannerDismissed] = useState(false);
-    const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [hideBottomNav, setHideBottomNav] = useState(false);
 
     // Determine if center button should show based on current route
-    const showCenterButton = pathname.startsWith("/inventory") || pathname.startsWith("/reservations") || pathname.startsWith("/loans");
+    const showCenterButton = pathname.startsWith("/inventario") || pathname.startsWith("/loans");
 
-    // Make drawer opener available globally for mobile topbar
-    useEffect(() => {
-        const handleOpenDrawer = () => setIsMobileDrawerOpen(true);
-        window.addEventListener('open-mobile-drawer', handleOpenDrawer);
-        return () => window.removeEventListener('open-mobile-drawer', handleOpenDrawer);
-    }, []);
+    // Get page title based on current route
+    const getPageTitle = () => {
+        if (pathname.startsWith("/dashboard")) return "Dashboard";
+        if (pathname.startsWith("/inventario")) return "Inventario";
+        if (pathname.startsWith("/loans")) return "Préstamos";
+        if (pathname.startsWith("/reservaciones")) return "Reservas";
+        if (pathname.startsWith("/reuniones")) return "Reuniones";
+        if (pathname.startsWith("/personal")) return "Personal";
+        if (pathname.startsWith("/settings")) return "Configuración";
+        return "Flip";
+    };
 
     useEffect(() => {
         // Check if banner was dismissed in this session
@@ -50,6 +57,18 @@ export default function DashboardLayout({
                 })
                 .catch(console.error);
         }
+
+        // Listen for bottom nav visibility changes
+        const handleShowBottomNav = () => setHideBottomNav(false);
+        const handleHideBottomNav = () => setHideBottomNav(true);
+        
+        window.addEventListener('show-bottom-nav', handleShowBottomNav);
+        window.addEventListener('hide-bottom-nav', handleHideBottomNav);
+        
+        return () => {
+            window.removeEventListener('show-bottom-nav', handleShowBottomNav);
+            window.removeEventListener('hide-bottom-nav', handleHideBottomNav);
+        };
     }, [session, institution]);
 
     useEffect(() => {
@@ -195,15 +214,24 @@ export default function DashboardLayout({
                     {/* Desktop Sidebar */}
                     <Sidebar />
                     
-                    {/* Mobile Drawer */}
-                    <MobileDrawer 
-                        open={isMobileDrawerOpen} 
-                        onClose={() => setIsMobileDrawerOpen(false)} 
-                    />
-                    
                     {/* Main Content */}
-                    <main className="flex-1 overflow-auto relative pb-20 lg:pb-0">
-                        {children}
+                    <main className="flex-1 overflow-auto relative">
+                        {/* Mobile Topbar - Shows on all pages */}
+                        <NotionTopbar 
+                            title={getPageTitle()}
+                            onMenuClick={() => setMenuOpen(true)}
+                        />
+                        
+                        {/* Mobile Menu */}
+                        <NotionMenu 
+                            open={menuOpen}
+                            onClose={() => setMenuOpen(false)}
+                        />
+                        
+                        {/* Page Content with bottom padding for mobile nav */}
+                        <div className="pb-20 lg:pb-0">
+                            {children}
+                        </div>
                     </main>
                 </div>
 
@@ -215,6 +243,7 @@ export default function DashboardLayout({
                         const event = new CustomEvent('mobile-center-button-click');
                         window.dispatchEvent(event);
                     }}
+                    hidden={hideBottomNav}
                 />
             </div>
         </QueryProvider>

@@ -16,7 +16,6 @@ import { Users, Database, Wrench, Landmark } from "lucide-react";
 import { StatCard } from "@/features/dashboard/components/stat-card";
 
 // Mobile components
-import { MobileDashboardHeader } from "@/features/dashboard/components/mobile-dashboard-header";
 import { MobileMetricsGrid } from "@/features/dashboard/components/mobile-metrics-grid";
 import { MobileOverdueAlert } from "@/features/dashboard/components/mobile-overdue-alert";
 import { MobileQuickActions } from "@/features/dashboard/components/mobile-quick-actions";
@@ -90,10 +89,23 @@ export default function DashboardPage() {
         <>
             {/* Mobile Dashboard */}
             <div className="lg:hidden bg-background min-h-screen">
-                <MobileDashboardHeader 
-                    userName={user?.name || "Usuario"}
-                    institutionName={institution?.name}
-                />
+                {/* Greeting Section */}
+                <div className="px-4 pt-6 pb-4">
+                    <h1 className="text-2xl font-bold text-foreground mb-1">
+                        ¡Hola, {user?.name?.split(' ')[0]}!
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        {format(now, "EEEE, d 'de' MMMM", { locale: es })}
+                    </p>
+                    {institution?.name && (
+                        <div className="inline-flex items-center gap-2 px-3 py-2 bg-card border border-border/60 rounded-lg mt-3">
+                            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-xs font-semibold text-foreground truncate max-w-[250px]">
+                                {institution.name}
+                            </span>
+                        </div>
+                    )}
+                </div>
                 
                 <MobileMetricsGrid 
                     stats={{

@@ -41,11 +41,11 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
 
   const menuItems = [
     { href: "/dashboard", icon: Home, label: "Dashboard" },
-    { href: "/inventory", icon: Package, label: "Inventario" },
+    { href: "/inventario", icon: Package, label: "Inventario" },
     { href: "/loans", icon: HandCoins, label: "Préstamos" },
-    { href: "/reservations", icon: Calendar, label: "Reservas" },
-    { href: "/meetings", icon: Users, label: "Reuniones" },
-    { href: "/staff", icon: UsersIcon, label: "Personal" },
+    { href: "/reservaciones", icon: Calendar, label: "Reservas" },
+    { href: "/reuniones", icon: Users, label: "Reuniones" },
+    { href: "/personal", icon: UsersIcon, label: "Personal" },
     { href: "/settings", icon: Settings, label: "Configuración" },
   ];
 

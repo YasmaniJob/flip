@@ -54,14 +54,14 @@ export function MobileMetricsGrid({ stats }: MobileMetricsGridProps) {
           label="Reservas semana"
           value={stats?.weekReservations ?? "—"}
           icon={Calendar}
-          href="/reservations"
+          href="/reservaciones"
           color="blue"
         />
         <MetricCard
           label="Equipos inventario"
           value={stats?.totalResources ?? "—"}
           icon={Package}
-          href="/inventory"
+          href="/inventario"
           color="green"
         />
         <MetricCard
@@ -75,7 +75,7 @@ export function MobileMetricsGrid({ stats }: MobileMetricsGridProps) {
           label="Docentes staff"
           value={stats?.totalStaff ?? "—"}
           icon={Users}
-          href="/staff"
+          href="/personal"
           color="purple"
         />
       </div>

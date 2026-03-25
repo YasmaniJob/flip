@@ -1,85 +1,87 @@
 "use client";
 
-import { useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-const WEEKDAYS_SHORT = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface MobileWeekStripProps {
-  weekDates: Date[];
   currentWeekStart: Date;
-  onNavigate: (direction: "prev" | "next") => void;
+  onNavigate: (direction: 'prev' | 'next') => void;
+  weekDates: Date[];
+  selectedDate: Date;
+  onDateSelect: (date: Date) => void;
 }
 
-export function MobileWeekStrip({ weekDates, currentWeekStart, onNavigate }: MobileWeekStripProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+const WEEKDAYS_SHORT = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+
+export function MobileWeekStrip({ 
+  currentWeekStart, 
+  onNavigate, 
+  weekDates,
+  selectedDate,
+  onDateSelect
+}: MobileWeekStripProps) {
+  const weekEnd = new Date(currentWeekStart);
+  weekEnd.setDate(weekEnd.getDate() + 5);
+
   const todayDateString = new Date().toDateString();
 
-  // Auto-scroll to today on mount
-  useEffect(() => {
-    const todayIndex = weekDates.findIndex(d => d.toDateString() === todayDateString);
-    if (todayIndex !== -1 && scrollRef.current) {
-      const dayWidth = 72; // approximate width of each day
-      scrollRef.current.scrollLeft = todayIndex * dayWidth - 40;
-    }
-  }, [weekDates, todayDateString]);
-
   return (
-    <div className="lg:hidden sticky top-0 z-30 bg-card border-b border-border/40">
+    <div className="px-4 pb-4">
       {/* Week Navigation */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-border/20">
+      <div className="flex items-center justify-between mb-3">
         <button
-          onClick={() => onNavigate("prev")}
+          onClick={() => onNavigate('prev')}
           className="p-2 hover:bg-muted rounded-lg transition-colors"
-          aria-label="Semana anterior"
         >
-          <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+          <ChevronLeft className="w-5 h-5 text-muted-foreground" />
         </button>
         
-        <div className="text-center">
-          <p className="text-xs font-semibold text-foreground">
-            {currentWeekStart.toLocaleDateString("es-ES", { day: "numeric", month: "short" })} -{" "}
-            {weekDates[5]?.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" })}
-          </p>
-        </div>
-
+        <span className="text-sm font-semibold text-foreground">
+          {format(currentWeekStart, "d MMM", { locale: es })} - {format(weekEnd, "d MMM yyyy", { locale: es })}
+        </span>
+        
         <button
-          onClick={() => onNavigate("next")}
+          onClick={() => onNavigate('next')}
           className="p-2 hover:bg-muted rounded-lg transition-colors"
-          aria-label="Semana siguiente"
         >
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </button>
       </div>
 
-      {/* Days Strip */}
-      <div 
-        ref={scrollRef}
-        className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide"
-      >
-        {weekDates.map((date, i) => {
+      {/* Days Grid */}
+      <div className="flex rounded-xl overflow-hidden border border-border">
+        {weekDates.map((date, index) => {
+          const isActive = date.toDateString() === selectedDate.toDateString();
           const isToday = date.toDateString() === todayDateString;
+          const hasEvents = false; // TODO: Check if date has reservations
+
           return (
-            <div
-              key={i}
+            <button
+              key={index}
+              onClick={() => onDateSelect(date)}
               className={cn(
-                "flex flex-col items-center justify-center min-w-[64px] py-2 px-3 rounded-xl transition-colors",
-                isToday
-                  ? "bg-[#185FA5] text-white"
-                  : "bg-muted/50 text-muted-foreground"
+                "flex-1 flex flex-col items-center py-2 gap-1 border-r border-border last:border-r-0 transition-colors",
+                isActive ? "bg-foreground" : "bg-background hover:bg-muted/50"
               )}
             >
-              <span className="text-[10px] font-semibold uppercase tracking-wide">
-                {WEEKDAYS_SHORT[i]}
+              <span className={cn(
+                "text-[9px] uppercase font-medium",
+                isActive ? "text-background/70" : "text-muted-foreground"
+              )}>
+                {WEEKDAYS_SHORT[index]}
               </span>
               <span className={cn(
-                "text-2xl font-bold mt-1",
-                isToday && "text-white"
+                "text-[15px] font-semibold",
+                isActive ? "text-background" : isToday ? "text-primary" : "text-foreground"
               )}>
                 {date.getDate()}
               </span>
-            </div>
+              {hasEvents && !isActive && (
+                <div className="w-1 h-1 rounded-full bg-primary" />
+              )}
+            </button>
           );
         })}
       </div>

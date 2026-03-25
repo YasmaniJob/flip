@@ -22,6 +22,13 @@ import { ReservationCard } from "@/features/reservations/components/reservation-
 import { SelectionActionBar } from "@/features/reservations/components/selection-action-bar";
 import { DroppableCell } from "@/features/reservations/components/droppable-cell";
 
+// Mobile components
+import { MobileWeekStrip } from "@/features/reservations/components/mobile-week-strip";
+import { MobileScheduleView } from "@/features/reservations/components/mobile-schedule-view";
+import { MobileReservationSheet } from "@/features/reservations/components/mobile-reservation-sheet";
+import { MobileFilterSheet } from "@/features/reservations/components/mobile-filter-sheet";
+import { MobileReservationWizard } from "@/features/reservations/components/mobile-reservation-wizard";
+
 const WEEKDAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
 export type Shift = 'mañana' | 'tarde';
@@ -44,6 +51,11 @@ export function ReservacionesClient() {
     const [selectedSlots, setSelectedSlots] = useState<{ date: Date; pedagogicalHourId: string }[]>([]);
     const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
     const [selectedTitle, setSelectedTitle] = useState<string>("");
+    const [selectedMobileDate, setSelectedMobileDate] = useState<Date>(new Date());
+    const [mobileSheetSlot, setMobileSheetSlot] = useState<ReservationSlot | null>(null);
+    const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
+    const [isClassroomSheetOpen, setIsClassroomSheetOpen] = useState(false);
+    const [isShiftSheetOpen, setIsShiftSheetOpen] = useState(false);
 
     // Drag and Drop State
     const [dragState, setDragState] = useState<{
@@ -245,7 +257,154 @@ export function ReservacionesClient() {
     const todayDateString = new Date().toDateString();
 
     return (
-        <div className="p-6 sm:p-8 max-w-[1600px] mx-auto min-h-screen space-y-6 relative">
+        <>
+            {/* Mobile View */}
+            <div className="lg:hidden bg-background min-h-screen">
+                {/* Filter Buttons - Single Row */}
+                <div className="flex gap-2 px-4 pt-4 pb-3">
+                    <button
+                        onClick={() => setIsClassroomSheetOpen(true)}
+                        className="flex-1 px-4 py-3 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-colors text-left shadow-sm"
+                    >
+                        <span className="text-xs text-muted-foreground block mb-1">Aula</span>
+                        <span className="truncate block">{classrooms?.find(c => c.id === selectedClassroomId)?.name || 'Seleccionar'}</span>
+                    </button>
+                    <button
+                        onClick={() => setIsShiftSheetOpen(true)}
+                        className="flex-shrink-0 px-4 py-3 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted transition-colors text-left shadow-sm capitalize min-w-[120px]"
+                    >
+                        <span className="text-xs text-muted-foreground block mb-1">Turno</span>
+                        {selectedShift || 'Seleccionar'}
+                    </button>
+                </div>
+
+                <MobileWeekStrip 
+                    currentWeekStart={currentWeekStart}
+                    onNavigate={navigateWeek}
+                    weekDates={weekDates}
+                    selectedDate={selectedMobileDate}
+                    onDateSelect={setSelectedMobileDate}
+                />
+
+                <MobileScheduleView 
+                    pedagogicalHours={pedagogicalHours}
+                    selectedDate={selectedMobileDate}
+                    slotMap={slotMap}
+                    selectedSlots={selectedSlots}
+                    onSlotClick={(slot, hourId) => {
+                        if (slot) {
+                            // Show bottom sheet with slot details
+                            setMobileSheetSlot(slot);
+                            setIsMobileSheetOpen(true);
+                        } else {
+                            // Toggle selection for empty slot
+                            handleCellClick(selectedMobileDate, { id: hourId });
+                        }
+                    }}
+                />
+
+                {/* Selection Action Bar - Mobile */}
+                {selectedSlots.length > 0 && canManage && !isDialogOpen && (
+                    <div className="lg:hidden fixed bottom-20 left-0 right-0 z-50 px-4 pb-4">
+                        <div className="bg-primary text-primary-foreground rounded-lg shadow-2xl p-4 flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-semibold">
+                                    {selectedSlots.length} {selectedSlots.length === 1 ? 'hora seleccionada' : 'horas seleccionadas'}
+                                </p>
+                                <p className="text-xs opacity-80">
+                                    {selectedMobileDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                </p>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setSelectedSlots([])}
+                                    className="px-4 py-2 bg-primary-foreground/20 hover:bg-primary-foreground/30 rounded-lg text-sm font-semibold transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={() => setIsDialogOpen(true)}
+                                    className="px-4 py-2 bg-primary-foreground text-primary rounded-lg text-sm font-semibold hover:bg-primary-foreground/90 transition-colors"
+                                >
+                                    Crear reserva
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Mobile Reservation Sheet */}
+                <MobileReservationSheet 
+                    slot={mobileSheetSlot}
+                    open={isMobileSheetOpen}
+                    onClose={() => {
+                        setIsMobileSheetOpen(false);
+                        setMobileSheetSlot(null);
+                    }}
+                    onViewDetails={() => {
+                        if (mobileSheetSlot?.reservationMainId) {
+                            setSelectedReservationId(mobileSheetSlot.reservationMainId);
+                            setSelectedTitle(mobileSheetSlot.title || "Detalles del Taller");
+                        }
+                    }}
+                    onMarkAttendance={() => {
+                        // Open attendance marking - will open the full detail sheet
+                        if (mobileSheetSlot?.reservationMainId) {
+                            setSelectedReservationId(mobileSheetSlot.reservationMainId);
+                            setSelectedTitle(mobileSheetSlot.title || "Detalles del Taller");
+                        }
+                    }}
+                    onReschedule={() => {
+                        // TODO: Implement reschedule functionality
+                        console.log('Reschedule:', mobileSheetSlot);
+                    }}
+                    onCancel={() => {
+                        // TODO: Implement cancel functionality
+                        console.log('Cancel:', mobileSheetSlot);
+                    }}
+                    canManage={canManage}
+                />
+
+                {/* Mobile Reservation Wizard */}
+                <MobileReservationWizard 
+                    open={isDialogOpen}
+                    onClose={() => {
+                        setIsDialogOpen(false);
+                        setSelectedSlots([]);
+                    }}
+                    selectedSlots={selectedSlots}
+                    classroomId={selectedClassroomId}
+                    onSuccess={() => {
+                        setSelectedSlots([]);
+                    }}
+                />
+
+                {/* Classroom Filter Sheet */}
+                <MobileFilterSheet 
+                    open={isClassroomSheetOpen}
+                    onClose={() => setIsClassroomSheetOpen(false)}
+                    title="Seleccionar Aula"
+                    options={classrooms?.filter(c => c.active).map(c => ({ id: c.id, name: c.name })) || []}
+                    selectedId={selectedClassroomId}
+                    onSelect={setSelectedClassroomId}
+                />
+
+                {/* Shift Filter Sheet */}
+                <MobileFilterSheet 
+                    open={isShiftSheetOpen}
+                    onClose={() => setIsShiftSheetOpen(false)}
+                    title="Seleccionar Turno"
+                    options={[
+                        { id: 'mañana', name: 'Mañana' },
+                        { id: 'tarde', name: 'Tarde' }
+                    ]}
+                    selectedId={selectedShift || 'mañana'}
+                    onSelect={(shift) => setSelectedShift(shift as Shift)}
+                />
+            </div>
+
+            {/* Desktop View */}
+            <div className="hidden lg:block p-6 sm:p-8 max-w-[1600px] mx-auto min-h-screen space-y-6 relative">
             <PageHeader
                 title="Reservaciones del AIP"
             />
@@ -440,7 +599,8 @@ export function ReservacionesClient() {
                     {selectedReservationId && <WorkshopDetailSheet reservationId={selectedReservationId} title={selectedTitle} />}
                 </DialogContent>
             </Dialog>
-        </div>
+            </div>
+        </>
     );
 }
 

@@ -33,12 +33,12 @@ export function InventoryHeader({ onAddResource, resources }: InventoryHeaderPro
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
+                <div className="hidden lg:block">
                     <h1 className="text-2xl font-black tracking-tighter text-foreground uppercase">
                         Inventario
                     </h1>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 lg:ml-auto">
                     <Button variant="ghost" className="h-10 px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
                         Exportar
                     </Button>
