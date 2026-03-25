@@ -33,12 +33,21 @@ export function MobileTopbar({
     .toUpperCase()
     .slice(0, 2) || "U";
 
+  const handleMenuClick = () => {
+    if (onMenuClick) {
+      onMenuClick();
+    } else {
+      // Fallback: dispatch global event to open drawer
+      window.dispatchEvent(new Event('open-mobile-drawer'));
+    }
+  };
+
   return (
     <header className="lg:hidden sticky top-0 z-40 bg-card border-b border-border/40 safe-area-pt">
       <div className="flex items-center justify-between h-14 px-4">
         {/* Left: Menu Button */}
         <button
-          onClick={onMenuClick}
+          onClick={handleMenuClick}
           className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors"
           aria-label="Abrir menú"
         >

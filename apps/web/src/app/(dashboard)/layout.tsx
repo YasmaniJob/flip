@@ -26,6 +26,13 @@ export default function DashboardLayout({
     // Determine if center button should show based on current route
     const showCenterButton = pathname.startsWith("/inventory") || pathname.startsWith("/reservations") || pathname.startsWith("/loans");
 
+    // Make drawer opener available globally for mobile topbar
+    useEffect(() => {
+        const handleOpenDrawer = () => setIsMobileDrawerOpen(true);
+        window.addEventListener('open-mobile-drawer', handleOpenDrawer);
+        return () => window.removeEventListener('open-mobile-drawer', handleOpenDrawer);
+    }, []);
+
     useEffect(() => {
         // Check if banner was dismissed in this session
         const dismissed = sessionStorage.getItem('trial_banner_dismissed');
