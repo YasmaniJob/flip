@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion } from "framer-motion";
-import { BookOpen, GraduationCap } from "lucide-react";
+import { BookOpen, GraduationCap, ArrowRight } from "lucide-react";
 
 import { OnboardingData, Step, STEPS, STEP_META } from "./components/types";
 import { StepIndicator } from "./components/StepIndicator";
@@ -153,9 +153,10 @@ function OnboardingContent() {
                     <button
                         onClick={nextStep}
                         disabled={!data.nivel || isLoading}
-                        className={`${isMobile ? 'px-8 py-2.5' : 'px-12 py-3 animate-in zoom-in-95'} rounded-full bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all disabled:opacity-40 active:scale-95`}
+                        className="w-full sm:w-auto group flex items-center justify-center gap-2 px-10 py-3.5 rounded-lg bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all disabled:opacity-40 active:scale-95 border border-primary"
                     >
                         Continuar
+                        <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />
                     </button>
                 ) : step !== 'confirmacion' ? (
                     <button
@@ -201,7 +202,7 @@ function OnboardingContent() {
                 </div>
             </header>
 
-            <main className="flex flex-col flex-1 max-w-[1400px] mx-auto w-full px-6 py-4 lg:py-8 pb-24 lg:pb-8 lg:justify-center min-h-0">
+            <main className="flex flex-col flex-1 max-w-[1400px] mx-auto w-full px-6 py-4 lg:py-8 pb-32 lg:pb-8 lg:justify-center min-h-0">
                 <div className={`${step === 'nivel' ? 'mb-8' : 'mb-6'} text-center mx-auto max-w-4xl px-4 shrink-0`}>
                     {data.nivel && step !== 'nivel' && step !== 'confirmacion' && (
                         <motion.div
@@ -264,8 +265,21 @@ function OnboardingContent() {
                 </div>
             </main>
             {/* MOBILE FIXED BOTTOM NAV */}
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border px-4 py-3 flex items-center justify-between safe-area-pb">
-                {renderNavButtons(true)}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border px-6 py-6 flex items-center safe-area-pb">
+                {step === 'nivel' ? (
+                    <button
+                        onClick={nextStep}
+                        disabled={!data.nivel || isLoading}
+                        className="w-full group flex items-center justify-center gap-2 py-4 rounded-lg bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all disabled:opacity-40 active:scale-95 border border-primary"
+                    >
+                        Continuar
+                        <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />
+                    </button>
+                ) : (
+                    <div className="flex items-center justify-between w-full gap-3">
+                        {renderNavButtons(true)}
+                    </div>
+                )}
             </div>
         </div>
     );
