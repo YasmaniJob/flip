@@ -88,37 +88,37 @@ export function ImportCurricularAreasDialog({
         }}>
             <DialogContent 
                 showCloseButton={false}
-                className="max-w-4xl h-[85vh] p-0 flex flex-col overflow-hidden border border-border shadow-none rounded-lg"
+                className="max-w-5xl lg:max-w-6xl h-[85vh] p-0 flex flex-col overflow-hidden border border-border shadow-none rounded-lg"
             >
                 {/* Accessibility required DialogTitle (Visually Hidden) */}
                 <DialogTitle className="sr-only">Importar Áreas Curriculares CNEB</DialogTitle>
 
                 {/* ── Header ────────────────────────────────────────────────────────── */}
-                <div className="shrink-0 px-6 py-5 border-b border-border bg-white">
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-md bg-primary/5 flex items-center justify-center text-primary shrink-0 border border-primary/10">
-                                <BookOpen className="h-5 w-5" />
+                <div className="shrink-0 px-8 py-6 border-b border-border bg-white">
+                    <div className="flex items-center justify-between gap-12">
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <div className="w-12 h-12 rounded-md bg-primary/5 flex items-center justify-center text-primary shrink-0 border border-primary/10">
+                                <BookOpen className="h-6 w-6" />
                             </div>
-                            <div>
-                                <h3 className="text-xl font-black text-foreground tracking-tight">
+                            <div className="min-w-0">
+                                <h3 className="text-2xl font-black text-foreground tracking-tighter whitespace-nowrap">
                                     Importar Áreas CNEB
                                 </h3>
-                                <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
-                                    Modelo Curricular Nacional
+                                <p className="text-[12px] text-muted-foreground font-bold uppercase tracking-widest mt-0.5 opacity-70">
+                                    Curriculo Nacional de la Educación Básica
                                 </p>
                             </div>
                         </div>
 
-                        {/* Search on the right */}
-                        <div className="relative w-full max-w-xs group">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                        {/* Search on the right - Fixed width */}
+                        <div className="relative w-80 group shrink-0">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Buscar área..."
+                                placeholder="Buscar área curricular..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-muted/20 border border-border rounded-md h-9 pl-9 pr-4 text-sm font-medium focus:outline-none focus:bg-white focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all placeholder:text-muted-foreground/50"
+                                className="w-full bg-muted/20 border border-border rounded-md h-11 pl-10 pr-4 text-sm font-bold focus:outline-none focus:bg-white focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all placeholder:text-muted-foreground/40"
                             />
                             {searchTerm && (
                                 <button
@@ -158,8 +158,8 @@ export function ImportCurricularAreasDialog({
                 </div>
 
                 {/* ── Content ───────────────────────────────────────────────────────── */}
-                <div className="flex-1 overflow-y-auto px-8 py-8 custom-scrollbar bg-[#f4f5f7]/30">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex-1 overflow-y-auto px-10 py-10 custom-scrollbar bg-[#f4f5f7]/30">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {filteredAreas.map((area) => {
                             const isSelected = selected.includes(area.name);
                             const isDuplicate = existingAreas.some(ea => ea.name.toLowerCase() === area.name.toLowerCase());
