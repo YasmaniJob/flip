@@ -1,18 +1,18 @@
 "use client";
 
 import { ReservationSlot } from "@/features/reservations/api/reservations.api";
-import { X, User, Clock, BookOpen, Users as UsersIcon, Calendar, Check, RefreshCw, Trash2 } from "lucide-react";
+import { X, User, BookOpen, Users as UsersIcon, Calendar, Check, RefreshCw, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useMarkAttendance } from "@/features/reservations/hooks/use-reservations";
+import { parseDateSafe } from "@/features/reservations/utils/date-utils";
 
 interface MobileReservationSheetProps {
   slot: ReservationSlot | null;
   open: boolean;
   onClose: () => void;
-  onViewDetails?: () => void;
-  onMarkAttendance?: () => void;
-  onReschedule?: () => void;
   onCancel?: () => void;
+  onReschedule?: () => void;
   canManage: boolean;
 }
 
@@ -20,15 +20,27 @@ export function MobileReservationSheet({
   slot, 
   open, 
   onClose,
-  onViewDetails,
-  onMarkAttendance,
-  onReschedule,
   onCancel,
+  onReschedule,
   canManage
 }: MobileReservationSheetProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
+  const attendanceMutation = useMarkAttendance();
+  
   if (!slot) return null;
+
+  const handleMarkAttendance = async () => {
+    try {
+      await attendanceMutation.mutateAsync({
+        slotId: slot.id,
+        attended: !slot.attended,
+      });
+      onClose();
+    } catch (error) {
+      // Error handled by mutation
+    }
+  };
 
   const getBlockColor = (type: string) => {
     switch (type) {
@@ -59,8 +71,12 @@ export function MobileReservationSheet({
     }
   };
 
-  const colors = getBlockColor(slot.type);
-  const isPast = new Date(slot.date) < new Date();
+  const colors = getBlockColor(slot.type || 'class');
+  const slotDate = parseDateSafe(slot.date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isPastDay = slotDate < today;
+  const canManageSlot = !isPastDay || !slot.attended;
 
   return (
     <>
@@ -95,7 +111,7 @@ export function MobileReservationSheet({
 
         {/* Scrollable Content */}
         <div 
-          className="overflow-y-auto" 
+          className="overflow-y-auto pb-24" 
           style={{ 
             maxHeight: isExpanded ? 'calc(95vh - 28px)' : 'calc(70vh - 28px)'
           }}
@@ -137,9 +153,10 @@ export function MobileReservationSheet({
               </div>
 
               {/* Status Badge */}
-              {isPast && (
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
-                  Pendiente
+              {slot.attended && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600">
+                  <Check className="h-3 w-3" />
+                  Asistencia confirmada
                 </div>
               )}
             </div>
@@ -201,26 +218,33 @@ export function MobileReservationSheet({
             {canManage && (
               <div className="space-y-2 pt-3 pb-4 border-t border-border/40 mt-4">
                 {/* Mark Attendance - For all types */}
-                {onMarkAttendance && (
-                  <button
-                    onClick={() => {
-                      onMarkAttendance();
-                      onClose();
-                    }}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-primary text-primary-foreground rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors active:scale-[0.98]"
-                  >
-                    <Check className="h-4 w-4" />
-                    Marcar asistencia
-                  </button>
-                )}
+                <button
+                  onClick={handleMarkAttendance}
+                  disabled={attendanceMutation.isPending}
+                  className={cn(
+                    "w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-semibold text-sm transition-colors active:scale-[0.98]",
+                    slot.attended 
+                      ? "bg-muted text-foreground hover:bg-muted/80" 
+                      : "bg-primary text-primary-foreground hover:bg-primary/90"
+                  )}
+                >
+                  {slot.attended ? (
+                    <>
+                      <X className="h-4 w-4" />
+                      Desmarcar asistencia
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4" />
+                      Marcar asistencia
+                    </>
+                  )}
+                </button>
 
-                {/* Reschedule - Always show */}
-                {onReschedule && (
+                {/* Reschedule - Only if can manage */}
+                {canManageSlot && onReschedule && (
                   <button
-                    onClick={() => {
-                      onReschedule();
-                      onClose();
-                    }}
+                    onClick={onReschedule}
                     className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-muted text-foreground rounded-lg font-semibold text-sm hover:bg-muted/80 transition-colors active:scale-[0.98]"
                   >
                     <RefreshCw className="h-4 w-4" />
@@ -228,13 +252,10 @@ export function MobileReservationSheet({
                   </button>
                 )}
 
-                {/* Cancel - Always show */}
-                {onCancel && (
+                {/* Cancel - Only if can manage */}
+                {canManageSlot && onCancel && (
                   <button
-                    onClick={() => {
-                      onCancel();
-                      onClose();
-                    }}
+                    onClick={onCancel}
                     className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-transparent text-destructive rounded-lg font-semibold text-sm hover:bg-destructive/10 transition-colors border border-destructive/20 active:scale-[0.98]"
                   >
                     <Trash2 className="h-4 w-4" />

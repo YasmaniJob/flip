@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
 import { 
     useReservationsByDateRange, 
-    useRescheduleBlock
+    useRescheduleBlock,
+    useCancelSlot
 } from "@/features/reservations/hooks/use-reservations";
 import { useClassrooms } from "@/features/classrooms/hooks/use-classrooms";
 import { usePedagogicalHours } from "@/features/settings/hooks/use-pedagogical-hours";
@@ -16,12 +17,21 @@ import { ReservationSlot } from "@/features/reservations/api/reservations.api";
 import { ReservationDialog } from "@/features/reservations/components/reservation-dialog";
 import { WorkshopDetailSheet } from "@/features/reservations/components/workshop-detail-sheet";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AnimatePresence } from "framer-motion";
 import { useUserRole } from "@/hooks/use-user-role";
 import { useAcademicDefaults } from "../../../hooks/use-academic-defaults";
 import { ReservationCard } from "@/features/reservations/components/reservation-card";
 import { SelectionActionBar } from "@/features/reservations/components/selection-action-bar";
-import { DroppableCell } from "@/features/reservations/components/droppable-cell";
 
 // Mobile components
 import { MobileWeekStrip } from "@/features/reservations/components/mobile-week-strip";
@@ -29,8 +39,9 @@ import { MobileScheduleView } from "@/features/reservations/components/mobile-sc
 import { MobileReservationSheet } from "@/features/reservations/components/mobile-reservation-sheet";
 import { MobileFilterSheet } from "@/features/reservations/components/mobile-filter-sheet";
 import { MobileReservationWizard } from "@/features/reservations/components/mobile-reservation-wizard";
+import { RescheduleDialog } from "@/features/reservations/components/reschedule-dialog";
 
-const WEEKDAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+const WEEKDAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 
 export type Shift = 'mañana' | 'tarde';
 
@@ -58,17 +69,8 @@ export function ReservacionesClient() {
     const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
     const [isClassroomSheetOpen, setIsClassroomSheetOpen] = useState(false);
     const [isShiftSheetOpen, setIsShiftSheetOpen] = useState(false);
-
-    // Drag and Drop State
-    const [dragState, setDragState] = useState<{
-        isDragging: boolean;
-        sourceSlot: ReservationSlot | null;
-        blockSlots: ReservationSlot[];
-    }>({
-        isDragging: false,
-        sourceSlot: null,
-        blockSlots: []
-    });
+    const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+    const [rescheduleOpen, setRescheduleOpen] = useState(false);
 
     // Data Fetching
     const { data: classrooms, isLoading: isLoadingClassrooms } = useClassrooms();
@@ -96,7 +98,7 @@ export function ReservacionesClient() {
 
     const weekEnd = useMemo(() => {
         const d = new Date(currentWeekStart);
-        d.setDate(d.getDate() + 5);
+        d.setDate(d.getDate() + 4);
         return d;
   }, [currentWeekStart]);
 
@@ -125,13 +127,14 @@ export function ReservacionesClient() {
     }, [rawPedagogicalHours, selectedShift]);
 
     const rescheduleBlockMutation = useRescheduleBlock();
+    const cancelSlotMutation = useCancelSlot();
 
     // Memoized Mappings
     const slotMap = useMemo(() => {
         const map = new Map<string, ReservationSlot>();
-        if (!slots) return map;
+        if (!slots || !Array.isArray(slots)) return map;
         
-        slots.forEach(slot => {
+        slots.forEach((slot: ReservationSlot) => {
             if (slot.classroomId === selectedClassroomId) {
                 // Parsear fecha sin conversión de zona horaria
                 // Extraer solo la parte de fecha del ISO string (YYYY-MM-DD)
@@ -148,7 +151,7 @@ export function ReservacionesClient() {
     }, [slots, selectedClassroomId]);
 
     const weekDates = useMemo(() => {
-        return Array.from({ length: 6 }, (_, i) => {
+        return Array.from({ length: 5 }, (_, i) => {
             const d = new Date(currentWeekStart);
             d.setDate(d.getDate() + i);
             return d;
@@ -190,68 +193,6 @@ export function ReservacionesClient() {
             return [...prev, { date, pedagogicalHourId: hour.id }];
         });
     }, [slotMap, canManage]);
-
-    const handleDragStart = useCallback((e: React.DragEvent, slot: ReservationSlot) => {
-        if (!canManage && user?.id !== slot.staff?.id) return;
-
-        const blockSlots = slots?.filter(s => s.reservationMainId === slot.reservationMainId) || [];
-        setDragState({
-            isDragging: true,
-            sourceSlot: slot,
-            blockSlots
-        });
-        
-        e.dataTransfer.setData('application/json', JSON.stringify({
-            mainId: slot.reservationMainId,
-            staffId: slot.staff?.id
-        }));
-        e.dataTransfer.effectAllowed = 'move';
-  }, [canManage, user?.id, slots]);
-
-    const handleDragEnd = useCallback(() => {
-        setDragState({ isDragging: false, sourceSlot: null, blockSlots: [] });
-    }, []);
-
-    const handleDrop = useCallback(async (e: React.DragEvent, targetDate: Date, targetHourId: string) => {
-        e.preventDefault();
-        const data = e.dataTransfer.getData('application/json');
-        if (!data) return;
-
-        const { mainId } = JSON.parse(data);
-        const sourceHourIndex = pedagogicalHours.findIndex(h => h.id === dragState.sourceSlot?.pedagogicalHour.id);
-        const targetHourIndex = pedagogicalHours.findIndex(h => h.id === targetHourId);
-
-        if (sourceHourIndex === -1 || targetHourIndex === -1) return;
-
-        const hourOffset = targetHourIndex - sourceHourIndex;
-        const dateOffset = Math.round((targetDate.getTime() - new Date(dragState.sourceSlot!.date).getTime()) / (1000 * 60 * 60 * 24));
-
-        const updates = dragState.blockSlots.map(slot => {
-            const currentHourIndex = pedagogicalHours.findIndex(h => h.id === slot.pedagogicalHour.id);
-            const newHour = pedagogicalHours[currentHourIndex + hourOffset];
-            const newDate = new Date(slot.date);
-            newDate.setDate(newDate.getDate() + dateOffset);
-
-            return {
-                date: newDate.toISOString(),
-                pedagogicalHourId: newHour.id
-            };
-        });
-
-        const hasCollision = updates.some(u => {
-            const key = `${new Date(u.date).toDateString()}-${u.pedagogicalHourId}`;
-            const existing = slotMap.get(key);
-            return existing && existing.reservationMainId !== mainId;
-        });
-
-        if (hasCollision) return;
-
-        try {
-            await rescheduleBlockMutation.mutateAsync({ reservationId: mainId, slots: updates });
-        } catch (err) {
-            console.error("Failed to reschedule:", err);
-        }
-    }, [dragState, pedagogicalHours, slotMap, rescheduleBlockMutation]);
 
     const handleOpenDialog = () => {
         // En móvil, navegar a página dedicada
@@ -363,29 +304,56 @@ export function ReservacionesClient() {
                         setIsMobileSheetOpen(false);
                         setMobileSheetSlot(null);
                     }}
-                    onViewDetails={() => {
-                        if (mobileSheetSlot?.reservationMainId) {
-                            setSelectedReservationId(mobileSheetSlot.reservationMainId);
-                            setSelectedTitle(mobileSheetSlot.title || "Detalles del Taller");
-                        }
-                    }}
-                    onMarkAttendance={() => {
-                        // Open attendance marking - will open the full detail sheet
-                        if (mobileSheetSlot?.reservationMainId) {
-                            setSelectedReservationId(mobileSheetSlot.reservationMainId);
-                            setSelectedTitle(mobileSheetSlot.title || "Detalles del Taller");
-                        }
+                    onCancel={() => {
+                        setIsMobileSheetOpen(false);
+                        setTimeout(() => setConfirmCancelOpen(true), 300);
                     }}
                     onReschedule={() => {
-                        // TODO: Implement reschedule functionality
-                        console.log('Reschedule:', mobileSheetSlot);
-                    }}
-                    onCancel={() => {
-                        // TODO: Implement cancel functionality
-                        console.log('Cancel:', mobileSheetSlot);
+                        setIsMobileSheetOpen(false);
+                        setTimeout(() => setRescheduleOpen(true), 300);
                     }}
                     canManage={canManage}
                 />
+
+                {/* Cancel Confirmation Dialog */}
+                <AlertDialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>¿Cancelar reserva?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Esta acción no se puede deshacer. La reserva de{' '}
+                                {mobileSheetSlot?.staff?.name} será cancelada.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Volver</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={async () => {
+                                    if (mobileSheetSlot?.id) {
+                                        await cancelSlotMutation.mutateAsync(mobileSheetSlot.id);
+                                        setConfirmCancelOpen(false);
+                                        setMobileSheetSlot(null);
+                                    }
+                                }}
+                                className="bg-red-600 hover:bg-red-700"
+                                disabled={cancelSlotMutation.isPending}
+                            >
+                                {cancelSlotMutation.isPending ? 'Cancelando...' : 'Sí, cancelar'}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                {/* Reschedule Dialog */}
+                {mobileSheetSlot && (
+                    <RescheduleDialog
+                        slot={mobileSheetSlot}
+                        open={rescheduleOpen}
+                        onOpenChange={setRescheduleOpen}
+                        shift={selectedShift}
+                        classroomId={selectedClassroomId}
+                    />
+                )}
 
                 {/* Mobile Reservation Wizard */}
                 <MobileReservationWizard 
@@ -556,32 +524,31 @@ export function ReservacionesClient() {
                                             );
 
                                             if (slot) {
-                                                const canDrag = canManage || (user?.id === slot.staff?.id);
                                                 return (
                                                     <td key={i} className={cn("p-2 border-t border-border", !isLastCol && "border-r", isToday && "bg-primary/[0.02]")}>
                                                         <ReservationCard 
                                                             slot={slot}
                                                             isToday={isToday}
                                                             isLive={isToday && isLiveRow}
-                                                            canDrag={canDrag}
                                                             isAdmin={canManage}
-                                                            onDragStart={handleDragStart}
-                                                            onDragEnd={handleDragEnd}
                                                             onSelectReservation={setSelectedReservationId}
-                                                            isDraggingSelection={dragState.isDragging && dragState.blockSlots.some(s => s.id === slot.id)}
+                                                            classroomId={selectedClassroomId}
+                                                            shift={selectedShift}
                                                         />
                                                     </td>
                                                 );
                                             }
 
                                             return (
-                                                <DroppableCell 
+                                                <td 
                                                     key={i}
-                                                    isLast={isLastCol}
-                                                    isToday={isToday}
-                                                    isSelected={selectedSlotKeys.has(key)}
+                                                    className={cn(
+                                                        "p-2 border-t border-border cursor-pointer hover:bg-muted/30 transition-colors",
+                                                        !isLastCol && "border-r",
+                                                        isToday && "bg-primary/[0.02]",
+                                                        selectedSlotKeys.has(key) && "bg-primary/10"
+                                                    )}
                                                     onClick={() => handleCellClick(date, hour)}
-                                                    onDrop={(e) => handleDrop(e, date, hour.id)}
                                                 />
                                             );
                                         })}
@@ -615,7 +582,7 @@ export function ReservacionesClient() {
             />
 
             <Dialog open={!!selectedReservationId} onOpenChange={(open) => !open && setSelectedReservationId(null)}>
-                <DialogContent className="sm:max-w-2xl w-full h-full p-0 flex flex-col gap-0 border-none rounded-none fixed right-0 top-0 bottom-0 left-auto translate-x-0 translate-y-0 m-0 z-50">
+                <DialogContent className="hidden lg:flex sm:max-w-2xl w-full h-full p-0 flex-col gap-0 border-none rounded-none fixed right-0 top-0 bottom-0 left-auto translate-x-0 translate-y-0 m-0 z-50">
                     <DialogTitle className="sr-only">Detalles del taller</DialogTitle>
                     <DialogDescription className="sr-only">Gestión de asistencia y acuerdos.</DialogDescription>
                     {selectedReservationId && <WorkshopDetailSheet reservationId={selectedReservationId} title={selectedTitle} />}

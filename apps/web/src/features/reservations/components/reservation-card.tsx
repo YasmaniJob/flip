@@ -1,4 +1,4 @@
-import type { FC, DragEvent } from "react";
+import type { FC } from "react";
 import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { BookOpen, Check, ShieldCheck, Users } from "lucide-react";
@@ -9,12 +9,10 @@ interface ReservationCardProps {
   slot: ReservationSlot;
   isToday: boolean;
   isLive: boolean;
-  canDrag: boolean;
   isAdmin: boolean;
-  onDragStart: (e: DragEvent, slot: ReservationSlot) => void;
-  onDragEnd: () => void;
   onSelectReservation?: (id: string) => void;
-  isDraggingSelection?: boolean;
+  classroomId?: string;
+  shift?: 'mañana' | 'tarde';
 }
 
 export const ReservationCard: FC<ReservationCardProps> = memo(
@@ -22,28 +20,21 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
     slot,
     isToday,
     isLive,
-    canDrag,
     isAdmin,
-    onDragStart,
-    onDragEnd,
     onSelectReservation,
-    isDraggingSelection,
+    classroomId,
+    shift,
   }) => {
     const isWorkshop = slot.type === "workshop";
     const isInstitutional = !slot.grade && !slot.section;
 
     const commonClasses = cn(
-      "rounded-2xl px-4 py-3 h-full transition-all border border-transparent flex flex-col justify-center min-h-[68px] relative overflow-hidden group/card shadow-none",
-      isDraggingSelection && "opacity-20 scale-95",
-      canDrag ? "cursor-grab active:cursor-grabbing" : "cursor-default",
+      "rounded-2xl px-4 py-3 h-full transition-all border border-transparent flex flex-col justify-center min-h-[68px] relative overflow-hidden group/card shadow-none cursor-default",
     );
 
     if (isWorkshop) {
       return (
         <div
-          draggable={canDrag}
-          onDragStart={(e) => onDragStart(e, slot)}
-          onDragEnd={onDragEnd}
           onClick={() =>
             isAdmin &&
             slot.reservationMainId &&
@@ -56,6 +47,7 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
               : isToday
                 ? "bg-orange-500/[0.04] border-orange-500/10 hover:bg-orange-500/[0.08]"
                 : "bg-orange-100/40 dark:bg-orange-900/20 border-orange-200/50 dark:border-orange-800/50 hover:bg-orange-100/60 dark:hover:bg-orange-900/30",
+            isAdmin && slot.reservationMainId && "cursor-pointer"
           )}
         >
           <div className="flex items-start gap-3">
@@ -95,13 +87,8 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
             : "bg-card/50 text-foreground border-border hover:bg-card";
 
     return (
-      <div
-        draggable={canDrag}
-        onDragStart={(e) => onDragStart(e, slot)}
-        onDragEnd={onDragEnd}
-        className={cn("h-full", isDraggingSelection && "opacity-40")}
-      >
-        <ReservationPopover slot={slot}>
+      <div className="h-full">
+        <ReservationPopover slot={slot} classroomId={classroomId} shift={shift}>
           <div className={cn(commonClasses, cardStyles)}>
             <div className="flex items-start gap-3">
               <div

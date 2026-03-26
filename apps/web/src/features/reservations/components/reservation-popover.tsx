@@ -24,9 +24,11 @@ import { useUserRole } from '@/hooks/use-user-role';
 interface ReservationPopoverProps {
     slot: ReservationSlot;
     children: React.ReactNode;
+    classroomId?: string;
+    shift?: 'mañana' | 'tarde';
 }
 
-export function ReservationPopover({ slot, children }: ReservationPopoverProps) {
+export function ReservationPopover({ slot, children, classroomId, shift }: ReservationPopoverProps) {
     const [open, setOpen] = useState(false);
     const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
     const [rescheduleOpen, setRescheduleOpen] = useState(false);
@@ -206,6 +208,8 @@ export function ReservationPopover({ slot, children }: ReservationPopoverProps) 
                 slot={slot}
                 open={rescheduleOpen}
                 onOpenChange={setRescheduleOpen}
+                classroomId={classroomId}
+                shift={shift}
             />
         </>
     );

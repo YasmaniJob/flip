@@ -17,7 +17,7 @@ export function useReservationsByDateRange(startDate: string, endDate: string, c
     return useQuery({
         queryKey: reservationKeys.byDateRange(startDate, endDate, classroomId, shift),
         queryFn: () => ReservationsApi.getByDateRange(startDate, endDate, classroomId, shift),
-        staleTime: 10 * 60 * 1000, // 10 minutos - las reservas no cambian tan rápido
+        staleTime: 0,
         enabled: !!startDate && !!endDate && !!classroomId,
         placeholderData: (previousData) => previousData,
         retry: 2, // Reintentar 2 veces antes de fallar
@@ -121,8 +121,9 @@ export function useRescheduleBlock() {
             reservationId: string;
             slots: { date: string; pedagogicalHourId: string }[];
         }) => ReservationsApi.rescheduleBlock(reservationId, slots),
-        onSuccess: () => {
+        onSuccess: async () => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
+            await queryClient.refetchQueries({ queryKey: reservationKeys.all });
             showSuccess('Reprogramación exitosa');
         },
         onError: (error) => {
