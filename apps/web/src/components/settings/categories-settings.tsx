@@ -28,7 +28,7 @@ import { ImportTemplatesDialog } from './import-templates-dialog';
 const DEFAULT_COLORS = [
     '#0052CC', '#0747A6', '#5243AA', '#403294',
     '#00875A', '#006644', '#FF5630', '#DE350B',
-    '#FF8B00', '#FF991F', '#6554C0', '#403294'
+    '#FF8B00', '#FF991F', '#6554C0', '#8777D9'
 ];
 
 const DEFAULT_ICONS = [

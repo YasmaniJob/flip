@@ -107,7 +107,7 @@ export function TemplatesSettings() {
     };
 
     // Group templates by category
-    const templatesByCategory = templates.reduce((acc, template) => {
+    const templatesByCategory = (Array.isArray(templates) ? templates : []).reduce((acc, template) => {
         const categoryId = template.categoryId || 'uncategorized';
         if (!acc[categoryId]) {
             acc[categoryId] = [];
