@@ -88,7 +88,7 @@ export function ImportCurricularAreasDialog({
         }}>
             <DialogContent 
                 showCloseButton={false}
-                className="max-w-2xl h-[85vh] p-0 flex flex-col overflow-hidden border border-border shadow-none rounded-lg"
+                className="max-w-4xl h-[85vh] p-0 flex flex-col overflow-hidden border border-border shadow-none rounded-lg"
             >
                 {/* Accessibility required DialogTitle (Visually Hidden) */}
                 <DialogTitle className="sr-only">Importar Áreas Curriculares CNEB</DialogTitle>
@@ -158,8 +158,8 @@ export function ImportCurricularAreasDialog({
                 </div>
 
                 {/* ── Content ───────────────────────────────────────────────────────── */}
-                <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar bg-[#f4f5f7]/30">
-                    <div className="grid grid-cols-1 gap-2">
+                <div className="flex-1 overflow-y-auto px-8 py-8 custom-scrollbar bg-[#f4f5f7]/30">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {filteredAreas.map((area) => {
                             const isSelected = selected.includes(area.name);
                             const isDuplicate = existingAreas.some(ea => ea.name.toLowerCase() === area.name.toLowerCase());
