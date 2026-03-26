@@ -13,10 +13,18 @@ import {
 import {
     useSections,
     useCreateSection,
+    useBulkCreateSections,
     useDeleteSection,
     type Section,
 } from '@/features/settings/hooks/use-sections';
-import { Plus, Trash2, Loader2, GraduationCap, ChevronDown, ChevronRight, Check, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Loader2, GraduationCap, ChevronDown, ChevronRight, Check, AlertCircle, Layers } from 'lucide-react';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -41,6 +49,7 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
     const createGradeMutation = useCreateGrade();
     const deleteGradeMutation = useDeleteGrade();
     const createSectionMutation = useCreateSection();
+    const bulkCreateSectionMutation = useBulkCreateSections();
     const deleteSectionMutation = useDeleteSection();
 
     const applicableLevels: EducationLevel[] = useMemo(() => {
@@ -102,7 +111,6 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
 
     const handleAddSection = async (grade: Grade) => {
         const gradeSections = getSectionsForGrade(grade.id);
-        // Generate next letter: A, B, C...
         const existingNames = gradeSections.map(s => s.name.toUpperCase());
         const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         let nextLetter = 'A';
@@ -118,6 +126,30 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
             name: nextLetter,
             gradeId: grade.id,
         });
+    };
+
+    const handleBulkAddSections = async (grade: Grade, count: number) => {
+        const gradeSections = getSectionsForGrade(grade.id);
+        const existingNames = gradeSections.map(s => s.name.toUpperCase());
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        
+        const toCreate: { name: string, gradeId: string }[] = [];
+        let found = 0;
+
+        for (const letter of alphabet) {
+            if (found >= count) break;
+            if (!existingNames.includes(letter)) {
+                toCreate.push({
+                    name: letter,
+                    gradeId: grade.id
+                });
+                found++;
+            }
+        }
+
+        if (toCreate.length > 0) {
+            await bulkCreateSectionMutation.mutateAsync({ sections: toCreate });
+        }
     };
 
     const handleDeleteGrade = async () => {
@@ -282,39 +314,28 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
                                                     </div>
                                                 ))}
 
-                                                {/* Add Section Button */}
-                                                <button
-                                                    onClick={() => handleAddSection(grade)}
-                                                    disabled={createSectionMutation.isPending}
-                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-dashed border-border/80 text-[11px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all"
-                                                >
-                                                    {createSectionMutation.isPending ? (
-                                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                                    ) : (
-                                                        <Plus className="h-3 w-3" />
-                                                    )}
-                                                    SECCIÓN
-                                                </button>
+                                                {/* Add Section Popover */}
+                                                <SectionsPopover 
+                                                    grade={grade} 
+                                                    onAddOne={() => handleAddSection(grade)}
+                                                    onAddBulk={(count) => handleBulkAddSections(grade, count)}
+                                                    isPending={createSectionMutation.isPending || bulkCreateSectionMutation.isPending}
+                                                />
                                             </div>
                                         </div>
                                     ))}
                                 </div>
 
-                                {/* Add Grade Button */}
+                                {/* Add Grade Popover */}
                                 <div className="p-4 bg-muted/20">
-                                    <Button
-                                        onClick={() => handleAddSingleGrade(level)}
-                                        disabled={createGradeMutation.isPending}
-                                        variant="outline"
-                                        className="w-full h-10 border-dashed border-border/80 hover:border-primary hover:text-primary hover:bg-primary/5 rounded-md font-black uppercase tracking-widest text-[11px] shadow-none"
-                                    >
-                                        {createGradeMutation.isPending ? (
-                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                        ) : (
-                                            <Plus className="h-4 w-4 mr-2" />
-                                        )}
-                                        Agregar Nuevo Grado
-                                    </Button>
+                                    <GradesPopover 
+                                        level={level}
+                                        onAddOne={() => handleAddSingleGrade(level)}
+                                        onAddBulk={(count) => {
+                                            for(let i=0; i<count; i++) handleAddSingleGrade(level);
+                                        }}
+                                        isPending={createGradeMutation.isPending}
+                                    />
                                 </div>
                             </>
                         )}
@@ -379,5 +400,172 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
                 </AlertDialogContent>
             </AlertDialog>
         </div>
+    );
+}
+
+// ─── Internal Components ──────────────────────────────────────────────────────
+
+interface SectionsPopoverProps {
+    grade: Grade;
+    onAddOne: () => void;
+    onAddBulk: (count: number) => void;
+    isPending: boolean;
+}
+
+function GradesPopover({ level, onAddOne, onAddBulk, isPending }: { 
+    level: string; 
+    onAddOne: () => void; 
+    onAddBulk: (count: number) => void;
+    isPending: boolean;
+}) {
+    const [count, setCount] = useState(1);
+    const [open, setOpen] = useState(false);
+
+    const handleBulk = () => {
+        onAddBulk(count);
+        setOpen(false);
+    };
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    disabled={isPending}
+                    variant="outline"
+                    className="w-full h-10 border-dashed border-border/80 hover:border-primary hover:text-primary hover:bg-primary/5 rounded-md font-black uppercase tracking-widest text-[11px] shadow-none"
+                >
+                    {isPending ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                        <Plus className="h-4 w-4 mr-2" />
+                    )}
+                    Agregar Nuevo Grado
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent align="center" className="w-64 p-4 space-y-4 shadow-xl border-border bg-card">
+                <div className="space-y-1.5">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground">Añadir Grados</h4>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold">
+                        Nivel: <span className="text-primary">{level}</span>
+                    </p>
+                </div>
+
+                <div className="space-y-4">
+                    <Button 
+                        variant="jiraOutline" 
+                        size="sm" 
+                        className="w-full justify-start h-9 rounded-md border-border/60" 
+                        onClick={() => { onAddOne(); setOpen(false); }}
+                    >
+                        <Plus className="h-3.5 w-3.5 mr-2" />
+                        Añadir 1 (Sig. Nivel)
+                    </Button>
+
+                    <div className="pt-2 border-t border-border/50 space-y-3">
+                        <div className="space-y-1">
+                            <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/70">
+                                Cantidad a generar
+                            </Label>
+                            <div className="flex items-center gap-2">
+                                <Input 
+                                    type="number" 
+                                    min={1} 
+                                    max={12} 
+                                    value={count} 
+                                    onChange={(e) => setCount(parseInt(e.target.value) || 1)}
+                                    className="h-8 text-xs font-bold rounded-md bg-muted/20"
+                                />
+                                <span className="text-[10px] font-bold text-muted-foreground shrink-0 uppercase">grados</span>
+                            </div>
+                        </div>
+                        <Button 
+                            variant="jira" 
+                            size="sm" 
+                            className="w-full h-8 rounded-md text-[10px]" 
+                            onClick={handleBulk}
+                        >
+                            <Layers className="h-3 w-3 mr-2" />
+                            Generar {count} grados
+                        </Button>
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+}
+
+function SectionsPopover({ grade, onAddOne, onAddBulk, isPending }: SectionsPopoverProps) {
+    const [count, setCount] = useState(5);
+    const [open, setOpen] = useState(false);
+
+    const handleBulk = () => {
+        onAddBulk(count);
+        setOpen(false);
+    };
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <button
+                    disabled={isPending}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-dashed border-border/80 text-[11px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all"
+                >
+                    {isPending ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                        <Plus className="h-3 w-3" />
+                    )}
+                    SECCIÓN
+                </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-64 p-4 space-y-4 shadow-xl border-border bg-card">
+                <div className="space-y-1.5">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground">Añadir Secciones</h4>
+                    <p className="text-[10px] text-muted-foreground">
+                        Grado: <span className="text-primary font-bold">{grade.name}</span>
+                    </p>
+                </div>
+
+                <div className="space-y-4">
+                    <Button 
+                        variant="jiraOutline" 
+                        size="sm" 
+                        className="w-full justify-start h-9 rounded-md border-border/60" 
+                        onClick={() => { onAddOne(); setOpen(false); }}
+                    >
+                        <Plus className="h-3.5 w-3.5 mr-2" />
+                        Añadir siguiente letra
+                    </Button>
+
+                    <div className="pt-2 border-t border-border/50 space-y-3">
+                        <div className="space-y-1">
+                            <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/70">
+                                Generación Masiva
+                            </Label>
+                            <div className="flex items-center gap-2">
+                                <Input 
+                                    type="number" 
+                                    min={1} 
+                                    max={20} 
+                                    value={count} 
+                                    onChange={(e) => setCount(parseInt(e.target.value) || 1)}
+                                    className="h-8 text-xs font-bold rounded-md bg-muted/20"
+                                />
+                                <span className="text-[10px] font-bold text-muted-foreground shrink-0 uppercase">letras</span>
+                            </div>
+                        </div>
+                        <Button 
+                            variant="jira" 
+                            size="sm" 
+                            className="w-full h-8 rounded-md text-[10px]" 
+                            onClick={handleBulk}
+                        >
+                            <Layers className="h-3 w-3 mr-2" />
+                            Generar {count} secciones
+                        </Button>
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
     );
 }

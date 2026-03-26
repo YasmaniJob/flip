@@ -40,6 +40,22 @@ export function useCreateSection() {
     });
 }
 
+export function useBulkCreateSections() {
+    const queryClient = useQueryClient();
+    const api = useApiClient();
+
+    return useMutation({
+        mutationFn: (data: { sections: Omit<Section, 'id'>[] }) => api.post<Section[]>('/sections/bulk', data),
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['sections'] });
+            showSuccess(`${data.length} secciones creadas correctamente`);
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudieron crear las secciones');
+        },
+    });
+}
+
 export function useUpdateSection() {
     const queryClient = useQueryClient();
     const api = useApiClient();
