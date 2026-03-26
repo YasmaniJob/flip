@@ -23,8 +23,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -35,6 +33,17 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 
 type EducationLevel = 'primaria' | 'secundaria';
 
@@ -109,43 +118,11 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
         });
     };
 
-    const handleAddSection = async (grade: Grade) => {
-        const gradeSections = getSectionsForGrade(grade.id);
-        const existingNames = gradeSections.map(s => s.name.toUpperCase());
-        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        let nextLetter = 'A';
-
-        for (const letter of alphabet) {
-            if (!existingNames.includes(letter)) {
-                nextLetter = letter;
-                break;
-            }
-        }
-
-        await createSectionMutation.mutateAsync({
-            name: nextLetter,
-            gradeId: grade.id,
-        });
-    };
-
-    const handleBulkAddSections = async (grade: Grade, count: number) => {
-        const gradeSections = getSectionsForGrade(grade.id);
-        const existingNames = gradeSections.map(s => s.name.toUpperCase());
-        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        
-        const toCreate: { name: string, gradeId: string }[] = [];
-        let found = 0;
-
-        for (const letter of alphabet) {
-            if (found >= count) break;
-            if (!existingNames.includes(letter)) {
-                toCreate.push({
-                    name: letter,
-                    gradeId: grade.id
-                });
-                found++;
-            }
-        }
+    const handleBulkAddSectionNames = async (grade: Grade, names: string[]) => {
+        const toCreate = names.map(name => ({
+            name,
+            gradeId: grade.id
+        }));
 
         if (toCreate.length > 0) {
             await bulkCreateSectionMutation.mutateAsync({ sections: toCreate });
@@ -287,6 +264,13 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
                                                         </p>
                                                     </div>
                                                 </div>
+                                                <GradeSectionsList 
+                                                    grade={grade} 
+                                                    sections={getSectionsForGrade(grade.id)}
+                                                    onDeleteSection={(s) => setDeletingSection(s)}
+                                                    onAddBulk={(names) => handleBulkAddSectionNames(grade, names)}
+                                                    isPending={createSectionMutation.isPending || bulkCreateSectionMutation.isPending}
+                                                />
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
@@ -295,32 +279,6 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
                                                 >
                                                     <Trash2 className="h-3.5 w-3.5" />
                                                 </Button>
-                                            </div>
-
-                                            {/* Sections List */}
-                                            <div className="flex-1 flex flex-wrap items-center gap-1.5">
-                                                {getSectionsForGrade(grade.id).map(section => (
-                                                    <div
-                                                        key={section.id}
-                                                        className="relative group/section flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 bg-card border border-border rounded-md text-[13px] font-bold text-foreground hover:border-primary/40 hover:bg-primary/5 transition-all shadow-none"
-                                                    >
-                                                        <span className="tracking-tight">{section.name}</span>
-                                                        <button
-                                                            onClick={() => setDeletingSection(section)}
-                                                            className="w-5 h-5 flex items-center justify-center rounded-md hover:bg-rose-50 text-muted-foreground hover:text-rose-600 transition-colors opacity-0 group-hover/section:opacity-100"
-                                                        >
-                                                            <Trash2 className="h-3 w-3" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-
-                                                {/* Add Section Popover */}
-                                                <SectionsPopover 
-                                                    grade={grade} 
-                                                    onAddOne={() => handleAddSection(grade)}
-                                                    onAddBulk={(count) => handleBulkAddSections(grade, count)}
-                                                    isPending={createSectionMutation.isPending || bulkCreateSectionMutation.isPending}
-                                                />
                                             </div>
                                         </div>
                                     ))}
@@ -403,15 +361,142 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
     );
 }
 
-// ─── Internal Components ──────────────────────────────────────────────────────
-
-interface SectionsPopoverProps {
-    grade: Grade;
-    onAddOne: () => void;
-    onAddBulk: (count: number) => void;
+function GradeSectionsList({ 
+    grade, 
+    sections, 
+    onDeleteSection, 
+    onAddBulk, 
+    isPending 
+}: { 
+    grade: Grade; 
+    sections: Section[]; 
+    onDeleteSection: (s: Section) => void;
+    onAddBulk: (names: string[]) => void;
     isPending: boolean;
+}) {
+    return (
+        <div className="flex-1 flex flex-wrap items-center gap-1.5 overflow-hidden">
+            {sections.map(section => (
+                <div
+                    key={section.id}
+                    className="relative group/section flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 bg-card border border-border rounded-md text-[13px] font-bold text-foreground hover:border-primary/40 hover:bg-primary/5 transition-all shadow-none"
+                >
+                    <span className="tracking-tight">{section.name}</span>
+                    <button
+                        onClick={() => onDeleteSection(section)}
+                        className="w-5 h-5 flex items-center justify-center rounded-md hover:bg-rose-50 text-muted-foreground hover:text-rose-600 transition-colors opacity-0 group-hover/section:opacity-100"
+                    >
+                        <Trash2 className="h-3 w-3" />
+                    </button>
+                </div>
+            ))}
+
+            <BatchSectionsModal 
+                grade={grade}
+                existingSections={sections}
+                onConfirm={onAddBulk}
+                isPending={isPending}
+            />
+        </div>
+    );
 }
 
+function BatchSectionsModal({ 
+    grade, 
+    existingSections, 
+    onConfirm, 
+    isPending 
+}: { 
+    grade: Grade; 
+    existingSections: Section[];
+    onConfirm: (names: string[]) => void;
+    isPending: boolean;
+}) {
+    const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
+    const [open, setOpen] = useState(false);
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    const existingNames = existingSections.map(s => s.name.toUpperCase());
+
+    const selectedNames = useMemo(() => {
+        if (!selectedLetter) return [];
+        const index = alphabet.indexOf(selectedLetter);
+        return alphabet.slice(0, index + 1).filter(l => !existingNames.includes(l));
+    }, [selectedLetter, existingNames]);
+
+    const handleConfirm = () => {
+        onConfirm(selectedNames);
+        setOpen(false);
+        setSelectedLetter(null);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <button
+                    disabled={isPending}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-dashed border-border/80 text-[11px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all"
+                >
+                    {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                    SECCIÓN
+                </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md p-6 bg-card border-border shadow-2xl rounded-xl">
+                <DialogHeader className="mb-6">
+                    <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
+                        <Layers className="h-5 w-5 text-primary" />
+                        Agregar Varias Secciones
+                    </DialogTitle>
+                    <DialogDescription className="text-sm">
+                        Selecciona hasta qué letra deseas crear para el grado <span className="font-bold text-foreground">{grade.name}</span>. Las existentes ya están marcadas.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid grid-cols-6 gap-2 mb-8">
+                    {alphabet.map(letter => {
+                        const isExisting = existingNames.includes(letter);
+                        const isSelected = selectedLetter && alphabet.indexOf(letter) <= alphabet.indexOf(selectedLetter) && !isExisting;
+                        
+                        return (
+                            <button
+                                key={letter}
+                                disabled={isExisting}
+                                onClick={() => setSelectedLetter(letter)}
+                                className={cn(
+                                    "h-12 flex items-center justify-center rounded-lg text-sm font-black transition-all border outline-none",
+                                    isExisting && "bg-muted/40 border-border/50 text-muted-foreground/40 cursor-not-allowed",
+                                    isSelected && "bg-primary border-primary text-white scale-105 shadow-md shadow-primary/20",
+                                    !isExisting && !isSelected && "bg-card border-border hover:border-primary/40 hover:bg-primary/5 text-foreground"
+                                )}
+                            >
+                                {letter}
+                                {isExisting && <Check className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 text-white rounded-full p-0.5 border border-card" />}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <DialogFooter className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                        variant="ghost"
+                        onClick={() => { setOpen(false); setSelectedLetter(null); }}
+                        className="text-[11px] font-black uppercase tracking-widest rounded-md"
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        variant="jira"
+                        disabled={!selectedLetter || isPending}
+                        onClick={handleConfirm}
+                        className="flex-1 h-11 text-[11px] font-black uppercase tracking-widest rounded-md"
+                    >
+                        {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                        {selectedNames.length > 0 ? `Crear ${selectedNames.length} Secciones` : 'Selecciona una letra'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
 function GradesPopover({ level, onAddOne, onAddBulk, isPending }: { 
     level: string; 
     onAddOne: () => void; 
@@ -486,82 +571,6 @@ function GradesPopover({ level, onAddOne, onAddBulk, isPending }: {
                         >
                             <Layers className="h-3 w-3 mr-2" />
                             Generar {count} grados
-                        </Button>
-                    </div>
-                </div>
-            </PopoverContent>
-        </Popover>
-    );
-}
-
-function SectionsPopover({ grade, onAddOne, onAddBulk, isPending }: SectionsPopoverProps) {
-    const [count, setCount] = useState(5);
-    const [open, setOpen] = useState(false);
-
-    const handleBulk = () => {
-        onAddBulk(count);
-        setOpen(false);
-    };
-
-    return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <button
-                    disabled={isPending}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-dashed border-border/80 text-[11px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all"
-                >
-                    {isPending ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                        <Plus className="h-3 w-3" />
-                    )}
-                    SECCIÓN
-                </button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-64 p-4 space-y-4 shadow-xl border-border bg-card">
-                <div className="space-y-1.5">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-foreground">Añadir Secciones</h4>
-                    <p className="text-[10px] text-muted-foreground">
-                        Grado: <span className="text-primary font-bold">{grade.name}</span>
-                    </p>
-                </div>
-
-                <div className="space-y-4">
-                    <Button 
-                        variant="jiraOutline" 
-                        size="sm" 
-                        className="w-full justify-start h-9 rounded-md border-border/60" 
-                        onClick={() => { onAddOne(); setOpen(false); }}
-                    >
-                        <Plus className="h-3.5 w-3.5 mr-2" />
-                        Añadir siguiente letra
-                    </Button>
-
-                    <div className="pt-2 border-t border-border/50 space-y-3">
-                        <div className="space-y-1">
-                            <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground/70">
-                                Generación Masiva
-                            </Label>
-                            <div className="flex items-center gap-2">
-                                <Input 
-                                    type="number" 
-                                    min={1} 
-                                    max={20} 
-                                    value={count} 
-                                    onChange={(e) => setCount(parseInt(e.target.value) || 1)}
-                                    className="h-8 text-xs font-bold rounded-md bg-muted/20"
-                                />
-                                <span className="text-[10px] font-bold text-muted-foreground shrink-0 uppercase">letras</span>
-                            </div>
-                        </div>
-                        <Button 
-                            variant="jira" 
-                            size="sm" 
-                            className="w-full h-8 rounded-md text-[10px]" 
-                            onClick={handleBulk}
-                        >
-                            <Layers className="h-3 w-3 mr-2" />
-                            Generar {count} secciones
                         </Button>
                     </div>
                 </div>
