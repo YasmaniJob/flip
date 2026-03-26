@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/atoms/button';
 import { useRescheduleBlock, useReservationsByDateRange, ReservationSlot } from '../hooks/use-reservations';
@@ -29,7 +29,6 @@ const WEEKDAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 export function RescheduleDialog({ slot, open, onOpenChange, shift, classroomId }: RescheduleDialogProps) {
     const [currentWeekStart, setCurrentWeekStart] = useState(() => getWeekStart(parseDateSafe(slot.date)));
     const [selectedSlots, setSelectedSlots] = useState<SelectedSlot[]>([]);
-    const [dragState, setDragState] = useState<{ isDragging: boolean; mode: 'select' | 'deselect' | null }>({ isDragging: false, mode: null });
 
     const rescheduleBlockMutation = useRescheduleBlock();
     const { data: rawPedagogicalHours } = usePedagogicalHours();
@@ -88,58 +87,27 @@ export function RescheduleDialog({ slot, open, onOpenChange, shift, classroomId 
         setCurrentWeekStart(prev => addDays(prev, direction === 'next' ? 7 : -7));
     };
 
-    useEffect(() => {
-        const handleGlobalMouseUp = () => {
-            if (dragState.isDragging) {
-                setDragState({ isDragging: false, mode: null });
-            }
-        };
-        window.addEventListener('mouseup', handleGlobalMouseUp);
-        return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
-    }, [dragState.isDragging]);
-
-    const selectedSlotKeys = useMemo(() => {
-        const keys = new Set<string>();
-        selectedSlots.forEach(s => keys.add(`${s.date.toDateString()}-${s.hourId}`));
-        return keys;
-    }, [selectedSlots]);
-
     const isSelected = (dateKey: string, hourId: string) => {
-        return selectedSlotKeys.has(`${dateKey}-${hourId}`);
+        return selectedSlots.some(s => s.date.toDateString() === dateKey && s.hourId === hourId);
     };
 
-    const toggleCellSelection = (date: Date, hourId: string, mode: 'select' | 'deselect') => {
+    const toggleCellSelection = (date: Date, hourId: string) => {
         setSelectedSlots(prev => {
             const dateKey = date.toDateString();
             const exists = prev.some(s => s.date.toDateString() === dateKey && s.hourId === hourId);
 
-            if (mode === 'deselect' && exists) {
+            if (exists) {
                 return prev.filter(s => !(s.date.toDateString() === dateKey && s.hourId === hourId));
             }
 
-            if (mode === 'select' && !exists) {
-                if (prev.length >= requiredSlotsCount) {
-                    return [...prev.slice(1), { date, hourId }];
-                }
-                return [...prev, { date, hourId }];
+            // Normal single click toggle
+            if (prev.length >= requiredSlotsCount) {
+                // Remove the first one and add the new one if we only need X slots
+                if (requiredSlotsCount === 1) return [{ date, hourId }];
+                return [...prev.slice(1), { date, hourId }];
             }
-
-            return prev;
+            return [...prev, { date, hourId }];
         });
-    };
-
-    const handleMouseDown = (date: Date, dateKey: string, hourId: string, isBreak?: boolean, isReserved?: boolean) => {
-        if (isBreak || isReserved) return;
-        const currentlySelected = isSelected(dateKey, hourId);
-        const newMode = currentlySelected ? 'deselect' : 'select';
-
-        setDragState({ isDragging: true, mode: newMode });
-        toggleCellSelection(date, hourId, newMode);
-    };
-
-    const handleMouseEnter = (date: Date, hourId: string, isBreak?: boolean, isReserved?: boolean) => {
-        if (!dragState.isDragging || isBreak || isReserved) return;
-        toggleCellSelection(date, hourId, dragState.mode!);
     };
 
     const handleReschedule = async () => {
@@ -273,22 +241,10 @@ export function RescheduleDialog({ slot, open, onOpenChange, shift, classroomId 
                                             return (
                                                 <td
                                                     key={i}
-                                                    className={`p-1 border-t border-r last:border-r-0 border-border ${!isReserved && !isCurrent ? 'cursor-pointer select-none active:bg-muted/50' : ''}`}
+                                                    className={`p-1 border-t border-r last:border-r-0 border-border ${!isReserved && !isCurrent ? 'cursor-pointer select-none active:bg-muted/50 transition-colors' : ''}`}
                                                     onClick={() => {
                                                         if (!isReserved && !isCurrent) {
-                                                            toggleCellSelection(dObj.date, hour.id, isSlotSelected ? 'deselect' : 'select');
-                                                        }
-                                                    }}
-                                                    onMouseDown={(e) => {
-                                                        // Solo en desktop (cuando hay mouse)
-                                                        if (e.button === 0 && !('ontouchstart' in window)) {
-                                                            handleMouseDown(dObj.date, dObj.key, hour.id, hour.isBreak, isReserved);
-                                                        }
-                                                    }}
-                                                    onMouseEnter={() => {
-                                                        // Solo en desktop
-                                                        if (!('ontouchstart' in window)) {
-                                                            handleMouseEnter(dObj.date, hour.id, hour.isBreak, isReserved);
+                                                            toggleCellSelection(dObj.date, hour.id);
                                                         }
                                                     }}
                                                 >
