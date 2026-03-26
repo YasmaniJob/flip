@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { staff } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,27 +20,18 @@ export async function GET(request: NextRequest) {
     const userEmail = user.email;
 
     // Buscar todas las instituciones donde trabaja este usuario
-    // Primero intentar por DNI, si no existe, buscar por email
-    let staffRecords = [];
-    
-    if (userDni) {
-      staffRecords = await db.query.staff.findMany({
-        where: eq(staff.dni, userDni),
-        with: {
-          institution: true,
-        },
-      });
-    }
-    
-    // Si no hay resultados por DNI, intentar por email
-    if (staffRecords.length === 0 && userEmail) {
-      staffRecords = await db.query.staff.findMany({
-        where: eq(staff.email, userEmail),
-        with: {
-          institution: true,
-        },
-      });
-    }
+    // Usamos una sola query con OR y aprovechamos los nuevos índices globales
+    const staffRecords = await db.query.staff.findMany({
+      where: (staff, { or, eq }) => {
+        const conditions = [];
+        if (userDni) conditions.push(eq(staff.dni, userDni));
+        if (userEmail) conditions.push(eq(staff.email, userEmail));
+        return conditions.length > 0 ? or(...conditions) : undefined;
+      },
+      with: {
+        institution: true,
+      },
+    });
 
     // Si aún no hay resultados, retornar array vacío (no es error)
     if (staffRecords.length === 0) {
@@ -57,7 +46,7 @@ export async function GET(request: NextRequest) {
       id: s.institutionId,
       name: s.institution.name,
       nivel: s.institution.nivel,
-      logo: s.institution.logo,
+      logo: (s.institution.settings as any)?.logo,
     }));
 
     return NextResponse.json({

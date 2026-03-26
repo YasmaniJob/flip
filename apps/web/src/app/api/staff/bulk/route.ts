@@ -7,6 +7,7 @@ import { ForbiddenError } from '@/lib/utils/errors';
 import { db } from '@/lib/db';
 import { staff } from '@/lib/db/schema';
 import { randomUUID } from 'crypto';
+import { sql } from 'drizzle-orm';
 
 // POST /api/staff/bulk - Bulk create staff members
 export async function POST(request: NextRequest) {
@@ -43,7 +44,19 @@ export async function POST(request: NextRequest) {
       status: 'active',
     }));
 
-    const created = await db.insert(staff).values(values).returning();
+    const created = await db
+      .insert(staff)
+      .values(values)
+      .onConflictDoUpdate({
+        target: [staff.institutionId, staff.dni],
+        set: {
+          name: sql`EXCLUDED.name`,
+          role: sql`EXCLUDED.role`,
+          phone: sql`EXCLUDED.phone`,
+          email: sql`EXCLUDED.email`,
+        },
+      })
+      .returning();
 
     return successResponse(created, 201);
   } catch (error) {

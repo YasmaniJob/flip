@@ -220,6 +220,8 @@ export const staff = pgTable('staff', {
 }, (table) => ({
     institutionIdx: index('idx_staff_institution').on(table.institutionId),
     nameIdx: index('idx_staff_name').on(table.name),
+    dniGlobalIdx: index('idx_staff_dni_global').on(table.dni),
+    emailGlobalIdx: index('idx_staff_email_global').on(table.email),
     staffDniInstitution: uniqueIndex('idx_staff_institution_dni').on(table.institutionId, table.dni),
     staffEmailInstitution: uniqueIndex('idx_staff_institution_email').on(table.institutionId, table.email),
     roleIdx: index('idx_staff_role').on(table.role),
