@@ -265,7 +265,7 @@ function OnboardingContent() {
                 </div>
             </main>
             {/* MOBILE FIXED BOTTOM NAV */}
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border px-6 py-6 flex items-center safe-area-pb">
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border px-6 pb-12 pt-6 flex items-center safe-area-pb">
                 {step === 'nivel' ? (
                     <button
                         onClick={nextStep}
