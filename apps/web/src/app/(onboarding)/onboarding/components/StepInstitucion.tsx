@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useDeferredValue } from "react";
 import { motion } from "framer-motion";
 import {
     Search,
@@ -23,6 +23,15 @@ import {
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { OnboardingData } from "./types";
 
+const iconMap: Record<string, any> = {
+    'LIMA': Landmark, 'AREQUIPA': Building2, 'CUSCO': School, 'PUNO': Compass,
+    'PIURA': Sun, 'LA LIBERTAD': Landmark, 'ANCASH': Trees, 'CAJAMARCA': Landmark,
+    'JUNIN': Zap, 'LAMBAYEQUE': Wind, 'HUANUCO': Trees, 'SAN MARTIN': Globe,
+    'ICA': Sun, 'AYACUCHO': Star, 'LORETO': Globe, 'UCAYALI': Globe,
+    'AMAZONAS': Trees, 'APURIMAC': Trees, 'TACNA': MapPin, 'HUANCAVELICA': Landmark,
+    'MOQUEGUA': Landmark, 'PASCO': Cpu, 'TUMBES': Sun, 'MADRE DE DIOS': Globe,
+};
+
 interface StepInstitucionProps {
     data: OnboardingData;
     updateData: (u: Partial<OnboardingData>) => void;
@@ -30,11 +39,24 @@ interface StepInstitucionProps {
 
 export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
     const [query, setQuery] = useState("");
+    const deferredQuery = useDeferredValue(query);
     const [isManualMode, setIsManualMode] = useState(false);
     const [selectedDep, setSelectedDep] = useState("");
     const [selectedProv, setSelectedProv] = useState("");
     const [selectedDist, setSelectedDist] = useState("");
     const [showDeptGrid, setShowDeptGrid] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Click outside handler for mobile dropdown
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowDeptGrid(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     // Carousel state
     // Queries with caching for better performance
@@ -86,15 +108,23 @@ export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
         isFetchingNextPage,
         isFetching: isSearching
     } = useInfiniteQuery({
-        queryKey: ['search-institutions', query, selectedDep, selectedProv, selectedDist, data.nivel],
+        queryKey: ['search-institutions', deferredQuery, selectedDep, selectedProv, selectedDist, data.nivel],
         queryFn: async ({ pageParam = 0 }) => {
-            if (query.length < 3 && !selectedDep) return { items: [], total: 0 };
+            if (deferredQuery.length < 3 && !selectedDep) return { items: [], total: 0 };
             const nivel = data.nivel === 'primaria' ? 'Primaria' : 'Secundaria';
-            let url = `/api/institutions/search?q=${encodeURIComponent(query)}&nivel=${nivel}&limit=20&offset=${pageParam}`;
-            if (selectedDep) url += `&departamento=${encodeURIComponent(selectedDep)}`;
-            if (selectedProv) url += `&provincia=${encodeURIComponent(selectedProv)}`;
-            if (selectedDist) url += `&distrito=${encodeURIComponent(selectedDist)}`;
-            const res = await fetch(url);
+            
+            const params = new URLSearchParams({
+                q: deferredQuery,
+                nivel,
+                limit: '20',
+                offset: pageParam.toString()
+            });
+
+            if (selectedDep) params.append('departamento', selectedDep);
+            if (selectedProv) params.append('provincia', selectedProv);
+            if (selectedDist) params.append('distrito', selectedDist);
+
+            const res = await fetch(`/api/institutions/search?${params.toString()}`);
             if (!res.ok) throw new Error('Search failed');
             const json = await res.json();
             return json.data || json;
@@ -103,7 +133,7 @@ export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
             const currentTotal = allPages.reduce((acc, page) => acc + (page.items?.length || 0), 0);
             return currentTotal < (lastPage.total || 0) ? currentTotal : undefined;
         },
-        enabled: query.length >= 3 || !!selectedDep,
+        enabled: deferredQuery.length >= 3 || !!selectedDep,
         initialPageParam: 0,
         staleTime: 5 * 60 * 1000, // 5 minutes - search results can be cached
         gcTime: 15 * 60 * 1000, // 15 minutes in cache
@@ -130,15 +160,6 @@ export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
         if (observerTarget.current) observer.observe(observerTarget.current);
         return () => observer.disconnect();
     }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-    const iconMap: Record<string, any> = {
-        'LIMA': Landmark, 'AREQUIPA': Building2, 'CUSCO': School, 'PUNO': Compass,
-        'PIURA': Sun, 'LA LIBERTAD': Landmark, 'ANCASH': Trees, 'CAJAMARCA': Landmark,
-        'JUNIN': Zap, 'LAMBAYEQUE': Wind, 'HUANUCO': Trees, 'SAN MARTIN': Globe,
-        'ICA': Sun, 'AYACUCHO': Star, 'LORETO': Globe, 'UCAYALI': Globe,
-        'AMAZONAS': Trees, 'APURIMAC': Trees, 'TACNA': MapPin, 'HUANCAVELICA': Landmark,
-        'MOQUEGUA': Landmark, 'PASCO': Cpu, 'TUMBES': Sun, 'MADRE DE DIOS': Globe,
-    };
 
     const selectInstitution = (ie: any) => {
         updateData({
@@ -195,11 +216,15 @@ export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
                                     autoFocus
                                     onChange={(e) => updateData({
                                         institution: {
+                                            ...data.institution,
                                             nombre: e.target.value,
-                                            codigoModular: `MAN-${Math.floor(Math.random() * 10000)}`,
+                                            codigoModular: data.institution?.codigoModular?.startsWith('MAN-') 
+                                                ? data.institution.codigoModular 
+                                                : `MAN-${Math.floor(Math.random() * 10000)}`,
                                             departamento: data.institution?.departamento || "",
                                             provincia: data.institution?.provincia || "",
-                                            distrito: data.institution?.distrito || ""
+                                            distrito: data.institution?.distrito || "",
+                                            direccion: data.institution?.direccion || ""
                                         },
                                         isManual: true
                                     })}
@@ -219,7 +244,9 @@ export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
                                         className="w-full pl-11 pr-4 py-3 rounded-lg border-2 border-border bg-background text-sm font-bold focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all"
                                         placeholder="Ej. Lima"
                                         defaultValue={data.institution?.departamento}
-                                        onChange={(e) => updateData({ institution: { ...data.institution!, departamento: e.target.value } as any })}
+                                        onChange={(e) => updateData({ 
+                                            institution: { ...data.institution, departamento: e.target.value, nombre: data.institution?.nombre || "", codigoModular: data.institution?.codigoModular || "", provincia: data.institution?.provincia || "", distrito: data.institution?.distrito || "", direccion: data.institution?.direccion || "" } 
+                                        })}
                                     />
                                 </div>
                             </div>
@@ -233,7 +260,9 @@ export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
                                         className="w-full pl-11 pr-4 py-3 rounded-lg border-2 border-border bg-background text-sm font-bold focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all"
                                         placeholder="Ej. Yauyos"
                                         defaultValue={data.institution?.provincia}
-                                        onChange={(e) => updateData({ institution: { ...data.institution!, provincia: e.target.value } as any })}
+                                        onChange={(e) => updateData({ 
+                                            institution: { ...data.institution, provincia: e.target.value, nombre: data.institution?.nombre || "", codigoModular: data.institution?.codigoModular || "", departamento: data.institution?.departamento || "", distrito: data.institution?.distrito || "", direccion: data.institution?.direccion || "" }
+                                        })}
                                     />
                                 </div>
                             </div>
@@ -247,7 +276,9 @@ export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
                                         className="w-full pl-11 pr-4 py-3 rounded-lg border-2 border-border bg-background text-sm font-bold focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all"
                                         placeholder="Ej. Catahuasi"
                                         defaultValue={data.institution?.distrito}
-                                        onChange={(e) => updateData({ institution: { ...data.institution!, distrito: e.target.value } as any })}
+                                        onChange={(e) => updateData({ 
+                                            institution: { ...data.institution, distrito: e.target.value, nombre: data.institution?.nombre || "", codigoModular: data.institution?.codigoModular || "", departamento: data.institution?.departamento || "", provincia: data.institution?.provincia || "", direccion: data.institution?.direccion || "" }
+                                        })}
                                     />
                                 </div>
                             </div>
@@ -269,7 +300,7 @@ export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-6xl mx-auto w-full">
             <div className="bg-muted/30 p-6 md:p-8 rounded-lg border border-border">
-                <div className="flex flex-col lg:flex-row gap-8 min-h-[400px] h-[58vh] max-h-[650px]">
+                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 min-h-[400px] lg:h-[58vh] lg:max-h-[650px] h-full">
                     {/* SIDEBAR: DEPARTMENTS (DESKTOP) */}
                     <aside className="hidden lg:block w-64 shrink-0 border-r border-border/50 pr-6">
                         <div className="flex flex-col h-full space-y-4">
@@ -320,7 +351,7 @@ export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
                         </div>
                     </aside>
 
-                    <div className="lg:hidden space-y-4">
+                    <div className="lg:hidden relative" ref={dropdownRef}>
                         <button
                             onClick={() => setShowDeptGrid(!showDeptGrid)}
                             className={`
@@ -336,12 +367,12 @@ export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
                         </button>
 
                         {showDeptGrid && (
-                            <div className="p-4 rounded-lg border-2 border-border bg-muted/20 grid grid-cols-2 gap-2 animate-in slide-in-from-top-2 duration-200">
+                            <div className="absolute top-full left-0 right-0 z-20 mt-1 p-3 rounded-lg border-2 border-border bg-background shadow-lg grid grid-cols-2 gap-1.5 animate-in slide-in-from-top-2 duration-200 max-h-64 overflow-y-auto">
                                 {departamentos.map((d: string) => (
                                     <button
                                         key={d}
                                         onClick={() => { setSelectedDep(d); setSelectedProv(""); setSelectedDist(""); setShowDeptGrid(false); }}
-                                        className={`p-3 rounded-md border text-xs font-bold uppercase transition-all ${selectedDep === d ? 'bg-primary border-primary text-primary-foreground' : 'bg-background border-border text-foreground'}`}
+                                        className={`p-2.5 rounded-md border text-xs font-bold uppercase transition-all ${selectedDep === d ? 'bg-primary border-primary text-primary-foreground' : 'bg-muted/30 border-border text-foreground hover:bg-muted'}`}
                                     >
                                         {d}
                                     </button>

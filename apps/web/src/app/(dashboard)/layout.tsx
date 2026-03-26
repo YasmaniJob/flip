@@ -87,7 +87,11 @@ export default function DashboardLayout({
 
             // Check if user needs onboarding (unless SuperAdmin)
             if (!isSuperAdmin && !user.institutionId) {
-                router.push("/onboarding");
+                // Solo redirigir si llevamos más de 2 segundos en el dashboard sin institutionId
+                const timer = setTimeout(() => {
+                    router.push("/onboarding");
+                }, 2000);
+                return () => clearTimeout(timer);
             }
         }
     }, [session, isPending, router]);

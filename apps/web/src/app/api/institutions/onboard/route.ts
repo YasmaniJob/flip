@@ -4,6 +4,7 @@ import { turso } from '@/lib/db/turso';
 import {
   institutions,
   users,
+  sessions,
 } from '@/lib/db/schema';
 import { educationInstitutionsMinedu } from '@/lib/db/schema-turso';
 import { requireAuth } from '@/lib/auth/helpers';
@@ -180,7 +181,28 @@ export async function POST(request: NextRequest) {
         .where(eq(users.id, user.id));
     }
 
-    return successResponse(institution, 201);
+
+    // Invalidar sesión actual para forzar refresh
+    const cookieHeader = request.headers.get('cookie') || '';
+    const sessionToken = cookieHeader
+      .split(';')
+      .find(c => c.trim().startsWith('better-auth.session_token=') || c.trim().startsWith('__Secure-better-auth.session_token='))
+      ?.split('=')[1];
+
+    if (sessionToken) {
+      await db.update(sessions)
+        .set({ 
+          activeInstitutionId: institution.id,
+          updatedAt: new Date()
+        })
+        .where(eq(sessions.token, decodeURIComponent(sessionToken)));
+    }
+
+    // Modificamos el response final para limpiar la caché de cookies de Better Auth
+    const response = successResponse(institution, 201);
+    response.cookies.delete('better-auth.session_data');
+    response.cookies.delete('__Secure-better-auth.session_data');
+    return response;
   } catch (error) {
     console.error('[Onboard] Error:', error);
     return errorResponse(error);

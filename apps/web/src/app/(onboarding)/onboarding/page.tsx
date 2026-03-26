@@ -63,11 +63,28 @@ function OnboardingContent() {
 
             if (!response.ok) throw new Error('Error al completar onboarding');
 
-            await fetch('/api/auth/get-session');
+            const { authClient } = await import('@/lib/auth-client');
+            await authClient.getSession();
 
-            setTimeout(() => {
+            // Esperar a que la sesión tenga institutionId
+            let retries = 0;
+            while (retries < 10) {
+                const session = await authClient.getSession();
+                if ((session?.data?.user as any)?.institutionId) break;
+                await new Promise(r => setTimeout(r, 300));
+                retries++;
+            }
+
+            await authClient.getSession();
+            // Forzar refresh de la sesión en Better Auth
+            const freshSession = await authClient.getSession();
+            if ((freshSession?.data?.user as any)?.institutionId) {
                 window.location.href = '/dashboard';
-            }, 1000);
+            } else {
+                // Si aún no tiene institutionId, esperar 1 segundo más
+                await new Promise(r => setTimeout(r, 1000));
+                window.location.href = '/dashboard';
+            }
 
         } catch (err) {
             console.error(err);
@@ -108,6 +125,64 @@ function OnboardingContent() {
 
     const meta = STEP_META[step];
 
+    const renderNavButtons = (isMobile: boolean) => (
+        <>
+            <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
+                {step !== 'nivel' && (
+                    <button
+                        onClick={prevStep}
+                        disabled={isLoading}
+                        className="px-5 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-40"
+                    >
+                        Atrás
+                    </button>
+                )}
+                {isChanging && (
+                    <button
+                        onClick={() => router.push('/settings')}
+                        disabled={isLoading}
+                        className="px-5 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-40"
+                    >
+                        Cancelar
+                    </button>
+                )}
+            </div>
+
+            <div>
+                {step === 'nivel' ? (
+                    <button
+                        onClick={nextStep}
+                        disabled={!data.nivel || isLoading}
+                        className={`${isMobile ? 'px-8 py-2.5' : 'px-12 py-3 animate-in zoom-in-95'} rounded-full bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all disabled:opacity-40 active:scale-95`}
+                    >
+                        Continuar
+                    </button>
+                ) : step !== 'confirmacion' ? (
+                    <button
+                        onClick={nextStep}
+                        disabled={step === 'institucion' && !data.institution}
+                        className={`${isMobile ? 'px-6' : 'px-8'} py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`}
+                    >
+                        {step === 'institucion' && data.institution ? 'Confirmar selección' : 'Siguiente'}
+                    </button>
+                ) : (
+                    <button
+                        onClick={handleSubmit}
+                        disabled={isLoading}
+                        className={`${isMobile ? 'px-6 min-w-[140px]' : 'px-8 min-w-[160px]'} py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center`}
+                    >
+                        {isLoading ? (
+                            <>
+                                <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                                {isChanging ? 'Cambiando...' : 'Configurando...'}
+                            </>
+                        ) : isChanging ? 'Confirmar cambio' : 'Ir a mi espacio'}
+                    </button>
+                )}
+            </div>
+        </>
+    );
+
     return (
         <div className="min-h-screen flex flex-col bg-background text-foreground animate-in fade-in duration-500 relative">
             {isLoading && <OnboardingOverlay />}
@@ -126,7 +201,7 @@ function OnboardingContent() {
                 </div>
             </header>
 
-            <main className="flex flex-col flex-1 justify-center max-w-[1400px] mx-auto w-full px-6 py-4 lg:py-8 min-h-0">
+            <main className="flex flex-col flex-1 max-w-[1400px] mx-auto w-full px-6 py-4 lg:py-8 pb-24 lg:pb-8 lg:justify-center min-h-0">
                 <div className={`${step === 'nivel' ? 'mb-8' : 'mb-6'} text-center mx-auto max-w-4xl px-4 shrink-0`}>
                     {data.nivel && step !== 'nivel' && step !== 'confirmacion' && (
                         <motion.div
@@ -181,62 +256,17 @@ function OnboardingContent() {
                     )}
                 </div>
 
-                <div className={`transition-all duration-500 flex items-center w-full mx-auto ${step === 'institucion' ? 'max-w-6xl' : 'max-w-3xl'} ${step === 'nivel' ? 'justify-center border-none pt-0 mt-8' : 'justify-between pt-6 border-t border-border/50 mt-4'}`}>
-                    <div className="flex items-center gap-3">
-                        {step !== 'nivel' && (
-                            <button
-                                onClick={prevStep}
-                                disabled={isLoading}
-                                className="px-5 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-40"
-                            >
-                                Atrás
-                            </button>
-                        )}
-                        {isChanging && (
-                            <button
-                                onClick={() => router.push('/settings')}
-                                disabled={isLoading}
-                                className="px-5 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-40"
-                            >
-                                Cancelar
-                            </button>
-                        )}
-                    </div>
-
-                    <div>
-                        {step === 'nivel' ? (
-                            <button
-                                onClick={nextStep}
-                                disabled={!data.nivel || isLoading}
-                                className="px-12 py-3 rounded-full bg-primary text-primary-foreground text-base font-bold hover:bg-primary/90 transition-all disabled:opacity-40 active:scale-95 animate-in zoom-in-95"
-                            >
-                                Continuar
-                            </button>
-                        ) : step !== 'confirmacion' ? (
-                            <button
-                                onClick={nextStep}
-                                disabled={step === 'institucion' && !data.institution}
-                                className="px-8 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                                {step === 'institucion' && data.institution ? 'Confirmar selección' : 'Siguiente'}
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleSubmit}
-                                disabled={isLoading}
-                                className="px-8 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center min-w-[160px]"
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                                        {isChanging ? 'Cambiando...' : 'Configurando...'}
-                                    </>
-                                ) : isChanging ? 'Confirmar cambio' : 'Ir a mi espacio'}
-                            </button>
-                        )}
+                {/* Spacer for desktop layout */}
+                <div className="hidden lg:block">
+                    <div className={`transition-all duration-500 flex items-center w-full mx-auto ${step === 'institucion' ? 'max-w-6xl' : 'max-w-3xl'} ${step === 'nivel' ? 'justify-center border-none pt-0 mt-8' : 'justify-between pt-6 border-t border-border/50 mt-4'}`}>
+                        {renderNavButtons(false)}
                     </div>
                 </div>
             </main>
+            {/* MOBILE FIXED BOTTOM NAV */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border px-4 py-3 flex items-center justify-between safe-area-pb">
+                {renderNavButtons(true)}
+            </div>
         </div>
     );
 }
