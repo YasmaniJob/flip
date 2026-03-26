@@ -162,7 +162,7 @@ function OnboardingContent() {
                     <button
                         onClick={nextStep}
                         disabled={step === 'institucion' && !data.institution}
-                        className={`${isMobile ? 'px-6' : 'px-8'} py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed`}
+                        className={`${isMobile ? 'h-11 px-10' : 'px-8 py-2.5'} rounded-md bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 shadow-sm`}
                     >
                         {step === 'institucion' && data.institution ? 'Confirmar selección' : 'Siguiente'}
                     </button>
@@ -202,7 +202,7 @@ function OnboardingContent() {
                 </div>
             </header>
 
-            <main className="flex flex-col flex-1 max-w-[1400px] mx-auto w-full px-6 py-4 lg:py-8 pb-32 lg:pb-8 lg:justify-center min-h-0">
+            <main className="flex flex-col flex-1 max-w-[1400px] mx-auto w-full px-6 py-4 lg:py-8 pb-24 lg:pb-8 lg:justify-center min-h-0">
                 <div className={`${step === 'nivel' ? 'mb-8' : 'mb-6'} text-center mx-auto max-w-4xl px-4 shrink-0`}>
                     {data.nivel && step !== 'nivel' && step !== 'confirmacion' && (
                         <motion.div
@@ -265,7 +265,7 @@ function OnboardingContent() {
                 </div>
             </main>
             {/* MOBILE FIXED BOTTOM NAV */}
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border px-6 pb-12 pt-6 flex items-center safe-area-pb">
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-sm border-t border-border px-6 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] flex items-center">
                 {step === 'nivel' ? (
                     <button
                         onClick={nextStep}

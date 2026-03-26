@@ -474,7 +474,7 @@ export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
 
                             <div className="flex-1 overflow-y-scroll overflow-x-hidden custom-scrollbar pr-2 -mr-2 flex flex-col min-h-0">
                                 {searchResults.length > 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-20">
                                         {searchResults.map((ie: any, index: number) => {
                                             const isSelected = data.institution?.codigoModular === ie.codigoModular;
                                             return (

@@ -54,54 +54,25 @@ interface MobileRecentActivityProps {
 }
 
 export function MobileRecentActivity({ activities = [] }: MobileRecentActivityProps) {
-  // Mock data if no activities provided
-  const mockActivities: Activity[] = [
-    {
-      id: "1",
-      type: "loan",
-      title: "Préstamo registrado",
-      description: "Laptop HP ProBook 450 prestada a Juan Pérez",
-      timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 min ago
-    },
-    {
-      id: "2",
-      type: "reservation",
-      title: "Aula reservada",
-      description: "Laboratorio 2 - Sesión de clase",
-      timestamp: new Date(Date.now() - 1000 * 60 * 45), // 45 min ago
-    },
-    {
-      id: "3",
-      type: "inventory",
-      title: "Equipo agregado",
-      description: "Proyector Epson EB-X41 añadido al inventario",
-      timestamp: new Date(Date.now() - 1000 * 60 * 120), // 2 hours ago
-    },
-    {
-      id: "4",
-      type: "staff",
-      title: "Personal actualizado",
-      description: "María García - Rol cambiado a Coordinador",
-      timestamp: new Date(Date.now() - 1000 * 60 * 180), // 3 hours ago
-    },
-    {
-      id: "5",
-      type: "loan",
-      title: "Préstamo devuelto",
-      description: "Tablet Samsung Galaxy Tab A7 devuelta",
-      timestamp: new Date(Date.now() - 1000 * 60 * 240), // 4 hours ago
-    },
-  ];
-
-  const displayActivities = activities.length > 0 ? activities.slice(0, 5) : mockActivities;
+  const displayActivities = activities.slice(0, 5);
 
   return (
     <div className="lg:hidden px-4 pb-6">
       <h2 className="text-sm font-bold text-foreground mb-3">Actividad reciente</h2>
       <div className="bg-card border border-border/60 rounded-xl p-4">
-        {displayActivities.map((activity) => (
-          <ActivityItem key={activity.id} activity={activity} />
-        ))}
+        {displayActivities.length > 0 ? (
+          displayActivities.map((activity) => (
+            <ActivityItem key={activity.id} activity={activity} />
+          ))
+        ) : (
+          <div className="py-8 flex flex-col items-center justify-center text-center">
+            <span className="text-3xl mb-3 opacity-80">🌱</span>
+            <p className="text-sm font-bold text-foreground">Aún no hay actividad</p>
+            <p className="text-xs font-medium text-muted-foreground mt-1 max-w-[220px]">
+              Tu espacio está listo. Aquí aparecerán tus préstamos, reservas o movimientos de inventario.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
