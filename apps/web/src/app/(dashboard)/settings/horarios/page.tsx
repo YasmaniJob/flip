@@ -17,7 +17,6 @@ export default function HorariosPage() {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
                         <div>
                             <h1 className="text-3xl font-black tracking-tighter text-foreground font-sans">Horarios</h1>
-                            <p className="text-muted-foreground text-[11px] font-bold uppercase tracking-widest mt-1">Configuración de horas pedagógicas</p>
                         </div>
                     </div>
                     <PedagogicalHoursSettings />

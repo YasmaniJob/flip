@@ -32,7 +32,6 @@ export default function AreasPage() {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
                         <div>
                             <h1 className="text-3xl font-black tracking-tighter text-foreground font-sans">Áreas Curriculares</h1>
-                            <p className="text-muted-foreground text-[11px] font-bold uppercase tracking-widest mt-1">Configuración de currículo</p>
                         </div>
                     </div>
                     <CurricularAreasSettings educationLevel={institution?.nivel} />

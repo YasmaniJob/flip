@@ -7,9 +7,6 @@ export default function TemplatesPage() {
                 <h1 className="text-2xl font-black uppercase tracking-tight text-foreground">
                     Templates de Recursos
                 </h1>
-                <p className="text-sm text-muted-foreground mt-2">
-                    Gestiona los templates (subcategorías) que se usarán para clasificar los recursos del inventario.
-                </p>
             </div>
             <TemplatesSettings />
         </div>
