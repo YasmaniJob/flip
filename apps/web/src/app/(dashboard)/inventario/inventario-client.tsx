@@ -45,7 +45,7 @@ export default function InventarioClient() {
     const [editingResource, setEditingResource] = useState<Resource | null>(null);
     const [deletingResource, setDeletingResource] = useState<Resource | null>(null);
     
-    const { data: resources = [], isLoading: loadingResources } = useResources();
+    const { data: resources = [] } = useResources();
     const { data: templates = [], isLoading: loadingTemplates } = useInventoryAggregation();
     const { data: categories = [] } = useCategories();
     
@@ -90,45 +90,45 @@ export default function InventarioClient() {
     }, [templates, categories]);
 
     return (
-        <div className="p-6 sm:p-8 max-w-[1600px] mx-auto min-h-screen space-y-6">
+        <div className="p-4 sm:p-8 max-w-[1600px] mx-auto min-h-screen space-y-6">
             <InventoryHeader onAddResource={canManage ? () => setIsCreateDialogOpen(true) : undefined} resources={resources} />
             
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mt-8 mb-6 border-b border-border/30 pb-4">
+            <div className="flex flex-col gap-4 mt-8 mb-6 border-b border-border/30 pb-6">
                 <div className="relative w-full sm:w-[360px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40" />
                     <Input 
                         placeholder="Buscar recursos..." 
                         value={search} 
                         onChange={(e) => setSearch(e.target.value)} 
-                        className="h-10 pl-9 w-full bg-card border-border rounded-md text-[13px] shadow-none focus-visible:ring-primary/20" 
+                        className="h-10 pl-9 w-full bg-card border-border rounded-md text-[13px] shadow-none focus-visible:ring-primary/20 font-bold" 
                     />
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="grid grid-cols-2 sm:flex items-center gap-2 w-full">
                     <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                        <SelectTrigger className="h-10 w-[180px] bg-card border-border rounded-md text-[11px] font-black uppercase tracking-widest shadow-none focus:ring-primary/20">
+                        <SelectTrigger className="h-10 w-full sm:w-[180px] bg-card border-border rounded-md text-[10px] font-black uppercase tracking-widest shadow-none focus:ring-primary/20">
                             <SelectValue placeholder="Categoría" />
                         </SelectTrigger>
                         <SelectContent className="border-border shadow-none">
-                            <SelectItem value="all" className="text-[11px] font-black uppercase tracking-widest cursor-pointer">Todas las categorías</SelectItem>
-                            {usedCategories.map((cat) => (<SelectItem key={cat.id} value={cat.id} className="text-[11px] font-black uppercase tracking-widest cursor-pointer">{cat.name}</SelectItem>))}
+                            <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Todas las categorías</SelectItem>
+                            {usedCategories.map((cat) => (<SelectItem key={cat.id} value={cat.id} className="text-[10px] font-black uppercase tracking-widest cursor-pointer">{cat.name}</SelectItem>))}
                         </SelectContent>
                     </Select>
                     
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="h-10 w-[160px] bg-card border-border rounded-md text-[11px] font-black uppercase tracking-widest shadow-none focus:ring-primary/20">
+                        <SelectTrigger className="h-10 w-full sm:w-[160px] bg-card border-border rounded-md text-[10px] font-black uppercase tracking-widest shadow-none focus:ring-primary/20">
                             <SelectValue placeholder="Estado" />
                         </SelectTrigger>
                         <SelectContent className="border-border shadow-none">
-                            <SelectItem value="all" className="text-[11px] font-black uppercase tracking-widest cursor-pointer">Todos los estados</SelectItem>
-                            <SelectItem value="disponible" className="text-[11px] font-black uppercase tracking-widest cursor-pointer">Disponible</SelectItem>
-                            <SelectItem value="prestado" className="text-[11px] font-black uppercase tracking-widest cursor-pointer">Prestado</SelectItem>
-                            <SelectItem value="mantenimiento" className="text-[11px] font-black uppercase tracking-widest cursor-pointer">Mantenimiento</SelectItem>
-                            <SelectItem value="baja" className="text-[11px] font-black uppercase tracking-widest cursor-pointer">Baja</SelectItem>
+                            <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Todos los estados</SelectItem>
+                            <SelectItem value="disponible" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Disponible</SelectItem>
+                            <SelectItem value="prestado" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Prestado</SelectItem>
+                            <SelectItem value="mantenimiento" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Mantenimiento</SelectItem>
+                            <SelectItem value="baja" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Baja</SelectItem>
                         </SelectContent>
                     </Select>
 
-                    <Button variant="ghost" className="h-10 px-4 text-[11px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
+                    <Button variant="ghost" className="h-10 px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all col-span-2 sm:col-span-1 justify-center sm:justify-start">
                         <Filter className="w-3.5 h-3.5 mr-2 opacity-40" />
                         Más Filtros
                     </Button>

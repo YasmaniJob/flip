@@ -35,8 +35,64 @@ export function TemplateTable({
     };
 
     return (
-        <div className="bg-card border border-border rounded-lg mt-6 mb-8 shadow-none transition-all">
-            <div className="overflow-x-auto">
+        <div className="bg-transparent md:bg-card md:border md:border-border rounded-lg mt-6 mb-8 shadow-none transition-all">
+            {/* Mobile View: Cards */}
+            <div className="flex flex-col gap-3 md:hidden px-1">
+                {items.length === 0 ? (
+                    <div className="bg-card border border-border rounded-lg p-12 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
+                        No hay plantillas registradas
+                    </div>
+                ) : (
+                    items.map((item) => (
+                        <div 
+                            key={item.templateId}
+                            className="bg-white border border-border rounded-lg p-4 flex flex-col gap-4 shadow-none active:scale-[0.98] transition-all"
+                            onClick={(e) => toggleRow(item.templateId, e)}
+                        >
+                            <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-10 h-10 rounded-md bg-muted/10 border border-border flex items-center justify-center text-xl shrink-0">
+                                        {item.templateIcon || '📦'}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[13px] font-black text-foreground uppercase tracking-tight truncate">
+                                            {item.templateName}
+                                        </p>
+                                        <p className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-widest mt-0.5">
+                                            {item.categoryName}
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button 
+                                    variant="jiraOutline" 
+                                    className="h-8 px-3 text-[9px] font-black uppercase tracking-[0.1em] border shadow-none shrink-0"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onAddStock(item);
+                                    }}
+                                >
+                                    <Plus className="w-3 h-3 mr-1" />
+                                    Añadir
+                                </Button>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2 border-t border-border/50 pt-3">
+                                <div className="space-y-0.5">
+                                    <span className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest block">En Stock</span>
+                                    <p className="text-xs font-black text-foreground tabular-nums">{item.available}</p>
+                                </div>
+                                <div className="space-y-0.5">
+                                    <span className="text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest block">Prestados</span>
+                                    <p className="text-xs font-black text-foreground tabular-nums">{item.borrowed}</p>
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {/* Desktop View: Table */}
+            <div className="hidden md:block overflow-x-auto">
                 <table className="w-full border-collapse">
                     <thead>
                         <tr className="bg-muted/5 border-b border-border">

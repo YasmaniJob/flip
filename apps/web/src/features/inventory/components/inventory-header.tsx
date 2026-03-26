@@ -33,20 +33,20 @@ export function InventoryHeader({ onAddResource, resources }: InventoryHeaderPro
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="hidden lg:block">
-                    <h1 className="text-2xl font-black tracking-tighter text-foreground uppercase">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-foreground uppercase font-sans">
                         Inventario
                     </h1>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 lg:ml-auto">
-                    <Button variant="ghost" className="h-10 px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
+                <div className="flex items-center gap-2 shrink-0 sm:ml-auto">
+                    <Button variant="ghost" className="h-9 px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
                         Exportar
                     </Button>
                     {onAddResource && (
                         <Button 
                             variant="jira" 
                             onClick={onAddResource} 
-                            className="h-10 px-6 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-none"
+                            className="h-9 px-6 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-none"
                         >
                             <Plus className="h-3.5 w-3.5 mr-2" />
                             Nuevo Recurso
@@ -55,60 +55,48 @@ export function InventoryHeader({ onAddResource, resources }: InventoryHeaderPro
                 </div>
             </div>
             
-            <div className="flex flex-col md:flex-row items-stretch bg-card border border-border rounded-lg overflow-hidden shadow-none">
+            <div className="flex flex-col md:flex-row items-stretch bg-white border border-border rounded-lg overflow-hidden shadow-none">
                 {/* Left Side: Stats */}
-                <div className="px-8 py-6 flex flex-col justify-center min-w-[260px] border-b md:border-b-0 md:border-r border-border bg-muted/5">
-                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">
+                <div className="px-6 sm:px-8 py-5 sm:py-6 flex flex-col justify-center min-w-[220px] border-b md:border-b-0 md:border-r border-border bg-muted/5">
+                    <span className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-[0.2em] mb-1.5">
                         Unidades Físicas
                     </span>
                     <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-black text-foreground tracking-tighter tabular-nums">{total}</span>
-                        <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">Registradas</span>
+                        <span className="text-4xl font-black text-foreground tracking-tighter tabular-nums leading-none">{total}</span>
+                        <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest leading-none">Registradas</span>
                     </div>
                 </div>
 
                 {/* Right Side: Progress Bar */}
-                <div className="flex-1 px-10 py-6 flex flex-col justify-center">
+                <div className="flex-1 px-6 sm:px-10 py-5 sm:py-6 flex flex-col justify-center">
                     <div className="flex items-center gap-3 mb-4">
-                        <span className="text-xl font-black text-foreground tracking-tighter tabular-nums">{total}</span>
-                        <span className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.15em]">Recursos Mapeados</span>
+                        <span className="text-lg font-black text-foreground tracking-tighter tabular-nums">{total}</span>
+                        <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.15em]">Recursos Mapeados</span>
                     </div>
                     
-                    <div className="h-1.5 w-full bg-muted/20 rounded-full overflow-hidden flex gap-0.5 mb-5 shadow-none">
-                        <div
-                            className="h-full bg-emerald-500 transition-all duration-700"
-                            style={{ width: `${availablePercent}%` }}
-                        />
-                        <div
-                            className="h-full bg-blue-500 transition-all duration-700"
-                            style={{ width: `${borrowedPercent}%` }}
-                        />
-                        <div
-                            className="h-full bg-amber-500 transition-all duration-700"
-                            style={{ width: `${maintenancePercent}%` }}
-                        />
-                        <div
-                            className="h-full bg-rose-500 transition-all duration-700"
-                            style={{ width: `${retiredPercent}%` }}
-                        />
+                    <div className="h-1.5 w-full bg-muted/20 rounded-full overflow-hidden flex gap-0.5 mb-5 shadow-none border border-black/5">
+                        <div className="h-full bg-emerald-500 transition-all duration-700" style={{ width: `${availablePercent}%` }} />
+                        <div className="h-full bg-blue-500 transition-all duration-700" style={{ width: `${borrowedPercent}%` }} />
+                        <div className="h-full bg-amber-500 transition-all duration-700" style={{ width: `${maintenancePercent}%` }} />
+                        <div className="h-full bg-rose-500 transition-all duration-700" style={{ width: `${retiredPercent}%` }} />
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+                    <div className="grid grid-cols-2 lg:flex lg:flex-wrap items-center gap-x-8 gap-y-3">
                         <div className="flex items-center gap-2.5">
-                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Disp: <span className="text-foreground">{stats.available}</span></span>
+                            <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate">Disp: <span className="text-foreground">{stats.available}</span></span>
                         </div>
                         <div className="flex items-center gap-2.5">
-                            <div className="h-2 w-2 rounded-full bg-blue-500" />
-                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Pres: <span className="text-foreground">{stats.borrowed}</span></span>
+                            <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate">Pres: <span className="text-foreground">{stats.borrowed}</span></span>
                         </div>
                         <div className="flex items-center gap-2.5">
-                            <div className="h-2 w-2 rounded-full bg-amber-500" />
-                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Mant: <span className="text-foreground">{stats.maintenance}</span></span>
+                            <div className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate">Mant: <span className="text-foreground">{stats.maintenance}</span></span>
                         </div>
                         <div className="flex items-center gap-2.5">
-                            <div className="h-2 w-2 rounded-full bg-rose-500" />
-                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Baja: <span className="text-foreground">{stats.retired}</span></span>
+                            <div className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest truncate">Baja: <span className="text-foreground">{stats.retired}</span></span>
                         </div>
                     </div>
                 </div>
