@@ -79,11 +79,11 @@ function OnboardingContent() {
             // Forzar refresh de la sesión en Better Auth
             const freshSession = await authClient.getSession();
             if ((freshSession?.data?.user as any)?.institutionId) {
-                window.location.href = '/dashboard';
+                window.location.replace('/dashboard');
             } else {
-                // Si aún no tiene institutionId, esperar 1 segundo más
-                await new Promise(r => setTimeout(r, 1000));
-                window.location.href = '/dashboard';
+                // Si aún no tiene institutionId, esperar 2 segundo más
+                await new Promise(r => setTimeout(r, 2000));
+                window.location.replace('/dashboard');
             }
 
         } catch (err) {
