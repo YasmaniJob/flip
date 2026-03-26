@@ -70,9 +70,6 @@ export function useResources(params?: {
         `/resources${queryString ? `?${queryString}` : ""}`,
       );
       
-      // Debug log
-      console.log('[useResources] Raw response:', response);
-      
       // Handle both direct array and wrapped response
       if (Array.isArray(response)) {
         return response;
@@ -84,7 +81,8 @@ export function useResources(params?: {
       console.warn('[useResources] Unexpected response format:', response);
       return [];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000, // 2 minutos
+    placeholderData: (previousData) => previousData,
   });
 }
 

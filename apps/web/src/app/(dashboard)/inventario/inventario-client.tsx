@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import dynamic from "next/dynamic";
+import { useState, useMemo, useDeferredValue, lazy, Suspense, memo } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Search, Filter } from "lucide-react";
 import { TemplateTable } from "@/features/inventory/components/template-table";
-import { AddStockModal } from "@/features/inventory/components/add-stock-modal";
 import { InventoryHeader } from "@/features/inventory/components/inventory-header";
 import { useResources, type Resource } from "@/features/inventory/hooks/use-resources";
 import { useInventoryAggregation } from "@/features/inventory/hooks/use-inventory-aggregation";
@@ -17,15 +15,29 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 
-const ResourceWizard = dynamic(() => import("@/features/inventory/components/resource-wizard").then(m => m.ResourceWizard), { ssr: false });
-const ConfirmDeleteDialog = dynamic(() => import("@/components/molecules/confirm-delete-dialog").then(m => m.ConfirmDeleteDialog), { ssr: false });
-const ResourceDialog = dynamic(() => import("@/features/inventory/components/resource-dialog").then(m => m.ResourceDialog), { ssr: false });
+// Lazy load dialogs and modals
+const ResourceWizard = lazy(() => import("@/features/inventory/components/resource-wizard").then(m => ({ default: m.ResourceWizard })));
+const ConfirmDeleteDialog = lazy(() => import("@/components/molecules/confirm-delete-dialog").then(m => ({ default: m.ConfirmDeleteDialog })));
+const ResourceDialog = lazy(() => import("@/features/inventory/components/resource-dialog").then(m => ({ default: m.ResourceDialog })));
+const AddStockModal = lazy(() => import("@/features/inventory/components/add-stock-modal").then(m => ({ default: m.AddStockModal })));
+
+// Loading skeleton component
+const TableSkeleton = memo(() => (
+    <div className="bg-card border border-border h-[400px] flex items-center justify-center">
+        <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/30 animate-pulse">
+            Cargando catálogo...
+        </span>
+    </div>
+));
+TableSkeleton.displayName = "TableSkeleton";
 
 export default function InventarioClient() {
     const { canManage } = useUserRole();
     const queryClient = useQueryClient();
     const apiClient = useApiClient();
+    
     const [search, setSearch] = useState("");
+    const deferredSearch = useDeferredValue(search);
     const [categoryFilter, setCategoryFilter] = useState("all");
     const [statusFilter, setStatusFilter] = useState("all");
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -33,15 +45,9 @@ export default function InventarioClient() {
     const [editingResource, setEditingResource] = useState<Resource | null>(null);
     const [deletingResource, setDeletingResource] = useState<Resource | null>(null);
     
-    // We still load resources to pass down lengths or basic metadata if needed, but the main table consumes templates
     const { data: resources = [], isLoading: loadingResources } = useResources();
     const { data: templates = [], isLoading: loadingTemplates } = useInventoryAggregation();
     const { data: categories = [] } = useCategories();
-    
-    // Debug: Log resources data
-    console.log('[INVENTARIO] Resources:', resources);
-    console.log('[INVENTARIO] Loading:', loadingResources);
-    console.log('[INVENTARIO] Categories:', categories);
     
     const updateMutation = useMutation({
         mutationFn: async (data: any) => {
@@ -66,17 +72,18 @@ export default function InventarioClient() {
     });
 
     const filteredTemplates = useMemo(() => {
-        const searchLower = search.toLowerCase();
+        const searchLower = deferredSearch.toLowerCase();
         return templates.filter((t: any) => {
             if (categoryFilter !== "all" && t.categoryId !== categoryFilter) return false;
-            if (search) {
+            if (deferredSearch) {
                 const hit = t.templateName.toLowerCase().includes(searchLower) ||
                             t.categoryName.toLowerCase().includes(searchLower);
                 if (!hit) return false;
             }
             return true;
         });
-    }, [templates, search, categoryFilter]);
+    }, [templates, deferredSearch, categoryFilter]);
+    
     const usedCategories = useMemo(() => {
         const usedIds = new Set(templates.map((t: any) => t.categoryId).filter(Boolean));
         return categories.filter((c: any) => usedIds.has(c.id));
@@ -127,10 +134,9 @@ export default function InventarioClient() {
                     </Button>
                 </div>
             </div>
+            
             {loadingTemplates ? (
-                <div className="bg-card border border-border h-[400px] flex items-center justify-center">
-                    <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/30 animate-pulse">Cargando catálogo...</span>
-                </div>
+                <TableSkeleton />
             ) : (
                 <TemplateTable
                     items={filteredTemplates}
@@ -149,38 +155,56 @@ export default function InventarioClient() {
                 />
             )}
             
-            <ResourceWizard 
-                open={isCreateDialogOpen} 
-                onOpenChange={setIsCreateDialogOpen} 
-                onSuccess={() => {
-                    queryClient.invalidateQueries({ queryKey: ["inventory-templates-aggregation"] });
-                    queryClient.invalidateQueries({ queryKey: ["resources"] });
-                }} 
-            />
+            {/* Lazy loaded dialogs */}
+            <Suspense fallback={null}>
+                {isCreateDialogOpen && (
+                    <ResourceWizard 
+                        open={isCreateDialogOpen} 
+                        onOpenChange={setIsCreateDialogOpen} 
+                        onSuccess={() => {
+                            queryClient.invalidateQueries({ queryKey: ["inventory-templates-aggregation"] });
+                            queryClient.invalidateQueries({ queryKey: ["resources"] });
+                        }} 
+                    />
+                )}
 
+                {addStockParams && (
+                    <AddStockModal
+                        open={!!addStockParams}
+                        onOpenChange={(open) => !open && setAddStockParams(null)}
+                        categoryId={addStockParams.categoryId}
+                        templateId={addStockParams.templateId}
+                        templateName={addStockParams.templateName}
+                        templateIcon={addStockParams.templateIcon}
+                        onSuccess={() => {
+                            queryClient.invalidateQueries({ queryKey: ["resources"] });
+                            queryClient.invalidateQueries({ queryKey: ["inventory-templates-aggregation"] });
+                            setAddStockParams(null);
+                        }}
+                    />
+                )}
 
-
-            {addStockParams && (
-                <AddStockModal
-                    open={!!addStockParams}
-                    onOpenChange={(open) => !open && setAddStockParams(null)}
-                    categoryId={addStockParams.categoryId}
-                    templateId={addStockParams.templateId}
-                    templateName={addStockParams.templateName}
-                    templateIcon={addStockParams.templateIcon}
-                    onSuccess={() => {
-                        queryClient.invalidateQueries({ queryKey: ["resources"] });
-                        queryClient.invalidateQueries({ queryKey: ["inventory-templates-aggregation"] });
-                        setAddStockParams(null);
-                        
-                        // Opcionalmente, aquí podríamos abrir el Drawer ahora que sí tiene stock,
-                        // para que el usuario fluya naturalmente. Pero por ahora, volver a la tabla es limpio.
-                    }}
-                />
-            )}
-
-            {editingResource && (<ResourceDialog resource={editingResource} categories={categories} loading={updateMutation.isPending} onSave={(data) => updateMutation.mutate({ ...data, id: editingResource.id })} onClose={() => setEditingResource(null)} />)}
-            {deletingResource && (<ConfirmDeleteDialog open onOpenChange={(open) => !open && setDeletingResource(null)} title={`¿Eliminar "${deletingResource.name}"?`} description="Esta acción eliminará permanentemente el recurso del inventario. No se puede deshacer." onConfirm={() => deleteMutation.mutate(deletingResource.id)} isLoading={deleteMutation.isPending} />)}
+                {editingResource && (
+                    <ResourceDialog 
+                        resource={editingResource} 
+                        categories={categories} 
+                        loading={updateMutation.isPending} 
+                        onSave={(data) => updateMutation.mutate({ ...data, id: editingResource.id })} 
+                        onClose={() => setEditingResource(null)} 
+                    />
+                )}
+                
+                {deletingResource && (
+                    <ConfirmDeleteDialog 
+                        open 
+                        onOpenChange={(open) => !open && setDeletingResource(null)} 
+                        title={`¿Eliminar "${deletingResource.name}"?`} 
+                        description="Esta acción eliminará permanentemente el recurso del inventario. No se puede deshacer." 
+                        onConfirm={() => deleteMutation.mutate(deletingResource.id)} 
+                        isLoading={deleteMutation.isPending} 
+                    />
+                )}
+            </Suspense>
         </div>
     );
 }

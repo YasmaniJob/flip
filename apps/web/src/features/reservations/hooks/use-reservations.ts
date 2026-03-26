@@ -20,10 +20,7 @@ export function useReservationsByDateRange(startDate: string, endDate: string, c
         staleTime: 0,
         enabled: !!startDate && !!endDate && !!classroomId,
         placeholderData: (previousData) => previousData,
-        retry: 2, // Reintentar 2 veces antes de fallar
-        onError: (error) => {
-            handleApiError(error, 'No se pudieron cargar las reservas');
-        },
+        retry: 2,
     });
 }
 
@@ -31,11 +28,8 @@ export function useMyTodayReservations() {
     return useQuery({
         queryKey: reservationKeys.myToday(),
         queryFn: ReservationsApi.getMyToday,
-        staleTime: 2 * 60 * 1000, // 2 minutos (aumentado de 30s - agenda del día no cambia tan rápido)
-        retry: 2, // Reintentar 2 veces antes de fallar
-        onError: (error) => {
-            handleApiError(error, 'No se pudieron cargar tus reservas de hoy');
-        },
+        staleTime: 2 * 60 * 1000,
+        retry: 2,
     });
 }
 
@@ -141,10 +135,7 @@ export function useReservationAttendance(reservationId: string) {
         queryKey: reservationKeys.attendance(reservationId),
         queryFn: () => ReservationsApi.getAttendance(reservationId),
         enabled: !!reservationId,
-        retry: 2, // Reintentar 2 veces antes de fallar
-        onError: (error) => {
-            handleApiError(error, 'No se pudo cargar la asistencia');
-        },
+        retry: 2,
     });
 }
 
@@ -200,10 +191,7 @@ export function useReservationTasks(reservationId: string) {
         queryKey: reservationKeys.tasks(reservationId),
         queryFn: () => ReservationsApi.getTasks(reservationId),
         enabled: !!reservationId,
-        retry: 2, // Reintentar 2 veces antes de fallar
-        onError: (error) => {
-            handleApiError(error, 'No se pudieron cargar los acuerdos');
-        },
+        retry: 2,
     });
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, lazy, Suspense, memo } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -14,8 +14,6 @@ import {
 import { useClassrooms } from "@/features/classrooms/hooks/use-classrooms";
 import { usePedagogicalHours } from "@/features/settings/hooks/use-pedagogical-hours";
 import { ReservationSlot } from "@/features/reservations/api/reservations.api";
-import { ReservationDialog } from "@/features/reservations/components/reservation-dialog";
-import { WorkshopDetailSheet } from "@/features/reservations/components/workshop-detail-sheet";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
     AlertDialog,
@@ -33,17 +31,27 @@ import { useAcademicDefaults } from "../../../hooks/use-academic-defaults";
 import { ReservationCard } from "@/features/reservations/components/reservation-card";
 import { SelectionActionBar } from "@/features/reservations/components/selection-action-bar";
 
-// Mobile components
-import { MobileWeekStrip } from "@/features/reservations/components/mobile-week-strip";
-import { MobileScheduleView } from "@/features/reservations/components/mobile-schedule-view";
-import { MobileReservationSheet } from "@/features/reservations/components/mobile-reservation-sheet";
-import { MobileFilterSheet } from "@/features/reservations/components/mobile-filter-sheet";
-import { MobileReservationWizard } from "@/features/reservations/components/mobile-reservation-wizard";
-import { RescheduleDialog } from "@/features/reservations/components/reschedule-dialog";
+// Lazy load heavy components
+const ReservationDialog = lazy(() => import("@/features/reservations/components/reservation-dialog").then(m => ({ default: m.ReservationDialog })));
+const WorkshopDetailSheet = lazy(() => import("@/features/reservations/components/workshop-detail-sheet").then(m => ({ default: m.WorkshopDetailSheet })));
+const MobileWeekStrip = lazy(() => import("@/features/reservations/components/mobile-week-strip").then(m => ({ default: m.MobileWeekStrip })));
+const MobileScheduleView = lazy(() => import("@/features/reservations/components/mobile-schedule-view").then(m => ({ default: m.MobileScheduleView })));
+const MobileReservationSheet = lazy(() => import("@/features/reservations/components/mobile-reservation-sheet").then(m => ({ default: m.MobileReservationSheet })));
+const MobileFilterSheet = lazy(() => import("@/features/reservations/components/mobile-filter-sheet").then(m => ({ default: m.MobileFilterSheet })));
+const MobileReservationWizard = lazy(() => import("@/features/reservations/components/mobile-reservation-wizard").then(m => ({ default: m.MobileReservationWizard })));
+const RescheduleDialog = lazy(() => import("@/features/reservations/components/reschedule-dialog").then(m => ({ default: m.RescheduleDialog })));
 
 const WEEKDAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 
 export type Shift = 'mañana' | 'tarde';
+
+// Loading skeleton
+const LoadingSkeleton = memo(() => (
+    <div className="p-8 text-center text-muted-foreground animate-pulse">
+        Cargando reservas y horarios...
+    </div>
+));
+LoadingSkeleton.displayName = "LoadingSkeleton";
 
 export function ReservacionesClient() {
     const router = useRouter();
@@ -214,13 +222,13 @@ export function ReservacionesClient() {
 
     const isLoading = isLoadingClassrooms || isLoadingHours || isLoadingDefaults;
 
-    if (isLoading) return <div className="p-8 text-center text-muted-foreground animate-pulse">Cargando reservas y horarios...</div>;
+    if (isLoading) return <LoadingSkeleton />;
     if (errorSlots || errorHours) return <div className="p-8 text-center text-red-500">Error al cargar datos del sistema</div>;
 
     const todayDateString = new Date().toDateString();
 
     return (
-        <>
+        <Suspense fallback={<LoadingSkeleton />}>
             {/* Mobile View */}
             <div className="lg:hidden bg-background min-h-screen">
                 {/* Filter Buttons - Single Row */}
@@ -256,11 +264,9 @@ export function ReservacionesClient() {
                     selectedSlots={selectedSlots}
                     onSlotClick={(slot, hourId) => {
                         if (slot) {
-                            // Show bottom sheet with slot details
                             setMobileSheetSlot(slot);
                             setIsMobileSheetOpen(true);
                         } else {
-                            // Toggle selection for empty slot
                             handleCellClick(selectedMobileDate, { id: hourId });
                         }
                     }}
@@ -297,23 +303,25 @@ export function ReservacionesClient() {
                 )}
 
                 {/* Mobile Reservation Sheet */}
-                <MobileReservationSheet 
-                    slot={mobileSheetSlot}
-                    open={isMobileSheetOpen}
-                    onClose={() => {
-                        setIsMobileSheetOpen(false);
-                        setMobileSheetSlot(null);
-                    }}
-                    onCancel={() => {
-                        setIsMobileSheetOpen(false);
-                        setTimeout(() => setConfirmCancelOpen(true), 300);
-                    }}
-                    onReschedule={() => {
-                        setIsMobileSheetOpen(false);
-                        setTimeout(() => setRescheduleOpen(true), 300);
-                    }}
-                    canManage={canManage}
-                />
+                {isMobileSheetOpen && mobileSheetSlot && (
+                    <MobileReservationSheet 
+                        slot={mobileSheetSlot}
+                        open={isMobileSheetOpen}
+                        onClose={() => {
+                            setIsMobileSheetOpen(false);
+                            setMobileSheetSlot(null);
+                        }}
+                        onCancel={() => {
+                            setIsMobileSheetOpen(false);
+                            setTimeout(() => setConfirmCancelOpen(true), 300);
+                        }}
+                        onReschedule={() => {
+                            setIsMobileSheetOpen(false);
+                            setTimeout(() => setRescheduleOpen(true), 300);
+                        }}
+                        canManage={canManage}
+                    />
+                )}
 
                 {/* Cancel Confirmation Dialog */}
                 <AlertDialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
@@ -345,7 +353,7 @@ export function ReservacionesClient() {
                 </AlertDialog>
 
                 {/* Reschedule Dialog */}
-                {mobileSheetSlot && (
+                {mobileSheetSlot && rescheduleOpen && (
                     <RescheduleDialog
                         slot={mobileSheetSlot}
                         open={rescheduleOpen}
@@ -356,41 +364,47 @@ export function ReservacionesClient() {
                 )}
 
                 {/* Mobile Reservation Wizard */}
-                <MobileReservationWizard 
-                    open={isDialogOpen}
-                    onClose={() => {
-                        setIsDialogOpen(false);
-                        setSelectedSlots([]);
-                    }}
-                    selectedSlots={selectedSlots}
-                    classroomId={selectedClassroomId}
-                    onSuccess={() => {
-                        setSelectedSlots([]);
-                    }}
-                />
+                {isDialogOpen && (
+                    <MobileReservationWizard 
+                        open={isDialogOpen}
+                        onClose={() => {
+                            setIsDialogOpen(false);
+                            setSelectedSlots([]);
+                        }}
+                        selectedSlots={selectedSlots}
+                        classroomId={selectedClassroomId}
+                        onSuccess={() => {
+                            setSelectedSlots([]);
+                        }}
+                    />
+                )}
 
                 {/* Classroom Filter Sheet */}
-                <MobileFilterSheet 
-                    open={isClassroomSheetOpen}
-                    onClose={() => setIsClassroomSheetOpen(false)}
-                    title="Seleccionar Aula"
-                    options={classrooms?.filter(c => c.active).map(c => ({ id: c.id, name: c.name })) || []}
-                    selectedId={selectedClassroomId}
-                    onSelect={setSelectedClassroomId}
-                />
+                {isClassroomSheetOpen && (
+                    <MobileFilterSheet 
+                        open={isClassroomSheetOpen}
+                        onClose={() => setIsClassroomSheetOpen(false)}
+                        title="Seleccionar Aula"
+                        options={classrooms?.filter(c => c.active).map(c => ({ id: c.id, name: c.name })) || []}
+                        selectedId={selectedClassroomId}
+                        onSelect={setSelectedClassroomId}
+                    />
+                )}
 
                 {/* Shift Filter Sheet */}
-                <MobileFilterSheet 
-                    open={isShiftSheetOpen}
-                    onClose={() => setIsShiftSheetOpen(false)}
-                    title="Seleccionar Turno"
-                    options={[
-                        { id: 'mañana', name: 'Mañana' },
-                        { id: 'tarde', name: 'Tarde' }
-                    ]}
-                    selectedId={selectedShift || 'mañana'}
-                    onSelect={(shift) => setSelectedShift(shift as Shift)}
-                />
+                {isShiftSheetOpen && (
+                    <MobileFilterSheet 
+                        open={isShiftSheetOpen}
+                        onClose={() => setIsShiftSheetOpen(false)}
+                        title="Seleccionar Turno"
+                        options={[
+                            { id: 'mañana', name: 'Mañana' },
+                            { id: 'tarde', name: 'Tarde' }
+                        ]}
+                        selectedId={selectedShift || 'mañana'}
+                        onSelect={(shift) => setSelectedShift(shift as Shift)}
+                    />
+                )}
             </div>
 
             {/* Desktop View */}
@@ -581,15 +595,17 @@ export function ReservacionesClient() {
                 selectedShift={selectedShift}
             />
 
-            <Dialog open={!!selectedReservationId} onOpenChange={(open) => !open && setSelectedReservationId(null)}>
-                <DialogContent className="hidden lg:flex sm:max-w-2xl w-full h-full p-0 flex-col gap-0 border-none rounded-none fixed right-0 top-0 bottom-0 left-auto translate-x-0 translate-y-0 m-0 z-50">
-                    <DialogTitle className="sr-only">Detalles del taller</DialogTitle>
-                    <DialogDescription className="sr-only">Gestión de asistencia y acuerdos.</DialogDescription>
-                    {selectedReservationId && <WorkshopDetailSheet reservationId={selectedReservationId} title={selectedTitle} />}
-                </DialogContent>
-            </Dialog>
+            {selectedReservationId && (
+                <Dialog open={!!selectedReservationId} onOpenChange={(open) => !open && setSelectedReservationId(null)}>
+                    <DialogContent className="hidden lg:flex sm:max-w-2xl w-full h-full p-0 flex-col gap-0 border-none rounded-none fixed right-0 top-0 bottom-0 left-auto translate-x-0 translate-y-0 m-0 z-50">
+                        <DialogTitle className="sr-only">Detalles del taller</DialogTitle>
+                        <DialogDescription className="sr-only">Gestión de asistencia y acuerdos.</DialogDescription>
+                        <WorkshopDetailSheet reservationId={selectedReservationId} title={selectedTitle} />
+                    </DialogContent>
+                </Dialog>
+            )}
             </div>
-        </>
+        </Suspense>
     );
 }
 

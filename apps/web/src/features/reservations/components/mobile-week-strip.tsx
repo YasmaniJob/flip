@@ -63,18 +63,18 @@ export function MobileWeekStrip({
               onClick={() => onDateSelect(date)}
               className={cn(
                 "flex-1 flex flex-col items-center py-2 gap-1 border-r border-border last:border-r-0 transition-colors",
-                isActive ? "bg-foreground" : "bg-background hover:bg-muted/50"
+                isActive ? "bg-primary" : "bg-background hover:bg-muted/50"
               )}
             >
               <span className={cn(
                 "text-[9px] uppercase font-medium",
-                isActive ? "text-background/70" : "text-muted-foreground"
+                isActive ? "text-primary-foreground/70" : "text-muted-foreground"
               )}>
                 {WEEKDAYS_SHORT[index]}
               </span>
               <span className={cn(
                 "text-[15px] font-semibold",
-                isActive ? "text-background" : isToday ? "text-primary" : "text-foreground"
+                isActive ? "text-primary-foreground" : isToday ? "text-primary" : "text-foreground"
               )}>
                 {date.getDate()}
               </span>

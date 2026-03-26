@@ -224,6 +224,8 @@ export const staff = pgTable('staff', {
     staffEmailInstitution: uniqueIndex('idx_staff_institution_email').on(table.institutionId, table.email),
     roleIdx: index('idx_staff_role').on(table.role),
     statusIdx: index('idx_staff_status').on(table.status),
+    phoneIdx: index('idx_staff_phone').on(table.phone),
+    areaIdx: index('idx_staff_area').on(table.area),
 }));
 
 // ============================================

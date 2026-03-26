@@ -33,7 +33,9 @@ export async function GET(request: NextRequest) {
           ilike(staff.name, searchLower),
           ilike(staff.dni, searchLower),
           ilike(staff.email, searchLower),
-          ilike(staff.area, searchLower)
+          ilike(staff.phone, searchLower),
+          ilike(staff.area, searchLower),
+          ilike(staff.role, searchLower)
         )!
       );
     }
@@ -71,7 +73,13 @@ export async function GET(request: NextRequest) {
 
       if (search) {
         const searchLower = `%${search.toLowerCase()}%`;
-        adminConditions.push(or(ilike(users.name, searchLower), ilike(users.email, searchLower)));
+        adminConditions.push(
+          or(
+            ilike(users.name, searchLower),
+            ilike(users.email, searchLower),
+            ilike(users.dni, searchLower)
+          )
+        );
       }
 
       const admins = await db.query.users.findMany({

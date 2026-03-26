@@ -24,5 +24,7 @@ export function useInventoryAggregation() {
         queryFn: async (): Promise<InventoryTemplateAggregation[]> => {
             return apiClient.get("/inventory-templates");
         },
+        staleTime: 2 * 60 * 1000, // 2 minutos - el inventario no cambia tan frecuentemente
+        placeholderData: (previousData) => previousData,
     });
 }
