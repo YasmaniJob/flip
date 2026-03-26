@@ -12,7 +12,7 @@ import {
     useDeleteCurricularArea,
     type CurricularArea,
 } from '@/features/settings/hooks/use-curricular-areas';
-import { Plus, Trash2, Loader2, BookOpen, Sparkles, AlertCircle, Pencil } from 'lucide-react';
+import { Plus, Trash2, Loader2, BookOpen, Sparkles, AlertCircle, Pencil, X, Check } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -23,7 +23,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { SimpleFormModal } from '@/components/molecules/wizard-modal';
+import { cn } from '@/lib/utils';
 import { ImportCurricularAreasDialog } from './import-curricular-areas-dialog';
 
 interface CurricularAreasSettingsProps {
@@ -251,64 +251,147 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
                 </div>
             )}
 
-            {/* Create/Edit Modal */}
-            <SimpleFormModal
-                open={showModal}
-                onOpenChange={setShowModal}
-                icon="📖"
-                title={editingArea ? 'Editar Área Curricular' : 'Nueva Área Curricular'}
-                description={editingArea
-                    ? 'Modifica el nombre del área curricular.'
-                    : 'Crea una nueva área curricular personalizada.'}
-                formTitle="Detalles del Área"
-                onSubmit={handleSave}
-                onCancel={() => setShowModal(false)}
-                submitLabel={editingArea ? 'Guardar Cambios' : 'Crear Registro'}
-                canSubmit={formData.name.trim().length > 0 && !(createMutation.isPending || updateMutation.isPending)}
-                isSubmitting={createMutation.isPending || updateMutation.isPending}
-                sidebarChildren={
-                    <div className="space-y-6">
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/60 mb-4">Vista Previa</p>
-                            <div className="w-full aspect-square rounded-xl flex items-center justify-center bg-white/10 backdrop-blur-md border border-white/20 shadow-none">
-                                <BookOpen className="h-16 w-16 text-white" />
+            {/* Create/Edit Modal - Jira Single Column Style */}
+            <AlertDialog open={showModal} onOpenChange={(val) => {
+                if (!val) {
+                    setShowModal(false);
+                    setEditingArea(null);
+                }
+            }}>
+                {/* We use AlertDialogContent or DialogContent with no shadow-none and border-border */}
+                <AlertDialogContent className="max-w-xl p-0 flex flex-col overflow-hidden border border-border shadow-none rounded-lg bg-white">
+                    <AlertDialogHeader className="sr-only">
+                        <AlertDialogTitle>{editingArea ? 'Editar Área Curricular' : 'Nueva Área Curricular'}</AlertDialogTitle>
+                    </AlertDialogHeader>
+
+                    {/* ── Header ────────────────────────────────────────────────────────── */}
+                    <div className="shrink-0 px-6 py-5 border-b border-border bg-white flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-md bg-primary/5 flex items-center justify-center text-primary shrink-0 border border-primary/10">
+                                <BookOpen className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-foreground tracking-tight">
+                                    {editingArea ? 'Editar Área' : 'Nueva Área Curricular'}
+                                </h3>
+                                <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
+                                    {editingArea ? 'Modifica los detalles del registro' : 'Configura un área personalizada'}
+                                </p>
                             </div>
                         </div>
-                        <div className="space-y-1">
-                            <p className="text-white font-black text-sm uppercase tracking-tight truncate">
-                                {formData.name || 'Nueva Área'}
+                        <button 
+                            onClick={() => { setShowModal(false); setEditingArea(null); }}
+                            className="p-2 rounded-md hover:bg-muted text-muted-foreground transition-colors"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+
+                    {/* ── Content ───────────────────────────────────────────────────────── */}
+                    <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8 bg-[#f4f5f7]/30">
+                        {/* Area Name Field */}
+                        <div className="space-y-3">
+                            <Label htmlFor="area-name" className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
+                                Nombre Oficial del Área <span className="text-rose-500">*</span>
+                            </Label>
+                            <Input
+                                id="area-name"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                placeholder="Ej: Logística Digital o Arte Dramático"
+                                className="h-11 text-sm rounded-md border-border focus:ring-4 focus:ring-primary/5 focus:border-primary/50 bg-white shadow-none font-bold placeholder:text-muted-foreground/40 transition-all"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && formData.name.trim().length > 0) {
+                                        handleSave();
+                                    }
+                                }}
+                            />
+                            <p className="text-[11px] font-medium text-muted-foreground/70">
+                                Este nombre aparecerá en los reportes académicos y libretas escolares.
                             </p>
-                            <p className="text-white/60 text-[10px] font-black uppercase tracking-widest">
-                                {editingArea ? 'Editando Área' : 'Nuevo Registro'}
+                        </div>
+
+                        {/* Level Selection Field */}
+                        <div className="space-y-4">
+                            <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
+                                Niveles Académicos Aplicables
+                            </Label>
+                            <div className="grid grid-cols-2 gap-4">
+                                {['primaria', 'secundaria'].map((level) => {
+                                    const isAvailable = applicableLevels.includes(level);
+                                    const isSelected = formData.levels[level as keyof typeof formData.levels];
+                                    
+                                    if (!isAvailable && !editingArea) return null;
+
+                                    return (
+                                        <div 
+                                            key={level}
+                                            onClick={() => setFormData({
+                                                ...formData,
+                                                levels: {
+                                                    ...formData.levels,
+                                                    [level]: !isSelected
+                                                }
+                                            })}
+                                            className={cn(
+                                                "group flex items-center justify-between p-4 rounded-md border transition-all cursor-pointer bg-white select-none",
+                                                isSelected 
+                                                    ? "border-[#0052cc] bg-[#ebf2ff]" 
+                                                    : "border-border hover:border-primary/30 hover:bg-muted/10",
+                                                !isAvailable && "opacity-50 cursor-not-allowed border-dashed bg-muted/5"
+                                            )}
+                                        >
+                                            <span className={cn(
+                                                "text-[10px] font-black uppercase tracking-widest",
+                                                isSelected ? "text-[#0052cc]" : "text-muted-foreground"
+                                            )}>
+                                                {level}
+                                            </span>
+                                            
+                                            <div className={cn(
+                                                "w-5 h-5 rounded border transition-all flex items-center justify-center",
+                                                isSelected 
+                                                    ? "bg-[#0052cc] border-[#0052cc]" 
+                                                    : "border-border/60 group-hover:border-primary/50"
+                                            )}>
+                                                {isSelected && <Check className="h-3.5 w-3.5 text-white stroke-[3]" />}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <p className="text-[11px] font-medium text-muted-foreground leading-relaxed italic">
+                                Marca los niveles donde estará disponible esta área (Gran Unidad Escolar).
                             </p>
                         </div>
                     </div>
-                }
-            >
-                <div className="space-y-6 pt-2">
-                    <div className="space-y-3">
-                        <Label htmlFor="area-name" className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
-                            Nombre del Área <span className="text-rose-500">*</span>
-                        </Label>
-                        <Input
-                            id="area-name"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            placeholder="Ej: Logística Digital o Arte Dramático"
-                            className="h-11 text-sm rounded-md border-border focus:ring-1 focus:ring-primary shadow-none font-bold"
-                            autoFocus
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && formData.name.trim().length > 0) {
-                                    handleSave();
-                                }
-                            }}
-                        />
-                        <p className="text-[11px] font-medium text-muted-foreground">
-                            El nombre oficial que aparecerá en las libretas y certificados.
-                        </p>
+
+                    {/* ── Footer ────────────────────────────────────────────────────────── */}
+                    <div className="shrink-0 p-5 border-t border-border bg-white flex items-center justify-between">
+                        <Button
+                            variant="ghost"
+                            onClick={() => { setShowModal(false); setEditingArea(null); }}
+                            className="text-[11px] font-black uppercase tracking-widest h-10 px-6 rounded-md hover:bg-muted text-muted-foreground"
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={handleSave}
+                            disabled={formData.name.trim().length === 0 || (createMutation.isPending || updateMutation.isPending)}
+                            variant="jira"
+                            className="h-10 px-8 rounded-md font-black uppercase tracking-widest text-[11px] active:scale-95 transition-all shadow-none flex items-center gap-2"
+                        >
+                            {createMutation.isPending || updateMutation.isPending ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                                <Check className="h-3.5 w-3.5" />
+                            )}
+                            {editingArea ? 'Guardar Cambios' : 'Crear Registro'}
+                        </Button>
                     </div>
-                </div>
-            </SimpleFormModal>
+                </AlertDialogContent>
+            </AlertDialog>
 
             {/* Import Dialog */}
             <ImportCurricularAreasDialog
