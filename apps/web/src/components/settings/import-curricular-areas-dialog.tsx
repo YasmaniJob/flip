@@ -1,7 +1,10 @@
+'use client';
+
 import { useState, useMemo } from 'react';
-import { SimpleFormModal } from '@/components/molecules/wizard-modal';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/atoms/button';
 import { useSeedStandardAreas, type CurricularArea } from '@/features/settings/hooks/use-curricular-areas';
-import { Check, Search, Sparkles } from 'lucide-react';
+import { Check, Search, X, Loader2, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ImportCurricularAreasDialogProps {
@@ -11,20 +14,19 @@ interface ImportCurricularAreasDialogProps {
     onSuccess?: () => void;
 }
 
-// Standard Areas CNEB (Must match backend or be superset)
 const STANDARD_AREAS = [
-    { name: 'Matemática', icon: '📐', description: 'Resolución de problemas' },
-    { name: 'Comunicación', icon: '💬', description: 'Lectura, escritura y oralidad' },
-    { name: 'Ciencia y Tecnología', icon: '🔬', description: 'Indagación y alfabetización científica' },
-    { name: 'Personal Social', icon: '🤝', description: 'Autoestima y convivencia (Primaria)' },
-    { name: 'Desarrollo Personal, Ciudadanía y Cívica', icon: '⚖️', description: 'Valores y ciudadanía (Secundaria)' },
-    { name: 'Ciencias Sociales', icon: '🌍', description: 'Historia y geografía (Secundaria)' },
-    { name: 'Arte y Cultura', icon: '🎨', description: 'Apreciación y expresión artística' },
-    { name: 'Educación Física', icon: '🏃', description: 'Vida activa y saludable' },
-    { name: 'Educación Religiosa', icon: '⛪', description: 'Valores espirituales' },
-    { name: 'Inglés', icon: '🇬🇧', description: 'Lengua extranjera' },
-    { name: 'Educación para el Trabajo', icon: '💼', description: 'Emprendimiento (Secundaria)' },
-    { name: 'Tutoría', icon: '👥', description: 'Orientación educativa' },
+    { id: 'mat', name: 'Matemática', icon: '📐', description: 'Resolución de problemas' },
+    { id: 'com', name: 'Comunicación', icon: '💬', description: 'Lectura, escritura y oralidad' },
+    { id: 'cy t', name: 'Ciencia y Tecnología', icon: '🔬', description: 'Indagación y alfabetización científica' },
+    { id: 'per', name: 'Personal Social', icon: '🤝', description: 'Autoestima y convivencia (Primaria)' },
+    { id: 'dpc', name: 'Desarrollo Personal, Ciudadanía y Cívica', icon: '⚖️', description: 'Valores y ciudadanía (Secundaria)' },
+    { id: 'csc', name: 'Ciencias Sociales', icon: '🌍', description: 'Historia y geografía (Secundaria)' },
+    { id: 'ay c', name: 'Arte y Cultura', icon: '🎨', description: 'Apreciación y expresión artística' },
+    { id: 'efi', name: 'Educación Física', icon: '🏃', description: 'Vida activa y saludable' },
+    { id: 'rel', name: 'Educación Religiosa', icon: '⛪', description: 'Valores espirituales' },
+    { id: 'ing', name: 'Inglés', icon: '🇬🇧', description: 'Lengua extranjera' },
+    { id: 'ept', name: 'Educación para el Trabajo', icon: '💼', description: 'Emprendimiento (Secundaria)' },
+    { id: 'tut', name: 'Tutoría', icon: '👥', description: 'Orientación educativa' },
 ];
 
 export function ImportCurricularAreasDialog({
@@ -66,7 +68,6 @@ export function ImportCurricularAreasDialog({
 
     const handleImport = async () => {
         if (selected.length === 0) return;
-
         try {
             await seedMutation.mutateAsync(selected);
             onSuccess?.();
@@ -78,122 +79,179 @@ export function ImportCurricularAreasDialog({
     };
 
     return (
-        <SimpleFormModal
-            open={open}
-            onOpenChange={onOpenChange}
-            icon="📖"
-            title="Importar Áreas CNEB"
-            description="Selecciona las áreas curriculares estándar que deseas activar en tu institución."
-            formTitle={`Seleccionadas: ${selected.length}`}
+        <Dialog open={open} onOpenChange={(val) => {
+            onOpenChange(val);
+            if (!val) {
+                setSelected([]);
+                setSearchTerm('');
+            }
+        }}>
+            <DialogContent 
+                showCloseButton={false}
+                className="max-w-2xl h-[85vh] p-0 flex flex-col overflow-hidden border border-border shadow-none rounded-lg"
+            >
+                {/* ── Header ────────────────────────────────────────────────────────── */}
+                <div className="shrink-0 px-6 py-5 border-b border-border bg-white">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-md bg-primary/5 flex items-center justify-center text-primary shrink-0 border border-primary/10">
+                                <BookOpen className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-foreground tracking-tight">
+                                    Importar Áreas CNEB
+                                </h3>
+                                <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
+                                    Modelo Curricular Nacional
+                                </p>
+                            </div>
+                        </div>
 
-            onSubmit={handleImport}
-            onCancel={() => onOpenChange(false)}
-            submitLabel="Importar Seleccionadas"
-            canSubmit={selected.length > 0 && !seedMutation.isPending}
-            isSubmitting={seedMutation.isPending}
-            sidebarChildren={
-                <div className="w-full space-y-3">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
-                        <input
-                            type="text"
-                            placeholder="Buscar áreas..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-background/10 border border-white/20 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder:text-white/50 focus:outline-none focus:bg-background/20 transition-all font-medium text-sm"
-                        />
+                        {/* Search on the right */}
+                        <div className="relative w-full max-w-xs group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Buscar área..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full bg-muted/20 border border-border rounded-md h-9 pl-9 pr-4 text-sm font-medium focus:outline-none focus:bg-white focus:border-primary/50 focus:ring-4 focus:ring-primary/5 transition-all placeholder:text-muted-foreground/50"
+                            />
+                            {searchTerm && (
+                                <button
+                                    onClick={() => setSearchTerm('')}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-muted text-muted-foreground"
+                                >
+                                    <X className="h-3 w-3" />
+                                </button>
+                            )}
+                        </div>
                     </div>
+                </div>
 
+                {/* ── Toolbar ───────────────────────────────────────────────────────── */}
+                <div className="shrink-0 px-6 py-3 flex items-center justify-between bg-muted/5 border-b border-border/60">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#0052cc] bg-[#ebf2ff] px-2 py-1 rounded">
+                            Seleccionadas: {selected.length}
+                        </span>
+                        {selected.length > 0 && (
+                            <button
+                                onClick={() => setSelected([])}
+                                className="text-[10px] font-bold text-muted-foreground hover:text-rose-600 transition-colors uppercase tracking-widest px-2"
+                            >
+                                Limpiar
+                            </button>
+                        )}
+                    </div>
+                    
                     <button
-                        type="button"
                         onClick={handleSelectAll}
-                        className="w-full py-2.5 px-4 bg-background/5 border border-white/10 rounded-full text-white/80 text-xs font-semibold hover:bg-background/10 transition-colors flex items-center justify-center gap-2"
+                        className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5"
                     >
-                        <Check className="h-3.5 w-3.5" />
+                        <Check className={cn("h-3 w-3", selected.length > 0 && "text-primary")} />
                         {selected.length > 0 ? 'Deseleccionar Todo' : 'Seleccionar Todo'}
                     </button>
-
-                    <div className="bg-background/5 rounded-2xl p-3 border border-white/10 mt-2">
-                        <div className="flex items-center gap-2 text-white/80 mb-1.5">
-                            <Sparkles className="h-3.5 w-3.5 text-emerald-300" />
-                            <span className="font-bold text-xs">Información</span>
-                        </div>
-                        <p className="text-[10px] text-white/60 leading-relaxed">
-                            Las áreas estándar incluyen sus competencias y capacidades oficiales del MINEDU.
-                        </p>
-                    </div>
                 </div>
-            }
-        >
-            <div className="py-2">
-                <div className="grid grid-cols-1 gap-2">
-                    {filteredAreas.map((area) => {
-                        const isSelected = selected.includes(area.name);
-                        const isDuplicate = existingAreas.some(ea => ea.name.toLowerCase() === area.name.toLowerCase());
 
-                        return (
-                            <div
-                                key={area.name}
-                                onClick={() => handleToggle(area.name, isDuplicate)}
-                                className={cn(
-                                    "group flex items-center gap-4 p-3 rounded-xl border transition-all relative overflow-hidden select-none",
-                                    isDuplicate
-                                        ? "bg-muted/30 border-border opacity-60 cursor-not-allowed"
-                                        : "cursor-pointer",
-                                    !isDuplicate && isSelected
-                                        ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/50 shadow-sm"
-                                        : !isDuplicate && "bg-card border-border hover:border-border/80 hover:bg-muted/20"
-                                )}
-                            >
+                {/* ── Content ───────────────────────────────────────────────────────── */}
+                <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar bg-[#f4f5f7]/30">
+                    <div className="grid grid-cols-1 gap-2">
+                        {filteredAreas.map((area) => {
+                            const isSelected = selected.includes(area.name);
+                            const isDuplicate = existingAreas.some(ea => ea.name.toLowerCase() === area.name.toLowerCase());
+
+                            return (
                                 <div
+                                    key={area.name}
+                                    onClick={() => handleToggle(area.name, isDuplicate)}
                                     className={cn(
-                                        "w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-transform duration-300",
-                                        !isDuplicate && "group-hover:scale-110",
-                                        isSelected ? "bg-card shadow-sm" : "bg-muted"
+                                        "group flex items-center gap-4 p-3 rounded-md border transition-all relative overflow-hidden select-none bg-white",
+                                        isDuplicate
+                                            ? "bg-muted/10 border-border/40 opacity-60 cursor-not-allowed"
+                                            : "cursor-pointer border-border hover:border-primary/30",
+                                        !isDuplicate && isSelected
+                                            ? "bg-[#ebf2ff] border-[#0052cc]/30"
+                                            : !isDuplicate && "hover:bg-muted/10"
                                     )}
                                 >
-                                    {area.icon}
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <h4 className={cn(
-                                            "font-semibold transition-colors",
-                                            isSelected ? "text-emerald-900 dark:text-emerald-100" : "text-foreground"
-                                        )}>
-                                            {area.name}
-                                        </h4>
-                                        {isDuplicate && (
-                                            <span className="px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] uppercase font-bold tracking-wider">
-                                                Activa
-                                            </span>
-                                        )}
+                                    {/* Monochromatic Mini Icon container */}
+                                    <div className={cn(
+                                        "w-9 h-9 rounded flex items-center justify-center text-base shrink-0 bg-muted/40 text-muted-foreground transition-all",
+                                        isSelected && "bg-white text-primary border border-primary/20"
+                                    )}>
+                                        {area.icon}
                                     </div>
-                                    <p className="text-xs text-muted-foreground font-medium">
-                                        {area.description}
-                                    </p>
-                                </div>
-                                <div className={cn(
-                                    "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
-                                    isDuplicate ? "border-border bg-muted" : (
-                                        isSelected
-                                            ? "bg-emerald-500 border-emerald-500"
-                                            : "border-border group-hover:border-emerald-300"
-                                    )
-                                )}>
-                                    {isSelected && <Check className="h-3.5 w-3.5 text-white stroke-[3]" />}
-                                    {isDuplicate && <Check className="h-3.5 w-3.5 text-muted-foreground" />}
-                                </div>
-                            </div>
-                        );
-                    })}
 
-                    {filteredAreas.length === 0 && (
-                        <div className="text-center py-12 text-muted-foreground">
-                            <p>No se encontraron áreas con "{searchTerm}"</p>
-                        </div>
-                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-3">
+                                            <h4 className={cn(
+                                                "text-sm font-bold tracking-tight transition-colors",
+                                                isSelected ? "text-[#0052cc]" : "text-foreground"
+                                            )}>
+                                                {area.name}
+                                            </h4>
+                                            {isDuplicate && (
+                                                <span className="px-2 py-0.5 rounded-sm bg-muted text-muted-foreground text-[9px] uppercase font-black tracking-widest">
+                                                    Activa
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground font-medium truncate mt-0.5">
+                                            {area.description}
+                                        </p>
+                                    </div>
+
+                                    {/* Jira Style Checkbox */}
+                                    <div className={cn(
+                                        "w-5 h-5 rounded border transition-all flex items-center justify-center",
+                                        isDuplicate ? "bg-muted border-border/50 text-muted-foreground/40" : (
+                                            isSelected
+                                                ? "bg-[#0052cc] border-[#0052cc]"
+                                                : "border-border/60 group-hover:border-primary/50"
+                                        )
+                                    )}>
+                                        {isSelected && <Check className="h-3.5 w-3.5 text-white stroke-[3]" />}
+                                        {isDuplicate && <Check className="h-3.5 w-3.5 text-muted-foreground/30" />}
+                                    </div>
+                                </div>
+                            );
+                        })}
+
+                        {filteredAreas.length === 0 && (
+                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                                <Search className="h-8 w-8 text-muted-foreground/20 mb-3" />
+                                <p className="text-sm font-bold text-muted-foreground">No se encontraron áreas</p>
+                                <p className="text-xs text-muted-foreground/60 mt-1">Prueba con otro término de búsqueda</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
-        </SimpleFormModal>
+
+                {/* ── Footer ────────────────────────────────────────────────────────── */}
+                <div className="shrink-0 p-5 border-t border-border bg-white flex items-center justify-between">
+                    <Button
+                        variant="ghost"
+                        onClick={() => onOpenChange(false)}
+                        className="text-[11px] font-black uppercase tracking-widest h-10 px-6 rounded-md hover:bg-muted text-muted-foreground"
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        onClick={handleImport}
+                        disabled={selected.length === 0 || seedMutation.isPending}
+                        variant="jira"
+                        className="h-10 px-8 rounded-md font-black uppercase tracking-widest text-[11px] active:scale-95 transition-all shadow-none flex items-center gap-2"
+                    >
+                        {seedMutation.isPending ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                            <Check className="h-3.5 w-3.5" />
+                        )}
+                        {seedMutation.isPending ? 'Importando...' : `Importar ${selected.length} Áreas`}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 }
