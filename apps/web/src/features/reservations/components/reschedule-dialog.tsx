@@ -273,10 +273,24 @@ export function RescheduleDialog({ slot, open, onOpenChange, shift, classroomId 
                                             return (
                                                 <td
                                                     key={i}
-                                                    className={`p-1 border-t border-r last:border-r-0 border-border ${!isReserved && !isCurrent ? 'cursor-pointer select-none' : ''}`}
-                                                    onMouseDown={() => handleMouseDown(dObj.date, dObj.key, hour.id, hour.isBreak, isReserved)}
-                                                    onMouseEnter={() => handleMouseEnter(dObj.date, hour.id, hour.isBreak, isReserved)}
-                                                    onClick={() => !isReserved && !isCurrent && toggleCellSelection(dObj.date, hour.id, isSlotSelected ? 'deselect' : 'select')}
+                                                    className={`p-1 border-t border-r last:border-r-0 border-border ${!isReserved && !isCurrent ? 'cursor-pointer select-none active:bg-muted/50' : ''}`}
+                                                    onClick={() => {
+                                                        if (!isReserved && !isCurrent) {
+                                                            toggleCellSelection(dObj.date, hour.id, isSlotSelected ? 'deselect' : 'select');
+                                                        }
+                                                    }}
+                                                    onMouseDown={(e) => {
+                                                        // Solo en desktop (cuando hay mouse)
+                                                        if (e.button === 0 && !('ontouchstart' in window)) {
+                                                            handleMouseDown(dObj.date, dObj.key, hour.id, hour.isBreak, isReserved);
+                                                        }
+                                                    }}
+                                                    onMouseEnter={() => {
+                                                        // Solo en desktop
+                                                        if (!('ontouchstart' in window)) {
+                                                            handleMouseEnter(dObj.date, hour.id, hour.isBreak, isReserved);
+                                                        }
+                                                    }}
                                                 >
                                                     <div className={`rounded-lg py-1.5 px-1 lg:px-2 text-[9px] lg:text-[10px] font-medium text-center transition-all ${isCurrent
                                                         ? 'bg-muted text-muted-foreground'
