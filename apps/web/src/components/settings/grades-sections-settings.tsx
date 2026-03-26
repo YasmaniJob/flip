@@ -136,7 +136,7 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
             </div>
 
             {/* Grades List (Jira Style Table) */}
-            <div className="border border-border rounded-lg bg-card shadow-sm overflow-hidden">
+            <div className="border border-border rounded-lg bg-card overflow-hidden">
                 <div className="divide-y divide-border/60">
                     {sortedGrades.map(grade => (
                         <div key={grade.id} className="group flex flex-col md:flex-row md:items-center gap-6 py-4 px-6 hover:bg-muted/20 transition-colors bg-white">
@@ -254,17 +254,12 @@ function GradeSectionsList({
     onAddBulk: (names: string[]) => void;
     isPending: boolean;
 }) {
-    const [isExpanded, setIsExpanded] = useState(false);
-    const limit = 7;
-    const hasMore = sections.length > limit;
-    const displayedSections = isExpanded ? sections : sections.slice(0, limit);
-
     return (
         <div className="flex-1 flex flex-wrap items-center gap-1.5 overflow-hidden">
-            {displayedSections.map(section => (
+            {sections.map(section => (
                 <div
                     key={section.id}
-                    className="relative group/section flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 bg-[#ebf2ff] border border-transparent rounded-md text-[13px] font-black text-[#0052cc] hover:bg-[#deebff] transition-all shadow-none"
+                    className="relative group/section flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 bg-[#ebf2ff] border border-transparent rounded-md text-[13px] font-black text-[#0052cc] hover:bg-[#deebff] transition-all"
                 >
                     <span className="tracking-tight">{section.name}</span>
                     <button
@@ -275,15 +270,6 @@ function GradeSectionsList({
                     </button>
                 </div>
             ))}
-
-            {hasMore && (
-                <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="px-3 py-1.5 bg-muted/40 hover:bg-muted text-[10px] font-black uppercase tracking-widest text-muted-foreground rounded-md transition-colors border border-border/50 h-[33px]"
-                >
-                    {isExpanded ? 'Contraer' : `+ ${sections.length - limit} más`}
-                </button>
-            )}
 
             <BatchSectionsModal 
                 grade={grade}
@@ -334,7 +320,7 @@ function BatchSectionsModal({
                     SECCIÓN
                 </button>
             </DialogTrigger>
-            <DialogContent className="max-w-md p-6 bg-card border-border shadow-2xl rounded-xl">
+            <DialogContent className="max-w-md p-6 bg-card border-border rounded-xl">
                 <DialogHeader className="mb-6">
                     <DialogTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
                         <Layers className="h-5 w-5 text-primary" />
