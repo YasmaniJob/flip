@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/atoms/button';
 import { useSeedStandardAreas, type CurricularArea } from '@/features/settings/hooks/use-curricular-areas';
 import { Check, Search, X, Loader2, BookOpen } from 'lucide-react';
@@ -90,6 +90,9 @@ export function ImportCurricularAreasDialog({
                 showCloseButton={false}
                 className="max-w-2xl h-[85vh] p-0 flex flex-col overflow-hidden border border-border shadow-none rounded-lg"
             >
+                {/* Accessibility required DialogTitle (Visually Hidden) */}
+                <DialogTitle className="sr-only">Importar Áreas Curriculares CNEB</DialogTitle>
+
                 {/* ── Header ────────────────────────────────────────────────────────── */}
                 <div className="shrink-0 px-6 py-5 border-b border-border bg-white">
                     <div className="flex items-center justify-between gap-4">
