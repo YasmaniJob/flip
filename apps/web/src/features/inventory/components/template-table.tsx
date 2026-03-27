@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { type InventoryTemplateAggregation } from "../hooks/use-inventory-aggregation";
 import { InventoryTable } from "@/features/inventory/components/inventory-table";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TemplateTableProps {
@@ -14,6 +14,7 @@ interface TemplateTableProps {
     onAddStock: (template: InventoryTemplateAggregation) => void;
     onEditResource?: (resource: any) => void;
     onDeleteResource?: (resource: any) => void;
+    onDeleteTemplate?: (template: InventoryTemplateAggregation) => void;
 }
 
 const TH_CLASS = "px-6 py-3 text-left text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40";
@@ -24,7 +25,8 @@ export function TemplateTable({
     categories = [],
     onAddStock,
     onEditResource,
-    onDeleteResource 
+    onDeleteResource,
+    onDeleteTemplate
 }: TemplateTableProps) {
     const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
@@ -63,17 +65,32 @@ export function TemplateTable({
                                         </p>
                                     </div>
                                 </div>
-                                <Button 
-                                    variant="jiraOutline" 
-                                    className="h-8 px-3 text-[9px] font-black uppercase tracking-[0.1em] border shadow-none shrink-0"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onAddStock(item);
-                                    }}
-                                >
-                                    <Plus className="w-3 h-3 mr-1" />
-                                    Añadir
-                                </Button>
+                                <div className="flex items-center gap-2 shrink-0">
+                                    <Button 
+                                        variant="jiraOutline" 
+                                        className="h-8 px-3 text-[9px] font-black uppercase tracking-[0.1em] border shadow-none shrink-0"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onAddStock(item);
+                                        }}
+                                    >
+                                        <Plus className="w-3 h-3 mr-1" />
+                                        Añadir
+                                    </Button>
+                                    {onDeleteTemplate && (
+                                        <Button
+                                            variant="ghost"
+                                            className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onDeleteTemplate(item);
+                                            }}
+                                            title="Eliminar plantilla"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-2 border-t border-border/50 pt-3">
@@ -201,17 +218,32 @@ export function TemplateTable({
 
                                             {/* Acción */}
                                             <td className="px-6 py-4 text-right">
-                                                <Button 
-                                                    variant="jiraOutline" 
-                                                    className="h-8 px-4 text-[9px] font-black uppercase tracking-[0.1em] border shadow-none"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onAddStock(item);
-                                                    }}
-                                                >
-                                                    <Plus className="w-3.5 h-3.5 mr-1" />
-                                                    Añadir
-                                                </Button>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Button 
+                                                        variant="jiraOutline" 
+                                                        className="h-8 px-4 text-[9px] font-black uppercase tracking-[0.1em] border shadow-none"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onAddStock(item);
+                                                        }}
+                                                    >
+                                                        <Plus className="w-3.5 h-3.5 mr-1" />
+                                                        Añadir
+                                                    </Button>
+                                                    {onDeleteTemplate && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                onDeleteTemplate(item);
+                                                            }}
+                                                            title="Eliminar plantilla"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                         {isExpanded && (

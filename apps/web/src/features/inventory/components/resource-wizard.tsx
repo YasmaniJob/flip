@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { WizardStep1 } from "./wizard-step-1";
 import { BottomSheet } from "@/components/mobile/bottom-sheet";
 
@@ -31,6 +32,7 @@ export function ResourceWizard({
   const [wizardData] = useState<Partial<WizardData>>({
     mode: "individual",
   });
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const handleSuccess = (params?: {
     categoryId: string;
@@ -46,29 +48,15 @@ export function ResourceWizard({
     onOpenChange(false);
   };
 
-  return (
-    <>
-      {/* Mobile: Bottom Sheet */}
-      <BottomSheet
-        open={open}
-        onClose={handleCancel}
-        title="Nuevo Recurso"
-        maxHeight="90vh"
-      >
-        <WizardStep1
-          data={wizardData}
-          onNext={handleSuccess}
-          onCancel={handleCancel}
-          isMobile={true}
-        />
-      </BottomSheet>
+  if (!open) return null;
 
-      {/* Desktop: Dialog */}
+  if (isDesktop) {
+    return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
           showCloseButton={false}
           className={cn(
-            "p-0 gap-0 overflow-hidden bg-transparent border-none shadow-none transition-all duration-300 hidden lg:block",
+            "p-0 gap-0 overflow-hidden bg-transparent border-none shadow-none transition-all duration-300",
             isFullscreen
               ? "max-w-none w-screen h-screen rounded-none"
               : "sm:max-w-[1020px] w-[95vw] h-[85vh] rounded-none",
@@ -87,6 +75,22 @@ export function ResourceWizard({
           />
         </DialogContent>
       </Dialog>
-    </>
+    );
+  }
+
+  return (
+    <BottomSheet
+      open={open}
+      onClose={handleCancel}
+      title="Nuevo Recurso"
+      maxHeight="90vh"
+    >
+      <WizardStep1
+        data={wizardData}
+        onNext={handleSuccess}
+        onCancel={handleCancel}
+        isMobile={true}
+      />
+    </BottomSheet>
   );
 }

@@ -44,10 +44,23 @@ export default function InventarioClient() {
     const [addStockParams, setAddStockParams] = useState<{ categoryId: string, templateId: string, templateName: string, templateIcon?: string } | null>(null);
     const [editingResource, setEditingResource] = useState<Resource | null>(null);
     const [deletingResource, setDeletingResource] = useState<Resource | null>(null);
+    const [deletingTemplate, setDeletingTemplate] = useState<{ id: string; name: string } | null>(null);
     
     const { data: resources = [] } = useResources();
     const { data: templates = [], isLoading: loadingTemplates } = useInventoryAggregation();
     const { data: categories = [] } = useCategories();
+    const deleteTemplateMutation = useMutation({
+        mutationFn: (id: string) => apiClient.delete(`/resource-templates/${id}`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["inventory-templates-aggregation"] });
+            queryClient.invalidateQueries({ queryKey: ["templates"] });
+            setDeletingTemplate(null);
+            toast.success("Plantilla eliminada correctamente");
+        },
+        onError: () => {
+            toast.error("No se pudo eliminar la plantilla. Puede que tenga recursos asociados.");
+        }
+    });
     
     useEffect(() => {
         const handleCenterButtonClick = () => {
@@ -174,6 +187,7 @@ export default function InventarioClient() {
                     }}
                     onEditResource={setEditingResource}
                     onDeleteResource={setDeletingResource}
+                    onDeleteTemplate={(template) => setDeletingTemplate({ id: template.templateId, name: template.templateName })}
                 />
             )}
             
@@ -224,6 +238,17 @@ export default function InventarioClient() {
                         description="Esta acción eliminará permanentemente el recurso del inventario. No se puede deshacer." 
                         onConfirm={() => deleteMutation.mutate(deletingResource.id)} 
                         isLoading={deleteMutation.isPending} 
+                    />
+                )}
+
+                {deletingTemplate && (
+                    <ConfirmDeleteDialog 
+                        open 
+                        onOpenChange={(open) => !open && setDeletingTemplate(null)} 
+                        title={`¿Eliminar plantilla "${deletingTemplate.name}"?`} 
+                        description="Esta acción eliminará la plantilla. Solo se puede eliminar si no tiene recursos en stock asociados." 
+                        onConfirm={() => deleteTemplateMutation.mutate(deletingTemplate.id)} 
+                        isLoading={deleteTemplateMutation.isPending} 
                     />
                 )}
             </Suspense>

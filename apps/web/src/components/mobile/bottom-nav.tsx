@@ -24,7 +24,7 @@ export function BottomNav({ showCenterButton = false, onCenterButtonClick, hidde
   return (
     <nav 
       className={cn(
-        "lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border/40",
+        "lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border/40",
         hidden && "pointer-events-none opacity-0"
       )}
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}

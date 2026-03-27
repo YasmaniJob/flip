@@ -182,3 +182,20 @@ export function useCreateTemplate() {
     },
   });
 }
+
+export function useDeleteTemplate() {
+  const queryClient = useQueryClient();
+  const api = useApiClient();
+
+  return useMutation({
+    mutationFn: (id: string) => api.delete<boolean>(`/resource-templates/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory-templates-aggregation"] });
+      showSuccess('Plantilla eliminada correctamente');
+    },
+    onError: (error) => {
+      handleApiError(error, 'No se pudo eliminar la plantilla');
+    },
+  });
+}

@@ -224,7 +224,7 @@ export function CategoriesSettings() {
                     setEditingCategory(null);
                 }
             }}>
-                <AlertDialogContent className="max-w-xl p-0 flex flex-col overflow-hidden border border-border shadow-none rounded-lg bg-white">
+                <AlertDialogContent className="max-w-xl p-0 flex flex-col overflow-hidden border border-border shadow-none rounded-lg bg-white max-h-[85dvh] sm:max-h-[90vh] z-[100]">
                     <AlertDialogHeader className="sr-only">
                         <AlertDialogTitle>{editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}</AlertDialogTitle>
                     </AlertDialogHeader>
@@ -242,9 +242,6 @@ export function CategoriesSettings() {
                                 <h3 className="text-xl font-black text-foreground tracking-tight">
                                     {editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}
                                 </h3>
-                                <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
-                                    Organiza tus recursos de forma eficiente
-                                </p>
                             </div>
                         </div>
                         <button 
