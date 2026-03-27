@@ -142,7 +142,7 @@ export default function InventarioClient() {
 
             <InventoryHeader resources={resources} statusFilter={statusFilter} onStatusFilterChange={setStatusFilter} />
             
-            <div className="flex flex-row items-center gap-2 mt-0 mb-4">
+            <div className="flex flex-row items-center gap-2 mt-0 md:mt-8 mb-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40" />
                     <Input 
