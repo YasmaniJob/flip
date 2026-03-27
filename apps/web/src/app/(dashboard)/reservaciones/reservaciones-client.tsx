@@ -553,17 +553,37 @@ export function ReservacionesClient() {
                                                 );
                                             }
 
+                                            const isSelected = selectedSlotKeys.has(key);
                                             return (
                                                 <td 
                                                     key={i}
                                                     className={cn(
-                                                        "p-2 border-t border-border cursor-pointer hover:bg-muted/30 transition-colors",
+                                                        "p-1.5 border-t border-border cursor-pointer transition-all relative group/cell h-24",
                                                         !isLastCol && "border-r",
-                                                        isToday && "bg-primary/[0.02]",
-                                                        selectedSlotKeys.has(key) && "bg-primary/10"
+                                                        isToday && !isSelected && "bg-primary/[0.01]",
+                                                        isSelected && "bg-primary/[0.04]",
+                                                        "hover:bg-primary/[0.02]"
                                                     )}
                                                     onClick={() => handleCellClick(date, hour)}
-                                                />
+                                                >
+                                                    {/* Anticipation Hover Border (No Drag) */}
+                                                    <div className="absolute inset-x-1 border-primary/40 border-dashed border-2 opacity-0 group-hover/cell:opacity-100 transition-opacity pointer-events-none rounded-sm" />
+                                                    
+                                                    {/* Selection UI - Jira Flat Style */}
+                                                    {isSelected && (
+                                                        <div className="absolute inset-x-[1px] inset-y-[1px] bg-primary/[0.03] border-l-4 border-primary pointer-events-none p-2.5 flex flex-col gap-1.5 animate-in fade-in zoom-in-95 duration-200">
+                                                            <div className="flex flex-col gap-0.5">
+                                                                <span className="text-[9px] font-black text-primary uppercase tracking-[0.2em] leading-none mb-1">
+                                                                    Marcado
+                                                                </span>
+                                                                <span className="text-[8px] font-bold text-primary/50 uppercase tabular-nums tracking-wider">
+                                                                    {hour.startTime} — {hour.endTime}
+                                                                </span>
+                                                            </div>
+                                                            <div className="mt-auto h-1 w-8 bg-primary/20 rounded-full" />
+                                                        </div>
+                                                    )}
+                                                </td>
                                             );
                                         })}
                                     </tr>
