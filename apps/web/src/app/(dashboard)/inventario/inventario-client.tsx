@@ -4,7 +4,7 @@ import { useState, useMemo, useDeferredValue, lazy, Suspense, memo, useEffect } 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { TemplateTable } from "@/features/inventory/components/template-table";
 import { InventoryHeader } from "@/features/inventory/components/inventory-header";
 import { useResources, type Resource } from "@/features/inventory/hooks/use-resources";
@@ -55,10 +55,10 @@ export default function InventarioClient() {
             queryClient.invalidateQueries({ queryKey: ["inventory-templates-aggregation"] });
             queryClient.invalidateQueries({ queryKey: ["templates"] });
             setDeletingTemplate(null);
-            toast.success("Plantilla eliminada correctamente");
+            toast.success("Categoría eliminada correctamente");
         },
         onError: () => {
-            toast.error("No se pudo eliminar la plantilla. Puede que tenga recursos asociados.");
+            toast.error("No se pudo eliminar la categoría. Puede que tenga recursos asociados.");
         }
     });
     
@@ -96,6 +96,13 @@ export default function InventarioClient() {
         const searchLower = deferredSearch.toLowerCase();
         return templates.filter((t: any) => {
             if (categoryFilter !== "all" && t.categoryId !== categoryFilter) return false;
+            
+            // Apply status filter from Summary Cards
+            if (statusFilter === "disponible" && t.available === 0) return false;
+            if (statusFilter === "prestado" && t.borrowed === 0) return false;
+            if (statusFilter === "mantenimiento" && t.maintenance === 0) return false;
+            if (statusFilter === "baja" && t.retired === 0) return false;
+
             if (deferredSearch) {
                 const hit = t.templateName.toLowerCase().includes(searchLower) ||
                             t.categoryName.toLowerCase().includes(searchLower);
@@ -103,7 +110,7 @@ export default function InventarioClient() {
             }
             return true;
         });
-    }, [templates, deferredSearch, categoryFilter]);
+    }, [templates, deferredSearch, categoryFilter, statusFilter]);
     
     const usedCategories = useMemo(() => {
         const usedIds = new Set(templates.map((t: any) => t.categoryId).filter(Boolean));
@@ -112,24 +119,30 @@ export default function InventarioClient() {
 
     return (
         <div className="p-4 sm:p-8 max-w-[1600px] mx-auto min-h-screen space-y-6">
-            {/* Header / Actions - Mobile First */}
-            <div className="hidden sm:flex items-center justify-end gap-3 mb-2">
-                {canManage && (
-                    <Button 
-                        variant="jira" 
-                        onClick={() => setIsCreateDialogOpen(true)} 
-                        className="h-9 px-6 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-none"
-                    >
-                        <Plus className="h-3.5 w-3.5 mr-2" />
-                        Nuevo Recurso
-                    </Button>
-                )}
+            {/* Page Header */}
+            <div className="flex items-center justify-between mb-4">
+                <div>
+                    <h1 className="text-3xl font-black text-foreground tracking-tighter">Inventario</h1>
+                </div>
+                
+                {/* Actions - Desktop */}
+                <div className="hidden sm:flex items-center gap-3">
+                    {canManage && (
+                        <Button 
+                            variant="jira" 
+                            onClick={() => setIsCreateDialogOpen(true)} 
+                            className="h-9 px-6 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-none"
+                        >
+                            <Plus className="h-3.5 w-3.5 mr-2" />
+                            Nuevo Recurso
+                        </Button>
+                    )}
+                </div>
             </div>
 
-            <InventoryHeader resources={resources} />
-            
-            <div className="flex flex-col gap-4 mt-8 mb-6 border-b border-border/30 pb-6">
-                <div className="relative w-full sm:w-[360px]">
+            <InventoryHeader resources={resources} statusFilter={statusFilter} onStatusFilterChange={setStatusFilter} />
+                        <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 mb-6 border-b border-border/30 pb-6">
+                <div className="relative flex-1 w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40" />
                     <Input 
                         placeholder="Buscar recursos..." 
@@ -139,9 +152,9 @@ export default function InventarioClient() {
                     />
                 </div>
                 
-                <div className="grid grid-cols-2 sm:flex items-center gap-2 w-full">
+                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
                     <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                        <SelectTrigger className="h-10 w-full sm:w-[180px] bg-card border-border rounded-md text-[10px] font-black uppercase tracking-widest shadow-none focus:ring-primary/20">
+                        <SelectTrigger className="h-10 w-full sm:w-[220px] shrink-0 bg-card border-border rounded-md text-[10px] font-black uppercase tracking-widest shadow-none focus:ring-primary/20">
                             <SelectValue placeholder="Categoría" />
                         </SelectTrigger>
                         <SelectContent className="border-border shadow-none">
@@ -149,24 +162,6 @@ export default function InventarioClient() {
                             {usedCategories.map((cat) => (<SelectItem key={cat.id} value={cat.id} className="text-[10px] font-black uppercase tracking-widest cursor-pointer">{cat.name}</SelectItem>))}
                         </SelectContent>
                     </Select>
-                    
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="h-10 w-full sm:w-[160px] bg-card border-border rounded-md text-[10px] font-black uppercase tracking-widest shadow-none focus:ring-primary/20">
-                            <SelectValue placeholder="Estado" />
-                        </SelectTrigger>
-                        <SelectContent className="border-border shadow-none">
-                            <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Todos los estados</SelectItem>
-                            <SelectItem value="disponible" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Disponible</SelectItem>
-                            <SelectItem value="prestado" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Prestado</SelectItem>
-                            <SelectItem value="mantenimiento" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Mantenimiento</SelectItem>
-                            <SelectItem value="baja" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Baja</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    <Button variant="ghost" className="h-10 px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all col-span-2 sm:col-span-1 justify-center sm:justify-start">
-                        <Filter className="w-3.5 h-3.5 mr-2 opacity-40" />
-                        Más Filtros
-                    </Button>
                 </div>
             </div>
             
@@ -245,8 +240,8 @@ export default function InventarioClient() {
                     <ConfirmDeleteDialog 
                         open 
                         onOpenChange={(open) => !open && setDeletingTemplate(null)} 
-                        title={`¿Eliminar plantilla "${deletingTemplate.name}"?`} 
-                        description="Esta acción eliminará la plantilla. Solo se puede eliminar si no tiene recursos en stock asociados." 
+                        title={`¿Eliminar la categoría "${deletingTemplate.name}"?`} 
+                        description="Esta acción eliminará la categoría. Solo se puede eliminar si no tiene unidades en stock asociadas." 
                         onConfirm={() => deleteTemplateMutation.mutate(deletingTemplate.id)} 
                         isLoading={deleteTemplateMutation.isPending} 
                     />
