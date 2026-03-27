@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { reservationSlots } from '@/lib/db/schema';
+import { reservationSlots, staff } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { ValidationError, ForbiddenError } from './errors';
 
@@ -7,27 +7,40 @@ import { ValidationError, ForbiddenError } from './errors';
  * Check if user can modify a reservation
  * Only the creator (staffId) or admin/superadmin can modify
  */
-export function canModifyReservation(
+export async function canModifyReservation(
   reservation: { staffId: string; institutionId: string },
-  user: { id: string; role: string; institutionId: string }
-): boolean {
-  // Admin/SuperAdmin can modify any reservation in their institution
-  if (user.role === 'admin' || user.role === 'superadmin') {
+  user: { id: string; email: string; role: string | null | undefined; institutionId?: string | null | undefined; }
+): Promise<boolean> {
+  // Admin/SuperAdmin/PIP can modify any reservation in their institution
+  if (user.role === 'admin' || user.role === 'superadmin' || user.role === 'pip') {
     return reservation.institutionId === user.institutionId;
   }
 
+  // Cross-institutional check
+  if (!user.institutionId || reservation.institutionId !== user.institutionId) return false;
+
+  // Resolve staff ID for current user
+  const myStaff = await db.query.staff.findFirst({
+    where: and(
+        eq(staff.institutionId, user.institutionId),
+        eq(staff.email, user.email)
+    ),
+    columns: { id: true }
+  });
+
   // Creator can modify their own reservation
-  return reservation.staffId === user.id;
+  return reservation.staffId === myStaff?.id;
 }
 
 /**
  * Validate that user can modify a reservation, throw error if not
  */
-export function requireModifyPermission(
+export async function requireModifyPermission(
   reservation: { staffId: string; institutionId: string },
-  user: { id: string; role: string; institutionId: string }
-): void {
-  if (!canModifyReservation(reservation, user)) {
+  user: { id: string; email: string; role: string | null | undefined; institutionId?: string | null | undefined; }
+): Promise<void> {
+  const hasPermission = await canModifyReservation(reservation, user);
+  if (!hasPermission) {
     throw new ForbiddenError('No tienes permisos para modificar esta reserva');
   }
 }

@@ -91,15 +91,15 @@ export function ReservationDialog({
     }, [open, initialSelectedSlots]);
 
     const { data: myStaff } = useMyStaff();
-    const { isAdmin, role, user } = useUserRole();
+    const { canManage, user } = useUserRole();
 
-    // Auto-set teacher staff ID when not admin
+    // Auto-set teacher staff ID when not admin/manager
     useEffect(() => {
-        if (!isAdmin && myStaff?.id) {
+        if (!canManage && myStaff?.id) {
             setSelectedStaffId(myStaff.id);
             setSelectedStaffName(myStaff.name || '');
         }
-    }, [isAdmin, myStaff]);
+    }, [canManage, myStaff]);
 
     // UI States
     const [staffSearch, setStaffSearch] = useState('');
@@ -245,7 +245,7 @@ export function ReservationDialog({
     const handleClose = () => {
         setPurpose('');
         setTallerTitle('');
-        if (isAdmin) {
+        if (canManage) {
             setSelectedStaffId(null);
             setSelectedStaffName(null);
         }
@@ -312,7 +312,7 @@ export function ReservationDialog({
                                         <div className="flex items-center gap-2">
                                             <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-background border border-border text-[9px] font-bold text-foreground uppercase tracking-widest">
                                                 <User className="h-3 w-3 text-primary" />
-                                                {!isAdmin ? "Tú (Docente)" : selectedStaffName}
+                                                {canManage ? selectedStaffName : "Tú (Docente)"}
                                             </div>
                                             {(curricularAreaId || gradeId) && (
                                                <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-background border border-border text-[9px] font-bold text-muted-foreground uppercase tracking-widest max-w-[220px]">
@@ -352,7 +352,7 @@ export function ReservationDialog({
                                     {/* Teacher Chip */}
                                     <div className="space-y-4">
                                         <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Responsable</label>
-                                        {isAdmin ? (
+                                        {canManage ? (
                                             !selectedStaffId ? (
                                                 <div className="relative group">
                                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -433,7 +433,7 @@ export function ReservationDialog({
 
                              {/* Main Panel: Selection (Right) */}
                              <div className="flex-1 flex flex-col overflow-hidden bg-background p-10">
-                                {isAdmin && !selectedStaffId ? (
+                                {canManage && !selectedStaffId ? (
                                     <div className="flex-1 flex flex-col overflow-hidden">
                                         {!staff?.length && staffSearch ? (
                                             <div className="flex-1 flex flex-col items-center justify-center opacity-40">

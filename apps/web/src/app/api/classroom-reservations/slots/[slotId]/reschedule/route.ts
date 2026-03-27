@@ -41,7 +41,7 @@ export async function PUT(
     }
 
     // Check permissions
-    requireModifyPermission(slot.reservation, user);
+    await requireModifyPermission(slot.reservation, user);
 
     // Validate no conflict in new date/time (excluding current reservation)
     const newDate = normalizeDate(data.newDate);

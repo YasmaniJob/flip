@@ -30,7 +30,7 @@ export async function PUT(
     }
 
     // Check permissions
-    requireModifyPermission(reservation, user);
+    await requireModifyPermission(reservation, user);
 
     // Update status to cancelled
     const [updated] = await db

@@ -38,7 +38,7 @@ export async function PUT(
     }
 
     // Check permissions
-    requireModifyPermission(reservation, user);
+    await requireModifyPermission(reservation, user);
 
     if (!reservation.classroomId) {
       throw new NotFoundError('La reserva no tiene aula asignada');

@@ -35,7 +35,7 @@ export async function DELETE(
     }
 
     // Check permissions
-    requireModifyPermission(slot.reservation, user);
+    await requireModifyPermission(slot.reservation, user);
 
     // Delete slot
     await db

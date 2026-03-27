@@ -15,7 +15,7 @@ export async function GET(
 ) {
   try {
     const { user } = await requireAuth(request);
-    const institutionId = getInstitutionId(user);
+    const institutionId = await getInstitutionId(user);
     const { id } = await params;
 
     // Verify reservation exists
@@ -34,11 +34,7 @@ export async function GET(
     const tasksList = await db.query.reservationTasks.findMany({
       where: eq(reservationTasks.reservationId, id),
       with: {
-        assignedStaff: {
-          with: {
-            user: true,
-          },
-        },
+        assignedStaff: true,
       },
     });
 
@@ -55,7 +51,7 @@ export async function POST(
 ) {
   try {
     const { user } = await requireAuth(request);
-    const institutionId = getInstitutionId(user);
+    const institutionId = await getInstitutionId(user);
     const { id } = await params;
 
     const body = await request.json();
@@ -91,11 +87,12 @@ export async function POST(
     const [task] = await db
       .insert(reservationTasks)
       .values({
+        id: crypto.randomUUID(),
         reservationId: id,
         description: data.description,
         assignedStaffId: data.assignedStaffId,
         dueDate: data.dueDate ? new Date(data.dueDate) : null,
-        status: data.status || 'pending',
+        status: (data.status as 'pending' | 'completed') || 'pending',
       })
       .returning();
 
@@ -103,11 +100,7 @@ export async function POST(
     const taskWithStaff = await db.query.reservationTasks.findFirst({
       where: eq(reservationTasks.id, task.id),
       with: {
-        assignedStaff: {
-          with: {
-            user: true,
-          },
-        },
+        assignedStaff: true,
       },
     });
 

@@ -16,7 +16,7 @@ export async function PUT(
 ) {
   try {
     const { user } = await requireAuth(request);
-    const institutionId = getInstitutionId(user);
+    const institutionId = await getInstitutionId(user);
     const { taskId } = await params;
 
     const body = await request.json();
@@ -79,11 +79,7 @@ export async function PUT(
     const taskWithStaff = await db.query.reservationTasks.findFirst({
       where: eq(reservationTasks.id, updated.id),
       with: {
-        assignedStaff: {
-          with: {
-            user: true,
-          },
-        },
+        assignedStaff: true,
       },
     });
 
@@ -100,7 +96,7 @@ export async function DELETE(
 ) {
   try {
     const { user } = await requireAuth(request);
-    const institutionId = getInstitutionId(user);
+    const institutionId = await getInstitutionId(user);
     const { taskId } = await params;
 
     // Get task with reservation to verify institution

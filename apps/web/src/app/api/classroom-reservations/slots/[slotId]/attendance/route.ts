@@ -40,7 +40,7 @@ export async function PUT(
     }
 
     // Check permissions
-    requireModifyPermission(slot.reservation, user);
+    await requireModifyPermission(slot.reservation, user);
 
     // Update attendance
     const [updated] = await db
