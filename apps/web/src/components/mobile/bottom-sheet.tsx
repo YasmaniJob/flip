@@ -12,12 +12,12 @@ interface BottomSheetProps {
   maxHeight?: string;
 }
 
-export function BottomSheet({ 
-  open, 
-  onClose, 
-  title, 
+export function BottomSheet({
+  open,
+  onClose,
+  title,
   children,
-  maxHeight = "85vh"
+  maxHeight = "85vh",
 }: BottomSheetProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const startY = useRef<number>(0);
@@ -42,7 +42,7 @@ export function BottomSheet({
   const handleTouchMove = (e: React.TouchEvent) => {
     currentY.current = e.touches[0].clientY;
     const diff = currentY.current - startY.current;
-    
+
     if (diff > 0 && sheetRef.current) {
       sheetRef.current.style.transform = `translateY(${diff}px)`;
     }
@@ -50,11 +50,11 @@ export function BottomSheet({
 
   const handleTouchEnd = () => {
     const diff = currentY.current - startY.current;
-    
+
     if (diff > 100) {
       onClose();
     }
-    
+
     if (sheetRef.current) {
       sheetRef.current.style.transform = "";
     }
@@ -67,20 +67,21 @@ export function BottomSheet({
       {/* Overlay */}
       <div
         className={cn(
-          "lg:hidden fixed inset-0 bg-black/60 z-50 transition-opacity duration-300",
-          open ? "opacity-100" : "opacity-0"
+          "lg:hidden fixed inset-0 bg-black/60 transition-opacity duration-300",
+          open ? "opacity-100" : "opacity-0",
         )}
         onClick={onClose}
+        style={{ zIndex: 49 }}
       />
 
       {/* Bottom Sheet */}
       <div
         ref={sheetRef}
         className={cn(
-          "lg:hidden fixed bottom-0 left-0 right-0 bg-card z-50 transition-transform duration-300 ease-out rounded-t-2xl shadow-2xl",
-          open ? "translate-y-0" : "translate-y-full"
+          "lg:hidden fixed bottom-0 left-0 right-0 bg-card transition-transform duration-300 ease-out rounded-t-2xl",
+          open ? "translate-y-0" : "translate-y-full",
         )}
-        style={{ maxHeight }}
+        style={{ maxHeight, zIndex: 50 }}
       >
         {/* Handle */}
         <div
@@ -105,7 +106,10 @@ export function BottomSheet({
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto" style={{ maxHeight: `calc(${maxHeight} - 80px)` }}>
+        <div
+          className="overflow-y-auto"
+          style={{ maxHeight: `calc(${maxHeight} - 80px)` }}
+        >
           {children}
         </div>
       </div>
