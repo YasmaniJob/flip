@@ -63,7 +63,6 @@ export function InventoryTable({
                 <table className="w-full border-collapse">
                     <thead>
                         <tr className="bg-muted/5 border-b border-border">
-                            <th className={TH_CLASS}>ID Interno</th>
                             <th className={TH_CLASS}>Recurso</th>
                             <th className={TH_CLASS}>Categoría</th>
                             <th className={TH_CLASS}>Estado</th>
@@ -89,13 +88,6 @@ export function InventoryTable({
                                         key={item.id}
                                         className="group hover:bg-muted/5 transition-colors"
                                     >
-                                        {/* ID Interno */}
-                                        <td className="px-6 py-4">
-                                            <span className="text-xs font-bold text-muted-foreground/70 uppercase tracking-wider">
-                                                {item.internalId || "N/A"}
-                                            </span>
-                                        </td>
-
                                         {/* Recurso (Nombre + Marca) */}
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col gap-0.5">

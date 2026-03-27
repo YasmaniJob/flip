@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Search } from "lucide-react";
 import { TemplateTable } from "@/features/inventory/components/template-table";
 import { InventoryHeader } from "@/features/inventory/components/inventory-header";
+import { BatchProgressHUD } from "@/features/inventory/components/batch-progress-hud";
 import { useResources, type Resource } from "@/features/inventory/hooks/use-resources";
 import { useInventoryAggregation } from "@/features/inventory/hooks/use-inventory-aggregation";
 import { useCategories } from "@/features/inventory/hooks/use-categories";
@@ -118,7 +119,9 @@ export default function InventarioClient() {
     }, [templates, categories]);
 
     return (
-        <div className="p-4 sm:p-8 max-w-[1600px] mx-auto min-h-screen space-y-6">
+        <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-0 py-4 sm:py-6 space-y-4 sm:space-y-6">
+            <BatchProgressHUD />
+            
             {/* Page Header - Desktop Only (Duplicated by NotionTopbar on Mobile) */}
             <div className="hidden lg:flex items-center justify-between mb-4">
                 <div>

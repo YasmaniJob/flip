@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Slider } from "@/components/ui/slider";
 
 import { useCreateResource } from "@/features/inventory/hooks/use-resources";
+import { useBatchStore } from "../hooks/use-batch-store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -118,8 +119,14 @@ export function AddStockModal({
       }
   };
 
+  const { startBatch, updateProgress, completeBatch } = useBatchStore();
+
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
+    
+    // Close modal immediately for better UX
+    onOpenChange(false);
+
     try {
       if (!isBatchMode) {
         // Individual
@@ -136,9 +143,13 @@ export function AddStockModal({
         });
         toast.success("Recurso registrado exitosamente");
       } else {
-        // En lote (Batch)
-        const promises = values.batchItems.map((item) =>
-          createResourceMutation.mutateAsync({
+        // En lote (Batch) - Sequencial execution in background
+        const batchTotal = values.batchItems.length;
+        startBatch(batchTotal, templateName);
+
+        let completed = 0;
+        for (const item of values.batchItems) {
+          await createResourceMutation.mutateAsync({
             name: item.name || values.name,
             categoryId,
             templateId,
@@ -148,25 +159,17 @@ export function AddStockModal({
             condition: item.condition,
             status: item.status,
             notes: item.notes,
-          })
-        );
-        await Promise.all(promises);
-        toast.success(`${values.batchItems.length} recursos registrados exitosamente`);
+          });
+          completed++;
+          updateProgress(completed);
+        }
+        
+        completeBatch();
       }
 
-      form.reset({
-        mode: "individual",
-        name: templateName,
-        brand: "",
-        model: "",
-        singleItem: { serialNumber: "", condition: "bueno", status: "disponible", notes: "", name: "" },
-        batchItems: [
-          { serialNumber: "", condition: "bueno", status: "disponible", notes: "", name: `${templateName} 1` },
-          { serialNumber: "", condition: "bueno", status: "disponible", notes: "", name: `${templateName} 2` },
-        ],
-      });
+      // Reset form and notify parent
+      form.reset();
       onSuccess?.();
-      onOpenChange(false);
     } catch (err) {
       console.error(err);
       toast.error("Error al registrar el recurso");

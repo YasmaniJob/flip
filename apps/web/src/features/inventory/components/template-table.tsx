@@ -127,7 +127,11 @@ export function TemplateTable({
                             status: r.status,
                             serialNumber: r.serialNumber || null,
                             model: r.model || null,
-                        }));
+                        })).sort((a, b) => {
+                            if (!a.internalId) return 1;
+                            if (!b.internalId) return -1;
+                            return a.internalId.localeCompare(b.internalId, undefined, { numeric: true });
+                        });
 
                         const total = item.totalStock;
                         const availablePercent = total > 0 ? (item.available / total) * 100 : 0;
@@ -231,33 +235,12 @@ export function TemplateTable({
 
                                     {/* Expanded Detail View */}
                                     {isExpanded && (
-                                        <div className="border-t border-border bg-muted/10">
-                                            <div className="p-4 sm:p-6 pt-5 animate-in slide-in-from-top-2 duration-300">
-                                                <div className="bg-card border border-border rounded-lg shadow-none overflow-hidden">
-                                                    <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/5">
-                                                        <div className="space-y-0.5">
-                                                            <h3 className="text-[11px] font-black text-foreground uppercase tracking-widest">Unidades Registradas</h3>
-                                                            <p className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-widest">Gestión de stock individual.</p>
-                                                        </div>
-                                                        <Button 
-                                                            variant="jiraOutline"
-                                                            size="sm"
-                                                            className="h-8 px-4 text-[9px] font-black uppercase tracking-widest shadow-none"
-                                                            onClick={() => onAddStock(item)}
-                                                        >
-                                                            <Plus className="w-3.5 h-3.5 mr-1.5" />
-                                                            Nueva Unidad
-                                                        </Button>
-                                                    </div>
-                                                    <div className="p-0">
-                                                        <InventoryTable 
-                                                            items={tableItems}
-                                                            onEdit={onEditResource ? (i) => onEditResource(templateResources.find(r => r.id === i.id)) : undefined}
-                                                            onDelete={onDeleteResource ? (i) => onDeleteResource(templateResources.find(r => r.id === i.id)) : undefined}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        <div className="bg-muted/10 p-4 border-t border-border mt-0">
+                                            <InventoryTable 
+                                                items={tableItems} 
+                                                onEdit={onEditResource ? (i) => onEditResource(templateResources.find(r => r.id === i.id)) : undefined}
+                                                onDelete={onDeleteResource ? (i) => onDeleteResource(templateResources.find(r => r.id === i.id)) : undefined}
+                                            />
                                         </div>
                                     )}
                                 </div>
