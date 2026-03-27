@@ -119,14 +119,14 @@ export default function InventarioClient() {
 
     return (
         <div className="p-4 sm:p-8 max-w-[1600px] mx-auto min-h-screen space-y-6">
-            {/* Page Header */}
-            <div className="flex items-center justify-between mb-4">
+            {/* Page Header - Desktop Only (Duplicated by NotionTopbar on Mobile) */}
+            <div className="hidden lg:flex items-center justify-between mb-4">
                 <div>
                     <h1 className="text-3xl font-black text-foreground tracking-tighter">Inventario</h1>
                 </div>
                 
                 {/* Actions - Desktop */}
-                <div className="hidden sm:flex items-center gap-3">
+                <div className="flex items-center gap-3">
                     {canManage && (
                         <Button 
                             variant="jira" 
@@ -141,24 +141,25 @@ export default function InventarioClient() {
             </div>
 
             <InventoryHeader resources={resources} statusFilter={statusFilter} onStatusFilterChange={setStatusFilter} />
-                        <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 mb-6 border-b border-border/30 pb-6">
-                <div className="relative flex-1 w-full">
+            
+            <div className="flex flex-row items-center gap-2 mt-0 mb-4">
+                <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/40" />
                     <Input 
-                        placeholder="Buscar recursos..." 
+                        placeholder="Buscar..." 
                         value={search} 
                         onChange={(e) => setSearch(e.target.value)} 
                         className="h-10 pl-9 w-full bg-white border-border rounded-md text-[12px] shadow-none focus-visible:ring-primary/20 font-black placeholder:text-muted-foreground/30" 
                     />
                 </div>
                 
-                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                <div className="shrink-0">
                     <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                        <SelectTrigger className="h-10 w-full sm:w-[220px] shrink-0 bg-card border-border rounded-md text-[10px] font-black uppercase tracking-widest shadow-none focus:ring-primary/20">
+                        <SelectTrigger className="h-10 w-[140px] sm:w-[220px] bg-card border-border rounded-md text-[10px] font-black uppercase tracking-widest shadow-none focus:ring-primary/20">
                             <SelectValue placeholder="Categoría" />
                         </SelectTrigger>
                         <SelectContent className="border-border shadow-none">
-                            <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Todas las categorías</SelectItem>
+                            <SelectItem value="all" className="text-[10px] font-black uppercase tracking-widest cursor-pointer">Todas</SelectItem>
                             {usedCategories.map((cat) => (<SelectItem key={cat.id} value={cat.id} className="text-[10px] font-black uppercase tracking-widest cursor-pointer">{cat.name}</SelectItem>))}
                         </SelectContent>
                     </Select>

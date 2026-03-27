@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
-import { Package, CheckCircle2, CalendarHeart, Wrench, XCircle } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Package, CheckCircle2, CalendarHeart, Wrench, XCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface Resource {
     status: string;
@@ -15,6 +16,8 @@ interface InventoryHeaderProps {
 }
 
 export function InventoryHeader({ resources, statusFilter, onStatusFilterChange }: InventoryHeaderProps) {
+    const [isExpanded, setIsExpanded] = useState(false);
+    
     const stats = useMemo(() => {
         return resources.reduce((acc, r) => ({
             total: acc.total + 1,
@@ -87,18 +90,23 @@ export function InventoryHeader({ resources, statusFilter, onStatusFilterChange 
     ];
 
     return (
-        <div className="pt-2 mb-8">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 cursor-pointer">
-                {cards.map((card) => {
+        <div className="pt-2 mb-1">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 cursor-pointer mb-3">
+                {cards.map((card, index) => {
                     const isActive = statusFilter === card.id;
                     const Icon = card.icon;
+                    
+                    // Solo mostrar las primeras 2 en móvil si no está expandido
+                    const hideOnMobile = !isExpanded && index >= 2;
+
                     return (
                         <div
                             key={card.id}
                             onClick={() => handleCardClick(card.id)}
                             className={cn(
                                 "flex items-center justify-between p-4 sm:p-5 rounded-md border bg-card transition-colors duration-150 select-none shadow-none",
-                                isActive ? card.activeClass : card.borderClass
+                                isActive ? card.activeClass : card.borderClass,
+                                hideOnMobile ? "hidden md:flex" : "flex"
                             )}
                         >
                             <div className="flex flex-col gap-1">
@@ -122,6 +130,28 @@ export function InventoryHeader({ resources, statusFilter, onStatusFilterChange 
                         </div>
                     );
                 })}
+            </div>
+
+            {/* Toggle Button for Mobile Expansion */}
+            <div className="flex md:hidden justify-center mt-0 pb-1">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-1 text-[8px] font-black uppercase tracking-[0.2em] text-muted-foreground/30 hover:text-primary transition-all flex items-center gap-1.5 hover:bg-transparent"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                >
+                    {isExpanded ? (
+                        <>
+                            Ver menos
+                            <ChevronUp className="w-2.5 h-2.5 opacity-50" />
+                        </>
+                    ) : (
+                        <>
+                            Ver más detalle
+                            <ChevronDown className="w-2.5 h-2.5 opacity-50" />
+                        </>
+                    )}
+                </Button>
             </div>
         </div>
     );
