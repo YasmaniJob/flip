@@ -1,3 +1,17 @@
+import Link from "next/link";
+import { 
+  Package, 
+  ArrowRight, 
+  ShieldCheck, 
+  Zap, 
+  BarChart3, 
+  Layers, 
+  Search,
+  Calendar,
+  History,
+  Play
+} from "lucide-react";
+
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background selection:bg-primary/20 text-foreground overflow-x-hidden">
@@ -309,17 +323,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
-import Link from "next/link";
-import { 
-  Package, 
-  ArrowRight, 
-  ShieldCheck, 
-  Zap, 
-  BarChart3, 
-  Layers, 
-  Search,
-  Calendar,
-  History,
-  Play
-} from "lucide-react";
