@@ -9,8 +9,8 @@ interface NotionTopbarProps {
 
 export function NotionTopbar({ title, onMenuClick }: NotionTopbarProps) {
   return (
-    <div className="flex items-center justify-between px-4 py-4 lg:hidden border-b border-border/40 bg-background">
-      <h1 className="text-xl font-black tracking-tight text-foreground">
+    <div className="flex items-center justify-between px-4 py-4 lg:hidden border-b border-border bg-white shadow-none">
+      <h1 className="text-xl font-black tracking-tighter text-foreground uppercase">
         {title}
       </h1>
       <button

@@ -15,7 +15,6 @@ import {
 import { WizardLayout } from "@/components/layouts/wizard-layout";
 import type { WizardData } from "./resource-wizard";
 
-// ─── Standard catalogue ────────────────────────────────────────────────────────
 const STANDARD_CATALOGUE = [
   {
     category: { name: "Equipos Portátiles", icon: "💻", color: "#0052CC" },
@@ -98,13 +97,13 @@ const STANDARD_CATALOGUE = [
   },
 ] as const;
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
 interface WizardStep1Props {
   data: Partial<WizardData>;
   onNext: () => void;
   onCancel: () => void;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
+  isMobile?: boolean;
 }
 
 interface DbTemplate {
@@ -116,16 +115,13 @@ interface DbTemplate {
   defaultModel?: string;
 }
 
-// Unified item: either it exists in DB (has id/categoryId) or it's standard-only
 interface CatalogueItem {
   name: string;
   icon: string;
-  // If exists in DB:
   dbId?: string;
   dbCategoryId?: string;
   dbDefaultBrand?: string;
   dbDefaultModel?: string;
-  // Standard-catalogue parent
   stdCatName: string;
   stdCatIcon: string;
   stdCatColor: string;
@@ -139,15 +135,14 @@ interface CatalogueGroup {
   items: CatalogueItem[];
 }
 
-// ─── Component ─────────────────────────────────────────────────────────────────
 export function WizardStep1({
   data,
   onNext,
   onCancel,
   isFullscreen,
   onToggleFullscreen,
+  isMobile,
 }: WizardStep1Props) {
-  // Multi-select: key = dbId (if in DB) OR "std:catName||tplName"
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(
     data.templateId ? new Set([data.templateId]) : new Set(),
   );
@@ -156,16 +151,14 @@ export function WizardStep1({
   const [isCreating, setIsCreating] = useState(false);
 
   const { data: categories = [] } = useCategories();
-  const { data: allTemplates = [], isLoading: templatesLoading } = useAllTemplates();
+  const { data: allTemplates = [], isLoading: templatesLoading } =
+    useAllTemplates();
   const createCategoryMutation = useCreateCategory();
   const createTemplateMutation = useCreateTemplate();
 
-  // ── Build unified catalogue (standard + DB) ──────────────────────────────────
   const catalogue: CatalogueGroup[] = useMemo(() => {
     return STANDARD_CATALOGUE.map((stdGroup) => {
       const items: CatalogueItem[] = stdGroup.templates.map((tpl) => {
-        // Find a matching DB template by name (case-insensitive) within any
-        // category whose name matches the standard category
         const matchingCat = categories.find(
           (c) => c.name.toLowerCase() === stdGroup.category.name.toLowerCase(),
         );
@@ -200,7 +193,6 @@ export function WizardStep1({
     });
   }, [allTemplates, categories]);
 
-  // ── Filter by search ─────────────────────────────────────────────────────────
   const filteredGroups = useMemo(() => {
     if (!searchQuery.trim()) return catalogue;
     const q = searchQuery.toLowerCase();
@@ -216,7 +208,6 @@ export function WizardStep1({
       .filter((g) => g.items.length > 0);
   }, [catalogue, searchQuery]);
 
-  // ── Key helpers ──────────────────────────────────────────────────────────────
   const itemKey = (item: CatalogueItem): string =>
     item.dbId ?? `std:${item.stdCatName}||${item.name}`;
 
@@ -231,13 +222,11 @@ export function WizardStep1({
   };
 
   const clearSelection = () => setSelectedKeys(new Set());
-
   const selectionCount = selectedKeys.size;
 
   const handleSave = async () => {
     if (isCreating || selectionCount === 0) return;
 
-    // Collect selected items
     const selected: CatalogueItem[] = [];
     for (const group of catalogue) {
       for (const item of group.items) {
@@ -245,59 +234,186 @@ export function WizardStep1({
       }
     }
 
-    // If ALL selected items already exist in DB, proceed directly
     const allInDb = selected.every((i) => i.inDb);
 
     if (allInDb) {
-      onNext(); // Empty payload, step 2 is removed
+      onNext();
       return;
     }
 
-    // Some need to be created in DB first
     setIsCreating(true);
     try {
       const catIdCache = new Map<string, string>();
 
       for (const item of selected) {
-        let categoryId = item.dbCategoryId;
-
         if (!item.inDb) {
-          // Ensure category exists
+          let categoryId = catIdCache.get(item.stdCatName);
           if (!categoryId) {
-            categoryId = catIdCache.get(item.stdCatName);
-            if (!categoryId) {
-              const existing = categories.find(
-                (c) => c.name.toLowerCase() === item.stdCatName.toLowerCase(),
-              );
-              if (existing) {
-                categoryId = existing.id;
-              } else {
-                const newCat = await createCategoryMutation.mutateAsync({
-                  name: item.stdCatName,
-                  icon: item.stdCatIcon,
-                  color: item.stdCatColor,
-                });
-                categoryId = newCat.id;
-              }
-              catIdCache.set(item.stdCatName, categoryId);
+            const existing = categories.find(
+              (c) => c.name.toLowerCase() === item.stdCatName.toLowerCase(),
+            );
+            if (existing) {
+              categoryId = existing.id;
+            } else {
+              const created = await createCategoryMutation.mutateAsync({
+                name: item.stdCatName,
+                icon: item.stdCatIcon,
+              });
+              categoryId = created.id;
             }
+            catIdCache.set(item.stdCatName, categoryId);
           }
 
-          // Create template
           await createTemplateMutation.mutateAsync({
-            categoryId: categoryId!,
             name: item.name,
+            categoryId,
             icon: item.icon,
           });
         }
       }
 
-      onNext(); // Empty payload, step 2 is removed
+      onNext();
     } catch (err) {
       console.error("Error al activar subcategorías", err);
       setIsCreating(false);
     }
   };
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-full bg-background">
+        <div className="shrink-0 px-4 pt-2 pb-3 border-b border-border/40">
+          <div className="mb-3">
+            <h3 className="text-base font-black text-foreground">
+              Seleccionar Categoría
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Selecciona el tipo de recurso que vas a registrar.
+            </p>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar..."
+              className="w-full h-11 pl-10 pr-10 text-sm bg-card border border-border rounded-lg shadow-none focus:outline-none focus:border-primary/40 placeholder:text-muted-foreground/50 font-medium"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          {templatesLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredGroups.map((group) => {
+                const selectedInGroup = group.items.filter((i) =>
+                  selectedKeys.has(itemKey(i)),
+                ).length;
+                const isGroupSelected = selectedInGroup > 0;
+
+                return (
+                  <button
+                    key={group.catName}
+                    onClick={() => {
+                      if (isGroupSelected) {
+                        group.items.forEach((item) => {
+                          const key = itemKey(item);
+                          if (selectedKeys.has(key)) {
+                            setSelectedKeys((prev) => {
+                              const next = new Set(prev);
+                              next.delete(key);
+                              return next;
+                            });
+                          }
+                        });
+                      } else {
+                        const firstInDb = group.items.find((i) => i.inDb);
+                        const itemToSelect = firstInDb || group.items[0];
+                        if (itemToSelect) {
+                          setSelectedKeys(
+                            (prev) => new Set([...prev, itemKey(itemToSelect)]),
+                          );
+                        }
+                      }
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-3 rounded-lg border transition-all",
+                      isGroupSelected
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card hover:bg-muted/30",
+                    )}
+                  >
+                    <div
+                      className="w-10 h-10 flex items-center justify-center text-lg rounded-lg"
+                      style={{ backgroundColor: `${group.catColor}20` }}
+                    >
+                      {group.catIcon}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-bold text-foreground">
+                        {group.catName}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {group.items.length} tipos
+                      </p>
+                    </div>
+                    {isGroupSelected && (
+                      <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="h-3.5 w-3.5 text-white stroke-[3]" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="shrink-0 p-4 pb-6 border-t border-border/40 bg-card">
+          {selectionCount > 0 && (
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-primary bg-primary/5 px-3 py-1.5 rounded-md border border-primary/20">
+                {selectionCount} seleccionado{selectionCount !== 1 ? "s" : ""}
+              </span>
+              <button
+                onClick={clearSelection}
+                className="text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                Limpiar
+              </button>
+            </div>
+          )}
+          <Button
+            onClick={handleSave}
+            disabled={selectionCount === 0 || isCreating}
+            className="w-full h-12 text-sm font-bold"
+          >
+            {isCreating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Creando...
+              </>
+            ) : (
+              "Continuar"
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <WizardLayout
@@ -307,7 +423,6 @@ export function WizardStep1({
       isFullscreen={isFullscreen}
       onToggleFullscreen={onToggleFullscreen}
     >
-      {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="shrink-0 px-8 pt-5 pb-3 border-b border-border bg-muted/10">
         <div className="flex items-center justify-between mb-3">
           <div>
@@ -318,10 +433,8 @@ export function WizardStep1({
               Selecciona el tipo de recurso que vas a registrar.
             </p>
           </div>
-
         </div>
 
-        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <input
@@ -342,7 +455,6 @@ export function WizardStep1({
         </div>
       </div>
 
-      {/* ── Content ───────────────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto px-8 py-6 custom-scrollbar">
         {templatesLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -357,7 +469,6 @@ export function WizardStep1({
 
               return (
                 <div key={group.catName}>
-                  {/* Category separator */}
                   <div className="flex items-center gap-2 mb-3">
                     <div
                       className="w-7 h-7 flex items-center justify-center text-sm rounded-none"
@@ -379,7 +490,6 @@ export function WizardStep1({
                     )}
                   </div>
 
-                  {/* Templates grid */}
                   <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
                     {group.items.map((item) => {
                       const key = itemKey(item);
@@ -394,25 +504,19 @@ export function WizardStep1({
                             isSelected
                               ? "border-primary bg-primary/5"
                               : item.inDb
-                                // In DB but not selected: subtle green tint, solid border
                                 ? "border-emerald-200 bg-emerald-50/40 dark:border-emerald-800/50 dark:bg-emerald-900/20 hover:border-primary/30 hover:bg-primary/5"
-                                // Not in DB: dashed border, muted
                                 : "border-dashed border-border bg-card/50 hover:border-primary/40 hover:bg-muted/20",
                           )}
                         >
-                          {/* Top-right indicator */}
                           {isSelected ? (
-                            // Checked: filled blue checkbox
                             <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-none bg-primary border border-primary flex items-center justify-center shadow-none">
                               <Check className="h-2 w-2 text-white stroke-[3]" />
                             </div>
                           ) : item.inDb ? (
-                            // In DB, not selected: green dot
                             <div className="absolute top-1 right-1 w-3.5 h-3.5 flex items-center justify-center">
                               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             </div>
                           ) : (
-                            // Not in DB: empty box hint on hover
                             <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-none border border-border bg-card opacity-0 group-hover:opacity-100 transition-opacity shadow-none" />
                           )}
 
@@ -441,7 +545,6 @@ export function WizardStep1({
                             >
                               {item.name}
                             </p>
-                            {/* State label */}
                             {isSelected ? (
                               <span className="text-[7px] font-black uppercase tracking-widest text-primary">
                                 seleccionado
@@ -472,7 +575,6 @@ export function WizardStep1({
         )}
       </div>
 
-      {/* ── Footer ────────────────────────────────────────────────────────── */}
       <div className="shrink-0 p-5 border-t border-border bg-muted/10 flex items-center justify-between z-10">
         <Button
           variant="outline"

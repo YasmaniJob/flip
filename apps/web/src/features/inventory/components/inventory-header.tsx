@@ -1,7 +1,5 @@
 "use client";
 
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useMemo } from "react";
 
 interface Resource {
@@ -9,11 +7,10 @@ interface Resource {
 }
 
 interface InventoryHeaderProps {
-    onAddResource?: () => void;
     resources: Resource[];
 }
 
-export function InventoryHeader({ onAddResource, resources }: InventoryHeaderProps) {
+export function InventoryHeader({ resources }: InventoryHeaderProps) {
     const stats = useMemo(() => {
         return resources.reduce((acc, r) => ({
             total: acc.total + 1,
@@ -31,30 +28,7 @@ export function InventoryHeader({ onAddResource, resources }: InventoryHeaderPro
     const retiredPercent = total > 0 ? (stats.retired / total) * 100 : 0;
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-foreground uppercase font-sans">
-                        Inventario
-                    </h1>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 sm:ml-auto">
-                    <Button variant="ghost" className="h-9 px-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
-                        Exportar
-                    </Button>
-                    {onAddResource && (
-                        <Button 
-                            variant="jira" 
-                            onClick={onAddResource} 
-                            className="h-9 px-6 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-none"
-                        >
-                            <Plus className="h-3.5 w-3.5 mr-2" />
-                            Nuevo Recurso
-                        </Button>
-                    )}
-                </div>
-            </div>
-            
+        <div className="space-y-6 pt-2">
             <div className="flex flex-col md:flex-row items-stretch bg-white border border-border rounded-lg overflow-hidden shadow-none">
                 {/* Left Side: Stats */}
                 <div className="px-6 sm:px-8 py-5 sm:py-6 flex flex-col justify-center min-w-[220px] border-b md:border-b-0 md:border-r border-border bg-muted/5">
