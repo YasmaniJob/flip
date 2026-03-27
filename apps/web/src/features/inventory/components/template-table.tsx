@@ -46,7 +46,7 @@ export function TemplateTable({
                     items.map((item) => (
                         <div 
                             key={item.templateId}
-                            className="bg-white border border-border rounded-lg p-4 flex flex-col gap-4 shadow-none active:scale-[0.98] transition-all"
+                            className="bg-card border border-border rounded-lg p-4 flex flex-col gap-4 shadow-none active:scale-[0.98] transition-all"
                             onClick={(e) => toggleRow(item.templateId, e)}
                         >
                             <div className="flex items-center justify-between gap-4">
@@ -78,7 +78,7 @@ export function TemplateTable({
                                     {onDeleteTemplate && (
                                         <Button
                                             variant="ghost"
-                                            className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
+                                            className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0 border-0"
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onDeleteTemplate(item);
@@ -164,14 +164,14 @@ export function TemplateTable({
                                         {/* Center: Metrics & Progress */}
                                         <div className="flex-1 flex items-center gap-6 px-4 border-l border-border">
                                             {/* Big Number */}
-                                            <span className="text-3xl font-black text-slate-800 tracking-tighter tabular-nums leading-none shrink-0 w-16 text-right">
+                                            <span className="text-3xl font-black text-foreground tracking-tighter tabular-nums leading-none shrink-0 w-16 text-right">
                                                 {total}
                                             </span>
                                             
                                             {/* Bar & Status Dots */}
                                             <div className="flex flex-col justify-center flex-1 gap-2.5">
                                                 {/* Progress Bar */}
-                                                <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden flex gap-0.5 shadow-none border border-black/5">
+                                                <div className="h-1.5 w-full bg-muted/40 rounded-full overflow-hidden flex gap-0.5 shadow-none border border-black/5 dark:border-white/5">
                                                     <div className="h-full bg-emerald-500 transition-all duration-700" style={{ width: `${availablePercent}%` }} />
                                                     <div className="h-full bg-blue-500 transition-all duration-700" style={{ width: `${borrowedPercent}%` }} />
                                                     <div className="h-full bg-amber-500 transition-all duration-700" style={{ width: `${maintenancePercent}%` }} />

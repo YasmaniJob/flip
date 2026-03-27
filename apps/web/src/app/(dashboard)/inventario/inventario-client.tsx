@@ -149,7 +149,7 @@ export default function InventarioClient() {
                         placeholder="Buscar..." 
                         value={search} 
                         onChange={(e) => setSearch(e.target.value)} 
-                        className="h-10 pl-9 w-full bg-white border-border rounded-md text-[12px] shadow-none focus-visible:ring-primary/20 font-black placeholder:text-muted-foreground/30" 
+                        className="h-10 pl-9 w-full bg-background border-border rounded-md text-[12px] shadow-none focus-visible:ring-primary/20 font-black placeholder:text-muted-foreground/30" 
                     />
                 </div>
                 
