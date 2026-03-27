@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo, useDeferredValue, lazy, Suspense, memo } from "react";
+import { useState, useMemo, useDeferredValue, lazy, Suspense, memo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, Filter } from "lucide-react";
+import { Plus, Search, Filter } from "lucide-react";
 import { TemplateTable } from "@/features/inventory/components/template-table";
 import { InventoryHeader } from "@/features/inventory/components/inventory-header";
 import { useResources, type Resource } from "@/features/inventory/hooks/use-resources";
@@ -49,6 +49,14 @@ export default function InventarioClient() {
     const { data: templates = [], isLoading: loadingTemplates } = useInventoryAggregation();
     const { data: categories = [] } = useCategories();
     
+    useEffect(() => {
+        const handleCenterButtonClick = () => {
+            setIsCreateDialogOpen(true);
+        };
+        window.addEventListener('mobile-center-button-click', handleCenterButtonClick);
+        return () => window.removeEventListener('mobile-center-button-click', handleCenterButtonClick);
+    }, []);
+    
     const updateMutation = useMutation({
         mutationFn: async (data: any) => {
             const { id, ...body } = data;
@@ -91,7 +99,21 @@ export default function InventarioClient() {
 
     return (
         <div className="p-4 sm:p-8 max-w-[1600px] mx-auto min-h-screen space-y-6">
-            <InventoryHeader onAddResource={canManage ? () => setIsCreateDialogOpen(true) : undefined} resources={resources} />
+            {/* Header / Actions - Mobile First */}
+            <div className="hidden sm:flex items-center justify-end gap-3 mb-2">
+                {canManage && (
+                    <Button 
+                        variant="jira" 
+                        onClick={() => setIsCreateDialogOpen(true)} 
+                        className="h-9 px-6 text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-none"
+                    >
+                        <Plus className="h-3.5 w-3.5 mr-2" />
+                        Nuevo Recurso
+                    </Button>
+                )}
+            </div>
+
+            <InventoryHeader resources={resources} />
             
             <div className="flex flex-col gap-4 mt-8 mb-6 border-b border-border/30 pb-6">
                 <div className="relative w-full sm:w-[360px]">
@@ -100,7 +122,7 @@ export default function InventarioClient() {
                         placeholder="Buscar recursos..." 
                         value={search} 
                         onChange={(e) => setSearch(e.target.value)} 
-                        className="h-10 pl-9 w-full bg-card border-border rounded-md text-[13px] shadow-none focus-visible:ring-primary/20 font-bold" 
+                        className="h-10 pl-9 w-full bg-white border-border rounded-md text-[12px] shadow-none focus-visible:ring-primary/20 font-black placeholder:text-muted-foreground/30" 
                     />
                 </div>
                 
