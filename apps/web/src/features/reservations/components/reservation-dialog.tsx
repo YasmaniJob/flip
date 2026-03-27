@@ -8,7 +8,7 @@ import { Button } from '@/components/atoms/button';
 import { Textarea } from '@/components/ui/textarea';
 import { X, CheckCircle2, GraduationCap, Building2, User, Search, Check, BookOpen, ChevronLeft, ChevronRight, Users, Calendar } from "lucide-react";
 import { cn } from '@/lib/utils';
-import { useStaff, useRecurrentStaff } from '@/features/staff/hooks/use-staff';
+import { useStaff, useRecurrentStaff, useMyStaff } from '@/features/staff/hooks/use-staff';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useGrades } from '@/features/settings/hooks/use-grades';
 import { useSections } from '@/features/settings/hooks/use-sections';
@@ -90,16 +90,16 @@ export function ReservationDialog({
         }
     }, [open, initialSelectedSlots]);
 
-    // Role-based logic
-    const { isAdmin, user } = useUserRole();
+    const { data: myStaff } = useMyStaff();
+    const { isAdmin, role, user } = useUserRole();
 
-    // Auto-set teacher ID when not admin
+    // Auto-set teacher staff ID when not admin
     useEffect(() => {
-        if (!isAdmin && user?.id) {
-            setSelectedStaffId(user.id);
-            setSelectedStaffName(user.name || '');
+        if (!isAdmin && myStaff?.id) {
+            setSelectedStaffId(myStaff.id);
+            setSelectedStaffName(myStaff.name || '');
         }
-    }, [isAdmin, user]);
+    }, [isAdmin, myStaff]);
 
     // UI States
     const [staffSearch, setStaffSearch] = useState('');

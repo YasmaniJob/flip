@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useClassrooms } from "@/features/classrooms/hooks/use-classrooms";
-import { useMyInstitution } from "@/features/institutions/hooks/use-my-institution";
+import { useMyInstitution, institutionKeys } from "@/features/institutions/hooks/use-my-institution";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, Save, User as UserIcon, Lock, Trash2, ShieldCheck, Settings2, Sun, Moon, Pencil, X, Check } from "lucide-react";
@@ -17,7 +18,7 @@ import { BrandColorPicker } from "@/components/brand-color-picker";
 import { useBrandColor } from "@/components/brand-color-provider";
 import { getBrandColor } from "@/lib/brand-color";
 
-type SettingsTab = 'profile' | 'preferences' | 'security' | 'institution';
+type SettingsTab = 'profile' | 'preferences' | 'security' | 'institution' | 'control';
  
 const ROLE_LABELS: Record<string, string> = {
     superadmin: 'Super Administrador',
@@ -29,13 +30,14 @@ const ROLE_LABELS: Record<string, string> = {
 export function SettingsClient() {
     const { data: session } = useSession();
     const router = useRouter();
+    const queryClient = useQueryClient();
     const searchParams = useSearchParams();
     
     // Redirect legacy tabs to profile
     const rawTab = searchParams.get('tab');
     let activeTab: SettingsTab = 'profile';
     
-    if (rawTab === 'security' || rawTab === 'preferences' || rawTab === 'institution') {
+    if (rawTab === 'security' || rawTab === 'preferences' || rawTab === 'institution' || rawTab === 'control') {
         activeTab = rawTab as SettingsTab;
     }
     
@@ -82,6 +84,7 @@ export function SettingsClient() {
             if (res.ok) {
                 if (color !== undefined) setBrandColor(color);
                 if (logo !== undefined) setLogoUrl(logo);
+                queryClient.invalidateQueries({ queryKey: institutionKeys.myInstitution });
                 toast.success("Branding actualizado");
             } else {
                 throw new Error();
@@ -289,6 +292,16 @@ export function SettingsClient() {
                             <ShieldCheck className="w-3.5 h-3.5" />
                             Seguridad
                         </TabsTrigger>
+                        {(user?.role === 'admin' || user?.isSuperAdmin) && (
+                            <TabsTrigger 
+                                value="control" 
+                                className="gap-2 px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:text-primary data-[state=active]:border-b-2" 
+                                style={activeTab === 'control' ? { borderColor: getBrandColor(brandColor), color: getBrandColor(brandColor) } : undefined}
+                            >
+                                <Lock className="w-3.5 h-3.5" />
+                                Centro de Control
+                            </TabsTrigger>
+                        )}
                     </TabsList>
 
                     {/* Perfil Tab */}
@@ -822,6 +835,131 @@ export function SettingsClient() {
                                         Eliminar
                                     </Button>
                                 </div>
+                            </div>
+                        </div>
+                    </TabsContent>
+
+                    {/* Centro de Control Tab */}
+                    <TabsContent value="control" className="space-y-6 animate-in fade-in duration-300">
+                        <div className="bg-background rounded-lg border border-border overflow-hidden">
+                            <div className="p-6 border-b border-border bg-muted/5 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-md" style={{ backgroundColor: `${getBrandColor(brandColor)}15` }}>
+                                        <ShieldCheck className="w-5 h-5" style={{ color: getBrandColor(brandColor) }} />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-base font-bold text-foreground">Matriz de Permisos</h2>
+                                        <p className="text-xs text-muted-foreground">Define qué roles pueden acceder a cada funcionalidad básica</p>
+                                    </div>
+                                </div>
+                                <Button
+                                    onClick={async () => {
+                                        if (!institution) return;
+                                        const currentFeatures = (institution.settings as any)?.features || {};
+                                        setIsSavingSettings(true);
+                                        try {
+                                            const res = await fetch('/api/institutions/my-institution/features', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ features: currentFeatures })
+                                            });
+                                            if (res.ok) {
+                                                queryClient.invalidateQueries({ queryKey: institutionKeys.myInstitution });
+                                                toast.success("Permisos actualizados correctamente");
+                                            } else {
+                                                throw new Error();
+                                            }
+                                        } catch {
+                                            toast.error("Error al guardar permisos");
+                                        } finally {
+                                            setIsSavingSettings(false);
+                                        }
+                                    }}
+                                    disabled={isSavingSettings}
+                                    className="text-white font-bold h-10 px-6 shrink-0"
+                                    style={{ backgroundColor: getBrandColor(brandColor) }}
+                                >
+                                    {isSavingSettings ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                                    Guardar Configuración
+                                </Button>
+                            </div>
+
+                            <div className="overflow-x-auto">
+                                <table className="w-full border-collapse">
+                                    <thead>
+                                        <tr className="bg-muted/10">
+                                            <th className="p-6 text-left text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border">Funcionalidad</th>
+                                            <th className="p-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border">Docente</th>
+                                            <th className="p-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border">PIP</th>
+                                            <th className="p-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-border">Admin</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border">
+                                        {[
+                                            { id: 'reservations', name: 'Reservas de Aula', desc: 'Permitir crear y gestionar reservaciones de espacios (AIP/Laboratorios).' },
+                                            { id: 'loans', name: 'Préstamos de Recursos', desc: 'Permitir realizar solicitudes de préstamo de equipos e inventario.' },
+                                        ].map((feature) => {
+                                            const currentFeatures = (institution?.settings as any)?.features || {};
+                                            const featureData = currentFeatures[feature.id] || { docente: false, pip: true }; 
+
+                                            const toggle = (role: string) => {
+                                                const updatedFeatures = {
+                                                    ...currentFeatures,
+                                                    [feature.id]: {
+                                                        ...featureData,
+                                                        [role]: !featureData[role]
+                                                    }
+                                                };
+                                                
+                                                fetch('/api/institutions/my-institution/features', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ features: updatedFeatures })
+                                                }).then(res => {
+                                                    if (res.ok) {
+                                                        queryClient.invalidateQueries({ queryKey: institutionKeys.myInstitution });
+                                                        toast.success(`${feature.name} actualizado`);
+                                                    }
+                                                });
+                                            };
+
+                                            return (
+                                                <tr key={feature.id} className="hover:bg-muted/5 transition-colors">
+                                                    <td className="p-6">
+                                                        <p className="text-sm font-bold text-foreground">{feature.name}</p>
+                                                        <p className="text-xs text-muted-foreground mt-1 max-w-xs">{feature.desc}</p>
+                                                    </td>
+                                                    <td className="p-6 text-center">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={featureData.docente}
+                                                            onChange={() => toggle('docente')}
+                                                            className="w-5 h-5 accent-primary rounded cursor-pointer"
+                                                            style={{ accentColor: getBrandColor(brandColor) }}
+                                                        />
+                                                    </td>
+                                                    <td className="p-6 text-center">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={featureData.pip}
+                                                            onChange={() => toggle('pip')}
+                                                            className="w-5 h-5 accent-primary rounded cursor-pointer"
+                                                            style={{ accentColor: getBrandColor(brandColor) }}
+                                                        />
+                                                    </td>
+                                                    <td className="p-6 text-center">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={true}
+                                                            disabled
+                                                            className="w-5 h-5 bg-muted accent-muted-foreground rounded cursor-not-allowed opacity-50"
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </TabsContent>

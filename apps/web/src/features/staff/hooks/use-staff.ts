@@ -151,3 +151,14 @@ export const useRecurrentStaff = (limit: number = 6) => {
         enabled: !!session,
     });
 };
+
+export const useMyStaff = () => {
+    const { data: session } = useSession();
+    const api = useApiClient();
+
+    return useQuery({
+        queryKey: ['staff', 'me', session?.user?.id],
+        queryFn: () => api.get<Staff>('/staff/me'),
+        enabled: !!session?.user?.id,
+    });
+};

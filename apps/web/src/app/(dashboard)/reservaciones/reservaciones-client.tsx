@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
 import { 
     useReservationsByDateRange, 
-    useRescheduleBlock,
     useCancelSlot
 } from "@/features/reservations/hooks/use-reservations";
 import { useClassrooms } from "@/features/classrooms/hooks/use-classrooms";
@@ -55,7 +54,8 @@ LoadingSkeleton.displayName = "LoadingSkeleton";
 
 export function ReservacionesClient() {
     const router = useRouter();
-    const { user, canManage } = useUserRole();
+    const { canManage, canAction } = useUserRole();
+    const canReserve = canAction('reservations');
     const { data: defaults, isLoading: isLoadingDefaults } = useAcademicDefaults();
     
     // UI State
@@ -110,10 +110,7 @@ export function ReservacionesClient() {
         return d;
   }, [currentWeekStart]);
 
-    // Only fetch when we have all required data
-    const shouldFetch = !!selectedClassroomId && !!selectedShift && !isLoadingDefaults && !isLoadingClassrooms;
-
-    const { data: slots, isFetching: isFetchingSlots, error: errorSlots } = useReservationsByDateRange(
+    const { data: slots, error: errorSlots } = useReservationsByDateRange(
         currentWeekStart.toISOString().split('T')[0],
         weekEnd.toISOString().split('T')[0],
         selectedClassroomId,
@@ -134,7 +131,6 @@ export function ReservacionesClient() {
         return filtered;
     }, [rawPedagogicalHours, selectedShift]);
 
-    const rescheduleBlockMutation = useRescheduleBlock();
     const cancelSlotMutation = useCancelSlot();
 
     // Memoized Mappings
@@ -273,7 +269,7 @@ export function ReservacionesClient() {
                 />
 
                 {/* Selection Action Bar - Mobile */}
-                {selectedSlots.length > 0 && canManage && !isDialogOpen && (
+                {selectedSlots.length > 0 && canReserve && !isDialogOpen && (
                     <div className="lg:hidden fixed bottom-20 left-0 right-0 z-50 px-4 pb-4">
                         <div className="bg-primary text-primary-foreground rounded-lg shadow-2xl p-4 flex items-center justify-between">
                             <div>
@@ -319,7 +315,7 @@ export function ReservacionesClient() {
                             setIsMobileSheetOpen(false);
                             setTimeout(() => setRescheduleOpen(true), 300);
                         }}
-                        canManage={canManage}
+                        canManage={canReserve}
                     />
                 )}
 
@@ -544,7 +540,7 @@ export function ReservacionesClient() {
                                                             slot={slot}
                                                             isToday={isToday}
                                                             isLive={isToday && isLiveRow}
-                                                            isAdmin={canManage}
+                                                            isAdmin={canReserve}
                                                             onSelectReservation={setSelectedReservationId}
                                                             classroomId={selectedClassroomId}
                                                             shift={selectedShift}
@@ -595,13 +591,13 @@ export function ReservacionesClient() {
             </main>
 
             <AnimatePresence>
-                {selectedSlots.length > 0 && canManage && !isDialogOpen && (
+                {selectedSlots.length > 0 && canReserve && !isDialogOpen && (
                     <SelectionActionBar 
                         selectedIds={selectedSlots.map(s => s.pedagogicalHourId)}
                         onConfirm={handleOpenDialog}
                         onClear={() => setSelectedSlots([])}
                         isPending={false}
-                        isAdmin={canManage}
+                        isAdmin={canReserve}
                     />
                 )}
             </AnimatePresence>
