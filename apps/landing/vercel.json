@@ -1,7 +1,6 @@
 {
-  "buildCommand": "cd ../.. && pnpm install && pnpm --filter=landing build",
+  "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && cd apps/landing && pnpm build",
   "outputDirectory": ".next",
-  "installCommand": "pnpm install",
-  "framework": "nextjs",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD ./"
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": "nextjs"
 }

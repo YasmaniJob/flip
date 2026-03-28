@@ -1,154 +1,263 @@
-# Despliegue de Landing en Vercel
+# Despliegue de Landing en Vercel - Guía Completa
 
-## ✅ Verificación Pre-Deploy
+## 🚀 Configuración Rápida
 
-### 1. Package.json
-- ✅ Script `build`: `next build` (válido para Next.js)
-- ✅ Script `start`: `next start`
-- ✅ Dependencias correctas (Next.js 15, React 19)
-
-### 2. Next.config.js
-- ✅ Sin rutas que conflictúen con el monorepo
-- ✅ `transpilePackages: []` (no comparte paquetes con apps/web)
-
-### 3. Workspace Configuration
-- ✅ `pnpm-workspace.yaml` incluye `apps/*`
-- ✅ Proyecto aislado sin dependencias de otros workspaces
-
-### 4. Archivos de Configuración
-- ✅ `vercel.json` - Configuración de build para monorepo
-- ✅ `.vercelignore` - Ignora archivos fuera del workspace
-- ✅ `.env.example` - Template de variables de entorno
-
----
-
-## 📋 Pasos para Desplegar en Vercel
-
-### 1. Crear Nuevo Proyecto en Vercel
+### Paso 1: Crear Proyecto en Vercel
 
 1. Ve a https://vercel.com/dashboard
-2. Click en **"Add New..."** → **"Project"**
-3. Selecciona el mismo repositorio: `YasmaniJob/flip`
+2. Click **"Add New..."** → **"Project"**
+3. Selecciona tu repositorio: `YasmaniJob/flip`
+4. Click **"Import"**
 
-### 2. Configurar el Proyecto
+### Paso 2: Configuración del Proyecto
 
-**General Settings:**
-- **Project Name:** `flip-landing` (o el que prefieras)
-- **Framework Preset:** Next.js
-- **Root Directory:** `apps/landing` ⚠️ IMPORTANTE
-
-**Build & Development Settings:**
-- **Build Command:** (dejar vacío, usa el de vercel.json)
-- **Output Directory:** `.next`
-- **Install Command:** `pnpm install`
-
-### 3. Variables de Entorno
-
-Agrega en Vercel → Settings → Environment Variables:
+**⚠️ IMPORTANTE - Configuración Correcta:**
 
 ```
-NEXT_PUBLIC_APP_URL=https://flip.org.pe
+Framework Preset: Next.js
+Root Directory: apps/landing
+Build Command: (dejar el default o usar el de vercel.json)
+Output Directory: .next
+Install Command: pnpm install
+Node Version: 20.x
 ```
 
-### 4. Configurar Dominio
+### Paso 3: Variables de Entorno (Opcional)
 
-1. Ve a **Settings** → **Domains**
-2. Agrega el dominio: `flip.org.pe`
-3. Configura los DNS en tu proveedor:
-   - Type: `A` → Name: `@` → Value: (IP de Vercel)
-   - Type: `CNAME` → Name: `www` → Value: `cname.vercel-dns.com`
+```env
+NEXT_PUBLIC_APP_URL=https://app.flip.org.pe
+```
 
-### 5. Deploy
+### Paso 4: Deploy
 
-1. Click en **"Deploy"**
-2. Espera a que termine el build (~2-3 minutos)
-3. Verifica que el sitio esté funcionando
+Click en **"Deploy"** y espera 2-3 minutos.
 
 ---
 
-## 🔧 Configuración del Monorepo
+## 🔧 Configuración Detallada
 
-### Build Command Explicado
+### vercel.json Explicado
 
-El `vercel.json` usa este comando:
-```bash
-cd ../.. && pnpm install && pnpm --filter=landing build
+```json
+{
+  "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && cd apps/landing && pnpm build",
+  "outputDirectory": ".next",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": "nextjs"
+}
 ```
 
-**¿Por qué?**
+**¿Qué hace cada comando?**
 - `cd ../..` - Va a la raíz del monorepo
-- `pnpm install` - Instala todas las dependencias del workspace
-- `pnpm --filter=landing` - Ejecuta el build solo para el proyecto landing
+- `pnpm install --frozen-lockfile` - Instala dependencias (sin modificar lock)
+- `cd apps/landing` - Entra al directorio de landing
+- `pnpm build` - Ejecuta el build de Next.js
 
-### Estructura del Monorepo
+### Estructura del Proyecto
 
 ```
 flip-v2/
 ├── apps/
 │   ├── web/          # Dashboard (app.flip.org.pe)
-│   └── landing/      # Landing (flip.org.pe) ← NUEVO
-├── packages/         # Paquetes compartidos (si los hay)
+│   └── landing/      # Landing (flip.org.pe)
 ├── pnpm-workspace.yaml
-└── pnpm-lock.yaml
+├── pnpm-lock.yaml
+└── package.json
 ```
 
 ---
 
-## ⚠️ Notas Importantes
+## ⚠️ Problemas Comunes y Soluciones
 
-### 1. Builds Independientes
-- `apps/web` y `apps/landing` se despliegan por separado
-- Cada uno tiene su propio proyecto en Vercel
-- No comparten código ni dependencias
+### 1. Error: "No Build Output"
 
-### 2. Dominios
-- `app.flip.org.pe` → apps/web (Dashboard)
-- `flip.org.pe` → apps/landing (Landing page)
+**Problema:** Vercel no encuentra el output del build.
 
-### 3. Git Workflow
-- Ambos proyectos usan el mismo repositorio
-- Vercel detecta cambios automáticamente
-- Puedes configurar `ignoreCommand` para builds selectivos
+**Solución:**
+- Verifica que Root Directory sea `apps/landing`
+- Asegúrate de que Output Directory sea `.next`
+- Revisa que el build funcione localmente: `cd apps/landing && pnpm build`
 
-### 4. Monorepo con pnpm
-- Vercel soporta pnpm workspaces nativamente
-- El `vercel.json` maneja el build correctamente
-- No necesitas Turborepo para este caso simple
+### 2. Error: "Module not found"
 
----
+**Problema:** Dependencias no se instalan correctamente.
 
-## 🐛 Troubleshooting
-
-### Error: "Module not found"
+**Solución:**
 - Verifica que `pnpm-workspace.yaml` esté en la raíz
-- Asegúrate de que Root Directory sea `apps/landing`
+- Asegúrate de que `pnpm-lock.yaml` esté commiteado
+- Usa `--frozen-lockfile` en el install command
 
-### Error: "Build failed"
-- Revisa los logs en Vercel Dashboard
-- Verifica que el build funcione localmente: `pnpm build`
+### 3. Error: "Build Command Failed"
 
-### Error: "Domain not configured"
-- Espera 24-48h para propagación DNS
-- Verifica los registros DNS en tu proveedor
+**Problema:** El build command no se ejecuta correctamente.
+
+**Solución:**
+```bash
+# Prueba localmente desde la raíz:
+cd flip-v2
+pnpm install --frozen-lockfile
+cd apps/landing
+pnpm build
+```
+
+### 4. Error: "TypeScript/ESLint Errors"
+
+**Problema:** Errores de tipo o lint bloquean el build.
+
+**Solución:** Ya está configurado en `next.config.js`:
+```js
+typescript: {
+  ignoreBuildErrors: true,
+},
+eslint: {
+  ignoreDuringBuilds: true,
+}
+```
 
 ---
 
-## ✅ Checklist Final
+## 📋 Checklist Pre-Deploy
 
-Antes de hacer el deploy, verifica:
+Antes de hacer deploy, verifica:
 
-- [ ] `apps/landing/package.json` tiene script `build`
+- [ ] `apps/landing/package.json` existe y tiene script `build`
 - [ ] `apps/landing/vercel.json` existe
+- [ ] `pnpm-workspace.yaml` está en la raíz del repo
+- [ ] `pnpm-lock.yaml` está commiteado
+- [ ] El build funciona localmente: `cd apps/landing && pnpm build`
 - [ ] Root Directory en Vercel es `apps/landing`
-- [ ] Variables de entorno configuradas
-- [ ] Dominio `flip.org.pe` agregado en Vercel
-- [ ] DNS configurados en el proveedor
+- [ ] Node version es 20.x
+
+---
+
+## 🎯 Configuración de Dominios
+
+### Dominio Principal: flip.org.pe
+
+1. Ve a **Settings** → **Domains** en Vercel
+2. Agrega `flip.org.pe`
+3. Configura DNS en tu proveedor:
+
+```
+Type: A
+Name: @
+Value: 76.76.21.21 (IP de Vercel)
+
+Type: CNAME
+Name: www
+Value: cname.vercel-dns.com
+```
+
+### Subdominios
+
+- `app.flip.org.pe` → Proyecto `flip-web` (Dashboard)
+- `flip.org.pe` → Proyecto `flip-landing` (Landing)
+
+---
+
+## 🔄 Workflow de Desarrollo
+
+### Desarrollo Local
+
+```bash
+# Desde la raíz del proyecto
+cd apps/landing
+pnpm dev
+```
+
+### Build Local
+
+```bash
+cd apps/landing
+pnpm build
+pnpm start
+```
+
+### Deploy a Vercel
+
+```bash
+git add .
+git commit -m "Update landing"
+git push origin master
+```
+
+Vercel detecta el push y hace deploy automáticamente.
+
+---
+
+## 🐛 Debugging
+
+### Ver Logs de Build
+
+1. Ve a tu proyecto en Vercel Dashboard
+2. Click en el deployment fallido
+3. Ve a **"Build Logs"**
+4. Busca el error específico
+
+### Errores Comunes en Logs
+
+**"pnpm: command not found"**
+- Vercel debe detectar pnpm automáticamente
+- Si no, agrega `"packageManager": "pnpm@9.0.0"` en package.json
+
+**"Cannot find module"**
+- Verifica que todas las dependencias estén en package.json
+- Ejecuta `pnpm install` localmente y commitea el lock file
+
+**"Build exceeded maximum duration"**
+- El build tarda más de 45 minutos (límite de Vercel Free)
+- Optimiza el build o upgrade a plan Pro
+
+---
+
+## ✅ Verificación Post-Deploy
+
+Después del deploy exitoso:
+
+1. [ ] El sitio carga en la URL de Vercel (*.vercel.app)
+2. [ ] No hay errores en la consola del navegador
+3. [ ] Todas las páginas funcionan correctamente
+4. [ ] Las imágenes y assets cargan
+5. [ ] El dominio custom está configurado (si aplica)
 
 ---
 
 ## 📞 Soporte
 
-Si tienes problemas:
-1. Revisa los logs de build en Vercel
-2. Verifica que el build funcione localmente
-3. Compara con la configuración de `apps/web`
+Si sigues teniendo problemas:
+
+1. **Revisa los logs de build** en Vercel Dashboard
+2. **Prueba el build localmente** con los mismos comandos
+3. **Compara con apps/web** que ya está funcionando
+4. **Verifica la configuración** de Root Directory
+
+### Comandos de Diagnóstico
+
+```bash
+# Verificar estructura del monorepo
+ls -la apps/
+
+# Verificar pnpm workspace
+cat pnpm-workspace.yaml
+
+# Probar build completo
+cd apps/landing
+pnpm install
+pnpm build
+
+# Ver output del build
+ls -la .next/
+```
+
+---
+
+## 🎉 Deploy Exitoso
+
+Una vez que el deploy funcione:
+
+- ✅ Landing page disponible en Vercel URL
+- ✅ Builds automáticos en cada push
+- ✅ Preview deployments en cada PR
+- ✅ Dominio custom configurado (opcional)
+
+**URL de ejemplo:** https://flip-landing.vercel.app
