@@ -1,74 +1,47 @@
 ---
 import '../styles/global.css';
+import { db } from '../lib/db';
+import { changelog } from '../lib/schema';
+import { desc, eq } from 'drizzle-orm';
 
-const versions = [
-  {
-    version: "2.6.0",
-    date: "28 de marzo, 2026",
-    title: "Optimización de Rendimiento",
-    improvements: [
-      "Carga 40% más rápida en vista móvil de reservaciones",
-      "Búsqueda ampliada en personal: ahora incluye teléfono y rol",
-      "Reducción de 20-23% en tamaño de páginas principales",
-      "Animaciones de carga más fluidas en todas las listas",
-      "Índices de base de datos para búsquedas instantáneas"
-    ],
-    fixes: [
-      "Corregido solapamiento en registro inicial desde móvil",
-      "Solucionado error de colores en configuración de categorías",
-      "Validación mejorada en plantillas de recursos"
-    ]
-  },
-  {
-    version: "2.5.0",
-    date: "20 de marzo, 2026",
-    title: "Actualización Tecnológica Mayor",
-    improvements: [
-      "Migración a Next.js 15 para mejor rendimiento",
-      "Actualización a React 19 con nuevas capacidades",
-      "Sistema de caché optimizado para consultas frecuentes",
-      "Mejoras en velocidad de carga de componentes"
-    ],
-    fixes: [
-      "Actualización de sistema de consultas al servidor",
-      "Corrección en rutas de autenticación"
-    ]
-  },
-  {
-    version: "2.4.0",
-    date: "15 de febrero, 2026",
-    title: "Renovación del Módulo de Préstamos",
-    improvements: [
-      "Interfaz rediseñada más intuitiva para préstamos",
-      "Historial completo de préstamos por docente y recurso",
-      "Notificaciones automáticas de devoluciones pendientes",
-      "Búsqueda avanzada por múltiples criterios",
-      "Filtros por estado, fecha y tipo de recurso"
-    ]
-  },
-  {
-    version: "2.3.0",
-    date: "1 de febrero, 2026",
-    title: "Módulo de Reuniones Pedagógicas",
-    improvements: [
-      "Sistema completo para planificar reuniones de coordinación",
-      "Registro de acuerdos con seguimiento de cumplimiento",
-      "Asignación de tareas a docentes con fechas límite",
-      "Integración con calendario de reservaciones del AIP"
-    ]
-  },
-  {
-    version: "2.2.0",
-    date: "15 de enero, 2026",
-    title: "Mejoras en Gestión de Inventario",
-    improvements: [
-      "Códigos QR para identificación rápida de recursos",
-      "Estados de conservación con sistema de estrellas",
-      "Historial de mantenimiento por equipo",
-      "Alertas de equipos que requieren mantenimiento"
-    ]
-  }
-];
+let versions = [];
+
+try {
+  versions = await db
+    .select()
+    .from(changelog)
+    .where(eq(changelog.published, true))
+    .orderBy(desc(changelog.sortOrder));
+} catch (error) {
+  console.error('Error loading changelog:', error);
+  // Fallback data si falla la conexión
+  versions = [
+    {
+      version: "2.6.0",
+      date: new Date("2026-03-28"),
+      title: "Optimización de Rendimiento",
+      improvements: [
+        "Carga 40% más rápida en vista móvil de reservaciones",
+        "Búsqueda ampliada en personal: ahora incluye teléfono y rol",
+        "Reducción de 20-23% en tamaño de páginas principales"
+      ],
+      fixes: [
+        "Corregido solapamiento en registro inicial desde móvil",
+        "Solucionado error de colores en configuración de categorías"
+      ]
+    }
+  ];
+}
+
+// Format dates
+const formattedVersions = versions.map(v => ({
+  ...v,
+  dateFormatted: new Date(v.date).toLocaleDateString('es-ES', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })
+}));
 ---
 
 <!doctype html>
@@ -141,17 +114,17 @@ const versions = [
       <section class="px-6">
         <div class="container mx-auto max-w-5xl space-y-16">
           
-          {versions.map((v) => (
+          {formattedVersions.map((v) => (
             <article class="border-l-2 border-gray-200 pl-8 hover:border-blue-600 transition-colors">
               
               <div class="flex items-baseline gap-6 mb-6">
                 <span class="text-sm font-mono text-blue-600 font-semibold">{v.version}</span>
-                <span class="text-sm text-gray-500">{v.date}</span>
+                <span class="text-sm text-gray-500">{v.dateFormatted}</span>
               </div>
 
               <h2 class="text-4xl font-semibold tracking-tight mb-8">{v.title}</h2>
 
-              {v.improvements && (
+              {v.improvements && v.improvements.length > 0 && (
                 <div class="mb-8">
                   <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">Mejoras ({v.improvements.length})</h3>
                   <ul class="space-y-3">
@@ -165,7 +138,7 @@ const versions = [
                 </div>
               )}
 
-              {v.fixes && (
+              {v.fixes && v.fixes.length > 0 && (
                 <div>
                   <h3 class="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">Correcciones ({v.fixes.length})</h3>
                   <ul class="space-y-3">

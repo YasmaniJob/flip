@@ -703,3 +703,22 @@ export const meetingTasksRelations = relations(meetingTasks, ({ one }) => ({
         references: [staff.id],
     }),
 }));
+
+// ============================================
+// CHANGELOG (Public - for landing page)
+// ============================================
+export const changelog = pgTable('changelog', {
+    id: text('id').primaryKey(),
+    version: text('version').notNull().unique(),
+    title: text('title').notNull(),
+    date: timestamp('date').notNull(),
+    improvements: jsonb('improvements').$type<string[]>(),
+    fixes: jsonb('fixes').$type<string[]>(),
+    published: boolean('published').default(true),
+    sortOrder: integer('sort_order').default(0),
+    createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+    versionIdx: index('idx_changelog_version').on(table.version),
+    publishedIdx: index('idx_changelog_published').on(table.published),
+    sortOrderIdx: index('idx_changelog_sort').on(table.sortOrder),
+}));
