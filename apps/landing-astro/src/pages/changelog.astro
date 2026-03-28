@@ -4,55 +4,68 @@ import '../styles/global.css';
 const versions = [
   {
     version: "2.6.0",
-    date: "Mar 28, 2026",
-    title: "Optimización de Performance",
+    date: "28 de marzo, 2026",
+    title: "Optimización de Rendimiento",
     improvements: [
-      "Lazy loading en componentes pesados de Staff, Inventario y Reservaciones",
-      "React.memo y useDeferredValue para búsquedas fluidas",
-      "Reducción de bundle size en 20-23% en páginas principales",
-      "Skeleton loading animado en todas las listas",
-      "Índices de base de datos para búsquedas optimizadas"
+      "Carga 40% más rápida en vista móvil de reservaciones",
+      "Búsqueda ampliada en personal: ahora incluye teléfono y rol",
+      "Reducción de 20-23% en tamaño de páginas principales",
+      "Animaciones de carga más fluidas en todas las listas",
+      "Índices de base de datos para búsquedas instantáneas"
     ],
     fixes: [
-      "Corregido solapamiento en onboarding móvil",
-      "Fix de color duplicado en configuración de categorías",
-      "Validación de arrays en templates"
+      "Corregido solapamiento en registro inicial desde móvil",
+      "Solucionado error de colores en configuración de categorías",
+      "Validación mejorada en plantillas de recursos"
     ]
   },
   {
     version: "2.5.0",
-    date: "Mar 20, 2026",
-    title: "Next.js 15 y React 19",
+    date: "20 de marzo, 2026",
+    title: "Actualización Tecnológica Mayor",
     improvements: [
-      "Actualización a Next.js 15 con App Router",
-      "Migración a React 19 con nuevas características",
-      "React Query v5 para gestión de estado del servidor",
-      "Mejoras en Server Components y streaming"
+      "Migración a Next.js 15 para mejor rendimiento",
+      "Actualización a React 19 con nuevas capacidades",
+      "Sistema de caché optimizado para consultas frecuentes",
+      "Mejoras en velocidad de carga de componentes"
     ],
     fixes: [
-      "Removido onError deprecated de React Query",
-      "Fix de API routes con nueva autenticación"
+      "Actualización de sistema de consultas al servidor",
+      "Corrección en rutas de autenticación"
     ]
   },
   {
     version: "2.4.0",
-    date: "Feb 15, 2026",
-    title: "Refactor de Préstamos",
+    date: "15 de febrero, 2026",
+    title: "Renovación del Módulo de Préstamos",
     improvements: [
-      "Nueva interfaz de préstamos más intuitiva",
-      "Historial completo de transacciones",
-      "Notificaciones automáticas de devoluciones",
-      "Búsqueda avanzada por múltiples criterios"
+      "Interfaz rediseñada más intuitiva para préstamos",
+      "Historial completo de préstamos por docente y recurso",
+      "Notificaciones automáticas de devoluciones pendientes",
+      "Búsqueda avanzada por múltiples criterios",
+      "Filtros por estado, fecha y tipo de recurso"
     ]
   },
   {
     version: "2.3.0",
-    date: "Feb 1, 2026",
-    title: "Módulo de Reuniones",
+    date: "1 de febrero, 2026",
+    title: "Módulo de Reuniones Pedagógicas",
     improvements: [
-      "Sistema completo de gestión de reuniones",
-      "Acuerdos y tareas con seguimiento",
-      "Integración con calendario de reservaciones"
+      "Sistema completo para planificar reuniones de coordinación",
+      "Registro de acuerdos con seguimiento de cumplimiento",
+      "Asignación de tareas a docentes con fechas límite",
+      "Integración con calendario de reservaciones del AIP"
+    ]
+  },
+  {
+    version: "2.2.0",
+    date: "15 de enero, 2026",
+    title: "Mejoras en Gestión de Inventario",
+    improvements: [
+      "Códigos QR para identificación rápida de recursos",
+      "Estados de conservación con sistema de estrellas",
+      "Historial de mantenimiento por equipo",
+      "Alertas de equipos que requieren mantenimiento"
     ]
   }
 ];
@@ -83,7 +96,7 @@ const versions = [
         <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
           <a href="/" class="hover:text-blue-600 transition">Inicio</a>
           <a href="/pricing" class="hover:text-blue-600 transition">Precios</a>
-          <a href="/changelog" class="text-blue-600">Changelog</a>
+          <a href="/changelog" class="text-blue-600">Novedades</a>
         </nav>
 
         <a href="https://flip-v2-web.vercel.app/" class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 transition">
@@ -118,7 +131,7 @@ const versions = [
           <div class="bg-blue-50 border border-blue-200 rounded-2xl p-6 flex items-start gap-4">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgb(37, 99, 235)" stroke-width="2" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
             <p class="text-sm text-gray-700">
-              Las nuevas versiones se despliegan gradualmente y pueden tardar algunos días en llegar a todos los usuarios.
+              Las actualizaciones se despliegan automáticamente. Todas las mejoras están disponibles inmediatamente para todos los usuarios.
             </p>
           </div>
         </div>

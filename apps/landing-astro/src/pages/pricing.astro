@@ -1,57 +1,95 @@
 ---
 import '../styles/global.css';
 
+// Cálculos basados en S/ 39 anuales
+// Mensual: 39/12 = 3.25 → S/ 5 (con margen)
+// Bimestral: 39/6 = 6.5 → S/ 9 (con margen)
+// Trimestral: 39/4 = 9.75 → S/ 12 (con margen)
+// Anual: S/ 39 (mejor precio)
+
 const plans = [
   {
-    name: "Básico",
-    price: "$0",
-    period: "Gratis para siempre",
-    description: "Perfecto para instituciones pequeñas que están comenzando",
+    name: "Prueba Gratuita",
+    price: "S/ 0",
+    period: "15 días",
+    description: "Prueba todas las funcionalidades sin compromiso",
     features: [
-      "Hasta 100 recursos en inventario",
+      "Acceso completo por 15 días",
+      "Inventario ilimitado",
+      "Préstamos y reservaciones",
+      "Todos los módulos incluidos",
+      "Sin tarjeta de crédito"
+    ],
+    cta: "Comenzar prueba",
+    highlighted: false,
+    badge: "Recomendado para probar"
+  },
+  {
+    name: "Mensual",
+    price: "S/ 5",
+    period: "por mes",
+    savings: null,
+    description: "Flexibilidad mes a mes para tu AIP",
+    features: [
+      "Inventario ilimitado",
+      "Préstamos sin límite",
       "Reservaciones ilimitadas",
-      "3 usuarios administradores",
+      "Gestión de personal",
+      "Reuniones y acuerdos",
+      "Reportes y analytics",
       "Soporte por email",
       "Actualizaciones automáticas"
     ],
-    cta: "Comenzar gratis",
+    cta: "Suscribirse",
     highlighted: false
   },
   {
-    name: "Profesional",
-    price: "$49",
-    period: "por mes",
-    description: "Para instituciones que necesitan funcionalidades avanzadas",
+    name: "Bimestral",
+    price: "S/ 9",
+    period: "cada 2 meses",
+    savings: "Ahorra S/ 1",
+    description: "Paga cada dos meses y ahorra",
     features: [
-      "Recursos ilimitados",
-      "Usuarios ilimitados",
-      "Módulo de préstamos completo",
-      "Analytics y reportes avanzados",
-      "Gestión de reuniones y acuerdos",
-      "Multi-institución",
+      "Todo lo del plan Mensual",
+      "Ahorro de S/ 1 cada bimestre",
+      "Facturación cada 2 meses",
+      "Soporte prioritario"
+    ],
+    cta: "Suscribirse",
+    highlighted: false
+  },
+  {
+    name: "Trimestral",
+    price: "S/ 12",
+    period: "cada 3 meses",
+    savings: "Ahorra S/ 3",
+    description: "Mayor ahorro con pago trimestral",
+    features: [
+      "Todo lo del plan Mensual",
+      "Ahorro de S/ 3 cada trimestre",
+      "Facturación cada 3 meses",
+      "Soporte prioritario"
+    ],
+    cta: "Suscribirse",
+    highlighted: false
+  },
+  {
+    name: "Anual",
+    price: "S/ 39",
+    period: "por año",
+    savings: "Ahorra S/ 21",
+    description: "El mejor precio para tu institución",
+    features: [
+      "Todo lo del plan Mensual",
+      "Ahorro de S/ 21 al año",
+      "Equivalente a S/ 3.25/mes",
+      "Facturación anual única",
       "Soporte prioritario 24/7",
       "Capacitación incluida"
     ],
-    cta: "Comenzar prueba",
-    highlighted: true
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    period: "contactar ventas",
-    description: "Soluciones personalizadas para redes educativas grandes",
-    features: [
-      "Todo lo de Profesional",
-      "Multi-sede ilimitado",
-      "API REST completa",
-      "SSO y autenticación personalizada",
-      "SLA garantizado",
-      "Gerente de cuenta dedicado",
-      "Implementación asistida",
-      "Personalización de marca"
-    ],
-    cta: "Contactar ventas",
-    highlighted: false
+    cta: "Suscribirse",
+    highlighted: true,
+    badge: "Más popular"
   }
 ];
 ---
@@ -62,7 +100,7 @@ const plans = [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Precios - Flip</title>
-    <meta name="description" content="Planes y precios de Flip. Comienza gratis o elige el plan que mejor se adapte a tu institución." />
+    <meta name="description" content="Planes accesibles para Aulas de Innovación Pedagógica. Desde S/ 5 mensuales o S/ 39 anuales. Prueba gratis 15 días." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -82,11 +120,11 @@ const plans = [
         <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
           <a href="/" class="hover:text-blue-600 transition">Inicio</a>
           <a href="/pricing" class="text-blue-600">Precios</a>
-          <a href="/changelog" class="hover:text-blue-600 transition">Changelog</a>
+          <a href="/changelog" class="hover:text-blue-600 transition">Novedades</a>
         </nav>
 
         <a href="https://flip-v2-web.vercel.app/" class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 transition">
-          Abrir App
+          Acceder
         </a>
       </div>
     </header>
@@ -101,60 +139,78 @@ const plans = [
           </div>
           
           <h1 class="text-6xl md:text-8xl font-light tracking-tight mb-6 leading-none">
-            Simple <span class="font-semibold">pricing</span>
+            Precios <span class="font-semibold">accesibles</span>
           </h1>
           
           <p class="text-xl text-gray-600 font-light max-w-2xl mx-auto">
-            Elige el plan que mejor se adapte a las necesidades de tu institución educativa
+            Elige el plan de pago que mejor se adapte al presupuesto de tu Aula de Innovación Pedagógica
           </p>
         </div>
       </section>
 
-      <!-- Pricing Cards -->
-      <section class="px-6">
+      <!-- Pricing Toggle -->
+      <section class="px-6 mb-16">
         <div class="container mx-auto max-w-7xl">
-          <div class="grid md:grid-cols-3 gap-8">
+          <div class="flex justify-center">
+            <div class="inline-flex items-center gap-2 p-1 bg-gray-100 rounded-full">
+              <button id="btn-subscription" class="px-6 py-2 rounded-full font-medium text-sm transition bg-white text-gray-900 shadow-sm">
+                Suscripción
+              </button>
+              <button id="btn-trial" class="px-6 py-2 rounded-full font-medium text-sm transition text-gray-600 hover:text-gray-900">
+                Prueba Gratis
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pricing Cards - Subscription -->
+      <section id="subscription-plans" class="px-6">
+        <div class="container mx-auto max-w-7xl">
+          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             
-            {plans.map((plan) => (
+            {plans.slice(1).map((plan) => (
               <div class={`relative bg-white rounded-3xl overflow-hidden transition-all duration-500 ${
                 plan.highlighted 
-                  ? 'border-2 border-blue-600 shadow-2xl scale-105' 
+                  ? 'border-2 border-blue-600 shadow-2xl md:scale-105' 
                   : 'border border-gray-200 hover:shadow-xl'
               }`}>
                 
-                {plan.highlighted && (
-                  <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-400 via-blue-600 to-blue-400"></div>
+                {plan.badge && (
+                  <div class="absolute top-4 right-4 px-3 py-1 bg-blue-600 text-white text-xs font-semibold rounded-full">
+                    {plan.badge}
+                  </div>
                 )}
 
-                <div class="p-10">
+                <div class="p-8">
                   
-                  <div class="mb-8">
-                    <h3 class="text-2xl font-semibold mb-2">{plan.name}</h3>
-                    <div class="flex items-baseline gap-2 mb-2">
-                      <span class="text-5xl font-light">{plan.price}</span>
-                      {plan.price !== "Custom" && <span class="text-gray-500 text-sm">{plan.period}</span>}
+                  <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-2">{plan.name}</h3>
+                    <div class="flex items-baseline gap-1 mb-1">
+                      <span class="text-4xl font-light">{plan.price}</span>
                     </div>
-                    {plan.price === "Custom" && (
-                      <span class="text-gray-500 text-sm">{plan.period}</span>
+                    <span class="text-gray-500 text-sm">{plan.period}</span>
+                    {plan.savings && (
+                      <div class="mt-2 text-green-600 text-sm font-medium">{plan.savings}</div>
                     )}
                   </div>
 
-                  <p class="text-gray-600 mb-8 leading-relaxed font-light">
+                  <p class="text-gray-600 mb-6 leading-relaxed font-light text-sm">
                     {plan.description}
                   </p>
 
-                  <ul class="space-y-4 mb-10">
+                  <ul class="space-y-3 mb-8">
                     {plan.features.map((feature) => (
-                      <li class="flex items-start gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgb(34, 197, 94)" stroke-width="2.5" class="flex-shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      <li class="flex items-start gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgb(34, 197, 94)" stroke-width="2.5" class="flex-shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"/></svg>
                         <span class="text-gray-700 text-sm leading-relaxed">{feature}</span>
                       </li>
                     ))}
                   </ul>
 
                   <a 
-                    href={plan.highlighted ? "https://flip-v2-web.vercel.app/" : "#"}
-                    class={`block w-full py-4 text-center font-medium rounded-full transition-all ${
+                    href={appUrl}
+                    class={`block w-full py-3 text-center font-medium rounded-full transition-all text-sm ${
                       plan.highlighted
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'border border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
@@ -171,6 +227,98 @@ const plans = [
         </div>
       </section>
 
+      <!-- Trial Plan -->
+      <section id="trial-plan" class="px-6 hidden">
+        <div class="container mx-auto max-w-2xl">
+          <div class="bg-white border-2 border-blue-600 rounded-3xl p-12 text-center shadow-2xl">
+            
+            <div class="inline-block px-4 py-1 bg-blue-100 text-blue-600 text-xs font-semibold rounded-full mb-6">
+              Sin compromiso
+            </div>
+
+            <h3 class="text-3xl font-semibold mb-4">Prueba Gratuita</h3>
+            
+            <div class="mb-6">
+              <div class="text-6xl font-light mb-2">15 días</div>
+              <div class="text-gray-600 font-light">Acceso completo gratis</div>
+            </div>
+
+            <p class="text-gray-600 mb-8 leading-relaxed font-light max-w-md mx-auto">
+              Explora todas las funcionalidades de Flip sin límites. No se requiere tarjeta de crédito.
+            </p>
+
+            <ul class="space-y-3 mb-10 text-left max-w-md mx-auto">
+              {plans[0].features.map((feature) => (
+                <li class="flex items-start gap-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgb(34, 197, 94)" stroke-width="2.5" class="flex-shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span class="text-gray-700 leading-relaxed">{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            <a href={appUrl} class="inline-block w-full max-w-md py-4 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition">
+              Comenzar prueba gratuita
+            </a>
+
+            <p class="text-xs text-gray-500 mt-6">
+              Al finalizar la prueba, elige el plan que prefieras
+            </p>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- Comparison Table -->
+      <section class="px-6 mt-32">
+        <div class="container mx-auto max-w-5xl">
+          <h2 class="text-4xl font-semibold tracking-tight mb-12 text-center">Comparación de planes</h2>
+          
+          <div class="bg-white border border-gray-200 rounded-3xl overflow-hidden">
+            <table class="w-full">
+              <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th class="text-left p-6 font-semibold text-gray-900">Plan</th>
+                  <th class="text-center p-6 font-semibold text-gray-900">Precio</th>
+                  <th class="text-center p-6 font-semibold text-gray-900">Ahorro</th>
+                  <th class="text-center p-6 font-semibold text-gray-900">Costo/mes</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr class="hover:bg-gray-50 transition">
+                  <td class="p-6 font-medium">Mensual</td>
+                  <td class="p-6 text-center">S/ 5</td>
+                  <td class="p-6 text-center text-gray-400">—</td>
+                  <td class="p-6 text-center">S/ 5.00</td>
+                </tr>
+                <tr class="hover:bg-gray-50 transition">
+                  <td class="p-6 font-medium">Bimestral</td>
+                  <td class="p-6 text-center">S/ 9</td>
+                  <td class="p-6 text-center text-green-600 font-medium">S/ 1</td>
+                  <td class="p-6 text-center">S/ 4.50</td>
+                </tr>
+                <tr class="hover:bg-gray-50 transition">
+                  <td class="p-6 font-medium">Trimestral</td>
+                  <td class="p-6 text-center">S/ 12</td>
+                  <td class="p-6 text-center text-green-600 font-medium">S/ 3</td>
+                  <td class="p-6 text-center">S/ 4.00</td>
+                </tr>
+                <tr class="bg-blue-50 hover:bg-blue-100 transition">
+                  <td class="p-6 font-semibold">Anual</td>
+                  <td class="p-6 text-center font-semibold">S/ 39</td>
+                  <td class="p-6 text-center text-green-600 font-semibold">S/ 21</td>
+                  <td class="p-6 text-center font-semibold">S/ 3.25</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="text-center text-sm text-gray-500 mt-6">
+            Todos los planes incluyen las mismas funcionalidades. La diferencia está en el período de pago y el ahorro.
+          </p>
+        </div>
+      </section>
+
+
       <!-- FAQ Section -->
       <section class="px-6 mt-32">
         <div class="container mx-auto max-w-4xl">
@@ -180,30 +328,37 @@ const plans = [
           <div class="space-y-8">
             
             <div class="border-b border-gray-200 pb-8">
-              <h3 class="text-xl font-semibold mb-3">¿Puedo cambiar de plan en cualquier momento?</h3>
+              <h3 class="text-xl font-semibold mb-3">¿Cómo funciona la prueba gratuita?</h3>
               <p class="text-gray-600 leading-relaxed font-light">
-                Sí, puedes actualizar o degradar tu plan en cualquier momento. Los cambios se aplican inmediatamente y se prorratean según corresponda.
+                Tienes 15 días de acceso completo a todas las funcionalidades sin necesidad de ingresar tarjeta de crédito. Al finalizar, elige el plan que prefieras.
+              </p>
+            </div>
+
+            <div class="border-b border-gray-200 pb-8">
+              <h3 class="text-xl font-semibold mb-3">¿Puedo cambiar de plan después?</h3>
+              <p class="text-gray-600 leading-relaxed font-light">
+                Sí, puedes cambiar entre planes en cualquier momento. Si cambias a un plan con mayor período, se ajusta proporcionalmente el pago.
               </p>
             </div>
 
             <div class="border-b border-gray-200 pb-8">
               <h3 class="text-xl font-semibold mb-3">¿Qué métodos de pago aceptan?</h3>
               <p class="text-gray-600 leading-relaxed font-light">
-                Aceptamos tarjetas de crédito/débito (Visa, Mastercard, American Express) y transferencias bancarias para planes Enterprise.
+                Aceptamos transferencias bancarias, Yape, Plin y tarjetas de crédito/débito. El pago es por adelantado según el plan elegido.
               </p>
             </div>
 
             <div class="border-b border-gray-200 pb-8">
-              <h3 class="text-xl font-semibold mb-3">¿Ofrecen descuentos para múltiples instituciones?</h3>
+              <h3 class="text-xl font-semibold mb-3">¿Hay descuentos para múltiples instituciones?</h3>
               <p class="text-gray-600 leading-relaxed font-light">
-                Sí, ofrecemos descuentos especiales para redes educativas con múltiples sedes. Contacta a nuestro equipo de ventas para más información.
+                Sí, ofrecemos descuentos especiales para redes educativas o UGEL que deseen implementar Flip en múltiples instituciones. Contáctanos para más información.
               </p>
             </div>
 
             <div class="pb-8">
-              <h3 class="text-xl font-semibold mb-3">¿Hay período de prueba?</h3>
+              <h3 class="text-xl font-semibold mb-3">¿Qué incluyen todos los planes?</h3>
               <p class="text-gray-600 leading-relaxed font-light">
-                El plan Básico es gratis para siempre. Para el plan Profesional, ofrecemos 14 días de prueba sin necesidad de tarjeta de crédito.
+                Todos los planes de suscripción incluyen exactamente las mismas funcionalidades: inventario ilimitado, préstamos, reservaciones, gestión de personal, reuniones, reportes y soporte. La única diferencia es el período de pago y el ahorro.
               </p>
             </div>
 
@@ -226,6 +381,33 @@ const plans = [
         </div>
       </div>
     </footer>
+
+    <script>
+      const btnSubscription = document.getElementById('btn-subscription');
+      const btnTrial = document.getElementById('btn-trial');
+      const subscriptionPlans = document.getElementById('subscription-plans');
+      const trialPlan = document.getElementById('trial-plan');
+
+      btnSubscription?.addEventListener('click', () => {
+        btnSubscription.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+        btnSubscription.classList.remove('text-gray-600');
+        btnTrial?.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+        btnTrial?.classList.add('text-gray-600');
+        
+        subscriptionPlans?.classList.remove('hidden');
+        trialPlan?.classList.add('hidden');
+      });
+
+      btnTrial?.addEventListener('click', () => {
+        btnTrial.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+        btnTrial.classList.remove('text-gray-600');
+        btnSubscription?.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+        btnSubscription?.classList.add('text-gray-600');
+        
+        subscriptionPlans?.classList.add('hidden');
+        trialPlan?.classList.remove('hidden');
+      });
+    </script>
 
   </body>
 </html>

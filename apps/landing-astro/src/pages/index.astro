@@ -8,8 +8,8 @@ const appUrl = "https://flip-v2-web.vercel.app/";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Flip - Gestión Inteligente de Recursos Educativos</title>
-    <meta name="description" content="Optimiza el inventario, préstamos y reuniones de tu institución educativa con Flip." />
+    <title>Flip - Plataforma Digital para Aulas de Innovación Pedagógica</title>
+    <meta name="description" content="Optimiza la gestión de tu Aula de Innovación Pedagógica. Herramienta digital para profesores AIP que facilita el inventario, préstamos y transversalización digital." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -27,21 +27,21 @@ const appUrl = "https://flip-v2-web.vercel.app/";
         </div>
         
         <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-          <a href="#features" class="hover:text-blue-600 transition">Características</a>
-          <a href="#cases" class="hover:text-blue-600 transition">Casos de Uso</a>
+          <a href="#features" class="hover:text-blue-600 transition">Funcionalidades</a>
+          <a href="#roles" class="hover:text-blue-600 transition">Perfiles</a>
           <a href="/pricing" class="hover:text-blue-600 transition">Precios</a>
-          <a href="/changelog" class="hover:text-blue-600 transition">Changelog</a>
+          <a href="/changelog" class="hover:text-blue-600 transition">Novedades</a>
         </nav>
 
         <a href={appUrl} class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 transition">
-          Abrir App
+          Acceder
         </a>
       </div>
     </header>
 
     <main class="pt-16">
       
-      <!-- Hero Section - Antigravity Style -->
+      <!-- Hero Section -->
       <section class="min-h-screen flex flex-col items-center justify-center px-6 py-32 relative overflow-hidden">
         
         <!-- Animated Background Icons -->
@@ -55,9 +55,6 @@ const appUrl = "https://flip-v2-web.vercel.app/";
           <div class="absolute bottom-40 left-1/4 animate-float-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20M2 12h20"/></svg>
           </div>
-          <div class="absolute top-1/3 right-1/4 animate-float-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
-          </div>
         </div>
 
         <div class="max-w-5xl mx-auto text-center relative z-10">
@@ -67,85 +64,106 @@ const appUrl = "https://flip-v2-web.vercel.app/";
           </div>
 
           <h1 class="text-7xl md:text-9xl font-light tracking-tight mb-8 leading-none">
-            Experience liftoff<br/>
-            <span class="font-semibold">with Flip</span>
+            Gestión digital<br/>
+            <span class="font-semibold">para tu AIP</span>
           </h1>
           
           <p class="text-xl md:text-2xl text-gray-600 mb-16 max-w-3xl mx-auto font-light">
-            La plataforma de gestión educativa diseñada para coordinadores que exigen eficiencia absoluta
+            La plataforma diseñada para profesores de Aulas de Innovación Pedagógica que optimiza la gestión de recursos y potencia la transversalización digital
           </p>
 
           <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
             <a href={appUrl} class="px-8 py-4 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition text-base">
-              Abrir Flip
+              Probar 15 días gratis
             </a>
-            <a href="#cases" class="px-8 py-4 border border-gray-300 text-gray-700 font-medium rounded-full hover:border-gray-400 transition text-base flex items-center gap-2">
-              Explorar casos de uso
+            <a href="#roles" class="px-8 py-4 border border-gray-300 text-gray-700 font-medium rounded-full hover:border-gray-400 transition text-base flex items-center gap-2">
+              Conocer perfiles
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 3 19 12 5 21 5 3"/></svg>
             </a>
           </div>
 
-          <!-- Floating Icons Animation -->
+          <!-- Floating Keywords -->
           <div class="mt-24 flex items-center justify-center gap-4 flex-wrap opacity-40">
-            <span class="text-sm font-mono animate-slide-right">code</span>
-            <span class="text-sm font-mono animate-slide-left">refresh</span>
-            <span class="text-sm font-mono animate-slide-right">dashboard</span>
-            <span class="text-sm font-mono animate-slide-left">search</span>
-            <span class="text-sm font-mono animate-slide-right">folder</span>
-            <span class="text-sm font-mono animate-slide-left">terminal</span>
-            <span class="text-sm font-mono animate-slide-right">data</span>
-            <span class="text-sm font-mono animate-slide-left">check</span>
+            <span class="text-sm font-mono animate-slide-right">inventario</span>
+            <span class="text-sm font-mono animate-slide-left">préstamos</span>
+            <span class="text-sm font-mono animate-slide-right">reservas</span>
+            <span class="text-sm font-mono animate-slide-left">reportes</span>
+            <span class="text-sm font-mono animate-slide-right">reuniones</span>
+            <span class="text-sm font-mono animate-slide-left">analytics</span>
           </div>
         </div>
       </section>
 
-      <!-- Core Features - Clean Grid -->
+      <!-- Core Features -->
       <section id="features" class="py-32 px-6 bg-gray-50">
         <div class="container mx-auto max-w-7xl">
           
-          <div class="grid md:grid-cols-2 gap-24 items-start">
+          <div class="text-center mb-20">
+            <h2 class="text-5xl md:text-6xl font-light tracking-tight mb-6">
+              Todo lo que necesitas<br/>
+              <span class="font-semibold">en una plataforma</span>
+            </h2>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-16">
             
-            <!-- Feature 1 -->
             <div class="space-y-6">
               <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
               </div>
-              <h3 class="text-4xl font-semibold tracking-tight">Inventario Centralizado</h3>
+              <h3 class="text-3xl font-semibold tracking-tight">Inventario Inteligente</h3>
               <p class="text-lg text-gray-600 leading-relaxed font-light">
-                Gestiona todos los recursos de tu institución desde una interfaz unificada. Control de stock, mantenimiento y trazabilidad completa.
+                Registra y controla todos los recursos tecnológicos del AIP: laptops, tablets, proyectores, kits de robótica. Con códigos patrimoniales, estados de conservación y trazabilidad completa.
               </p>
             </div>
 
-            <!-- Feature 2 -->
+            <div class="space-y-6">
+              <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <h3 class="text-3xl font-semibold tracking-tight">Préstamos Ágiles</h3>
+              <p class="text-lg text-gray-600 leading-relaxed font-light">
+                Gestiona préstamos de equipos a docentes con un sistema fluido. Registro rápido, historial completo, notificaciones automáticas y control de devoluciones.
+              </p>
+            </div>
+
             <div class="space-y-6">
               <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
               </div>
-              <h3 class="text-4xl font-semibold tracking-tight">Reservaciones Inteligentes</h3>
+              <h3 class="text-3xl font-semibold tracking-tight">Reservaciones sin Conflictos</h3>
               <p class="text-lg text-gray-600 leading-relaxed font-light">
-                Sistema de reservas que previene conflictos automáticamente. Calendario visual optimizado para móvil y desktop.
+                Calendario visual para reservar el AIP y equipos. Prevención automática de conflictos, vista semanal optimizada para móvil, y confirmaciones instantáneas.
               </p>
             </div>
 
-            <!-- Feature 3 -->
             <div class="space-y-6">
               <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               </div>
-              <h3 class="text-4xl font-semibold tracking-tight">Gestión de Personal</h3>
+              <h3 class="text-3xl font-semibold tracking-tight">Gestión de Personal</h3>
               <p class="text-lg text-gray-600 leading-relaxed font-light">
-                Administra docentes, coordinadores y personal. Búsqueda avanzada por múltiples criterios y roles personalizables.
+                Administra docentes y coordinadores con roles específicos. Búsqueda avanzada por nombre, DNI, email, teléfono, área y rol.
               </p>
             </div>
 
-            <!-- Feature 4 -->
+            <div class="space-y-6">
+              <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+              </div>
+              <h3 class="text-3xl font-semibold tracking-tight">Reuniones y Acuerdos</h3>
+              <p class="text-lg text-gray-600 leading-relaxed font-light">
+                Planifica reuniones pedagógicas, registra acuerdos y da seguimiento a tareas. Mantén la coordinación institucional organizada.
+              </p>
+            </div>
+
             <div class="space-y-6">
               <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>
               </div>
-              <h3 class="text-4xl font-semibold tracking-tight">Analytics en Tiempo Real</h3>
+              <h3 class="text-3xl font-semibold tracking-tight">Reportes y Analytics</h3>
               <p class="text-lg text-gray-600 leading-relaxed font-light">
-                Métricas y reportes automáticos. Visualiza el uso de recursos, tendencias y toma decisiones basadas en datos.
+                Visualiza métricas de uso de recursos, tendencias de préstamos, y genera reportes para la dirección. Decisiones basadas en datos reales.
               </p>
             </div>
 
@@ -154,60 +172,88 @@ const appUrl = "https://flip-v2-web.vercel.app/";
       </section>
 
 
-      <!-- Use Cases Section -->
-      <section id="cases" class="py-32 px-6">
+      <!-- Roles Section -->
+      <section id="roles" class="py-32 px-6">
         <div class="container mx-auto max-w-7xl">
           
           <div class="text-center mb-20">
             <h2 class="text-5xl md:text-7xl font-light tracking-tight mb-6">
-              Built for <span class="font-semibold">educators</span><br/>
-              for the digital era
+              Diseñado para<br/>
+              <span class="font-semibold">cada perfil educativo</span>
             </h2>
             <p class="text-xl text-gray-600 font-light max-w-3xl mx-auto">
-              Flip está diseñado para instituciones educativas que buscan modernizar su gestión operativa
+              Flip se adapta a las necesidades específicas de cada rol en tu institución educativa
             </p>
           </div>
 
-          <!-- Case Cards -->
+          <!-- Role Cards -->
           <div class="grid md:grid-cols-3 gap-8">
             
             <div class="group relative bg-white border border-gray-200 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500">
               <div class="aspect-video bg-gradient-to-br from-blue-50 to-blue-100 relative overflow-hidden">
                 <div class="absolute inset-0 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgb(37, 99, 235)" stroke-width="1.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgb(37, 99, 235)" stroke-width="1.5"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="4"/></svg>
                 </div>
                 <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </div>
               <div class="p-8">
                 <div class="inline-block w-1 h-8 bg-blue-600 mb-4 animate-blink"></div>
-                <h3 class="text-2xl font-semibold mb-3">Coordinador Académico</h3>
-                <p class="text-gray-600 leading-relaxed font-light">
-                  Gestiona aulas, equipos y reservaciones desde un dashboard centralizado
+                <h3 class="text-2xl font-semibold mb-3">Profesor AIP</h3>
+                <p class="text-gray-600 leading-relaxed font-light mb-6">
+                  Control total del Aula de Innovación Pedagógica
                 </p>
-                <div class="mt-6 flex items-center gap-2 text-blue-600 font-medium text-sm group-hover:gap-4 transition-all">
-                  <span>Ver caso</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 3 19 12 5 21 5 3"/></svg>
-                </div>
+                <ul class="space-y-2 text-sm text-gray-600">
+                  <li class="flex items-start gap-2">
+                    <span class="text-blue-600 mt-1">•</span>
+                    <span>Gestión completa de inventario y préstamos</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-blue-600 mt-1">•</span>
+                    <span>Administración de reservaciones</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-blue-600 mt-1">•</span>
+                    <span>Reportes y estadísticas de uso</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-blue-600 mt-1">•</span>
+                    <span>Coordinación con docentes</span>
+                  </li>
+                </ul>
               </div>
             </div>
 
             <div class="group relative bg-white border border-gray-200 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-500">
               <div class="aspect-video bg-gradient-to-br from-purple-50 to-purple-100 relative overflow-hidden">
                 <div class="absolute inset-0 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgb(147, 51, 234)" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="rgb(147, 51, 234)" stroke-width="1.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                 </div>
                 <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </div>
               <div class="p-8">
                 <div class="inline-block w-1 h-8 bg-purple-600 mb-4 animate-blink"></div>
                 <h3 class="text-2xl font-semibold mb-3">Docente</h3>
-                <p class="text-gray-600 leading-relaxed font-light">
-                  Solicita préstamos de equipos y reserva espacios en segundos desde tu móvil
+                <p class="text-gray-600 leading-relaxed font-light mb-6">
+                  Acceso rápido para integrar tecnología en tus clases
                 </p>
-                <div class="mt-6 flex items-center gap-2 text-purple-600 font-medium text-sm group-hover:gap-4 transition-all">
-                  <span>Ver caso</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 3 19 12 5 21 5 3"/></svg>
-                </div>
+                <ul class="space-y-2 text-sm text-gray-600">
+                  <li class="flex items-start gap-2">
+                    <span class="text-purple-600 mt-1">•</span>
+                    <span>Solicitud de préstamos en segundos</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-purple-600 mt-1">•</span>
+                    <span>Reserva de AIP desde móvil</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-purple-600 mt-1">•</span>
+                    <span>Historial de uso de recursos</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-purple-600 mt-1">•</span>
+                    <span>Notificaciones de disponibilidad</span>
+                  </li>
+                </ul>
               </div>
             </div>
 
@@ -220,14 +266,28 @@ const appUrl = "https://flip-v2-web.vercel.app/";
               </div>
               <div class="p-8">
                 <div class="inline-block w-1 h-8 bg-green-600 mb-4 animate-blink"></div>
-                <h3 class="text-2xl font-semibold mb-3">Director</h3>
-                <p class="text-gray-600 leading-relaxed font-light">
-                  Supervisa operaciones, genera reportes y optimiza el uso de recursos institucionales
+                <h3 class="text-2xl font-semibold mb-3">Administrador</h3>
+                <p class="text-gray-600 leading-relaxed font-light mb-6">
+                  Supervisión y control institucional completo
                 </p>
-                <div class="mt-6 flex items-center gap-2 text-green-600 font-medium text-sm group-hover:gap-4 transition-all">
-                  <span>Ver caso</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="5 3 19 12 5 21 5 3"/></svg>
-                </div>
+                <ul class="space-y-2 text-sm text-gray-600">
+                  <li class="flex items-start gap-2">
+                    <span class="text-green-600 mt-1">•</span>
+                    <span>Dashboard con métricas en tiempo real</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-green-600 mt-1">•</span>
+                    <span>Gestión de usuarios y permisos</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-green-600 mt-1">•</span>
+                    <span>Reportes para dirección</span>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-green-600 mt-1">•</span>
+                    <span>Configuración institucional</span>
+                  </li>
+                </ul>
               </div>
             </div>
 
@@ -241,14 +301,12 @@ const appUrl = "https://flip-v2-web.vercel.app/";
           <div class="relative group">
             <div class="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl overflow-hidden border border-gray-200 shadow-2xl">
               <div class="p-8 h-full flex flex-col">
-                <!-- Browser Chrome -->
                 <div class="flex items-center gap-2 mb-6">
                   <div class="w-3 h-3 rounded-full bg-red-400"></div>
                   <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
                   <div class="w-3 h-3 rounded-full bg-green-400"></div>
                 </div>
                 
-                <!-- Dashboard Mockup -->
                 <div class="flex-1 bg-white rounded-2xl shadow-lg p-6 grid grid-cols-12 gap-4">
                   <div class="col-span-3 bg-gray-100 rounded-xl"></div>
                   <div class="col-span-9 space-y-4">
@@ -267,52 +325,63 @@ const appUrl = "https://flip-v2-web.vercel.app/";
         </div>
       </section>
 
-
-      <!-- Pricing Section -->
-      <section id="pricing" class="py-32 px-6 bg-gray-50">
-        <div class="container mx-auto max-w-7xl">
+      <!-- Benefits -->
+      <section class="py-32 px-6 bg-gray-50">
+        <div class="container mx-auto max-w-5xl">
+          <h2 class="text-4xl md:text-5xl font-light tracking-tight mb-16 text-center">
+            Potencia la <span class="font-semibold">transversalización digital</span>
+          </h2>
           
-          <div class="text-center mb-20">
-            <h2 class="text-5xl md:text-7xl font-light tracking-tight mb-6">
-              Available at <span class="font-semibold">no charge</span>
-            </h2>
-            <p class="text-xl text-gray-600 font-light">Para instituciones educativas</p>
-          </div>
-
-          <div class="max-w-2xl mx-auto bg-white border border-gray-200 rounded-3xl p-12 text-center">
-            <div class="mb-8">
-              <div class="text-6xl font-light mb-2">$0</div>
-              <div class="text-gray-600 font-light">Gratis para siempre</div>
+          <div class="grid md:grid-cols-2 gap-12">
+            <div class="flex gap-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-semibold mb-2">Optimiza tu tiempo</h3>
+                <p class="text-gray-600 font-light leading-relaxed">
+                  Reduce el tiempo administrativo y dedícate más a la innovación pedagógica
+                </p>
+              </div>
             </div>
-            
-            <ul class="space-y-4 mb-10 text-left">
-              <li class="flex items-start gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgb(34, 197, 94)" stroke-width="2.5" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
-                <span class="text-gray-700">Inventario ilimitado</span>
-              </li>
-              <li class="flex items-start gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgb(34, 197, 94)" stroke-width="2.5" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
-                <span class="text-gray-700">Reservaciones sin límite</span>
-              </li>
-              <li class="flex items-start gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgb(34, 197, 94)" stroke-width="2.5" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
-                <span class="text-gray-700">Usuarios ilimitados</span>
-              </li>
-              <li class="flex items-start gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgb(34, 197, 94)" stroke-width="2.5" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
-                <span class="text-gray-700">Soporte por email</span>
-              </li>
-              <li class="flex items-start gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgb(34, 197, 94)" stroke-width="2.5" class="mt-0.5 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>
-                <span class="text-gray-700">Actualizaciones automáticas</span>
-              </li>
-            </ul>
 
-            <a href={appUrl} class="inline-block w-full px-8 py-4 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition">
-              Comenzar ahora
-            </a>
+            <div class="flex gap-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-semibold mb-2">Trazabilidad total</h3>
+                <p class="text-gray-600 font-light leading-relaxed">
+                  Cada equipo, cada préstamo, cada reserva queda registrada automáticamente
+                </p>
+              </div>
+            </div>
+
+            <div class="flex gap-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-semibold mb-2">Acceso desde cualquier lugar</h3>
+                <p class="text-gray-600 font-light leading-relaxed">
+                  Interfaz optimizada para móvil y desktop. Gestiona desde tu celular o computadora
+                </p>
+              </div>
+            </div>
+
+            <div class="flex gap-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-semibold mb-2">Colaboración institucional</h3>
+                <p class="text-gray-600 font-light leading-relaxed">
+                  Facilita la coordinación entre docentes, PIP y dirección en tiempo real
+                </p>
+              </div>
+            </div>
+
           </div>
-
         </div>
       </section>
 
@@ -326,12 +395,16 @@ const appUrl = "https://flip-v2-web.vercel.app/";
           </div>
           
           <h2 class="text-6xl md:text-8xl font-light tracking-tight mb-12 leading-none">
-            Achieve new<br/>
-            <span class="font-semibold">heights</span>
+            Transforma tu<br/>
+            <span class="font-semibold">AIP hoy</span>
           </h2>
           
+          <p class="text-xl text-gray-600 mb-12 font-light">
+            Comienza con 15 días de prueba gratuita. Sin tarjeta de crédito.
+          </p>
+          
           <a href={appUrl} class="inline-block px-12 py-5 bg-blue-600 text-white text-lg font-medium rounded-full hover:bg-blue-700 hover:scale-105 transition-all shadow-xl">
-            Abrir Flip
+            Comenzar ahora
           </a>
         </div>
       </section>
