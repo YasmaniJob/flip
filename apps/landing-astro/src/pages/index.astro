@@ -1,0 +1,346 @@
+---
+import '../styles/global.css';
+
+const appUrl = "https://flip-v2-web.vercel.app/";
+---
+
+<!doctype html>
+<html lang="es" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flip - Gestión Inteligente de Recursos Educativos</title>
+    <meta name="description" content="Optimiza el inventario, préstamos y reuniones de tu institución educativa con Flip. La herramienta definitiva para docentes y coordinadores." />
+    <meta name="keywords" content="gestión de inventario, préstamos de equipos, coordinación escolar, recursos educativos, AIP" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  </head>
+  <body class="font-sans antialiased min-h-screen bg-background text-foreground">
+    <div class="flex flex-col min-h-screen bg-background selection:bg-primary/20 text-foreground overflow-x-hidden">
+      
+      <!-- Navigation -->
+      <header class="fixed top-0 z-50 w-full px-12 py-8 bg-transparent">
+        <div class="container mx-auto flex items-center justify-between">
+          <div class="flex items-center gap-3 group cursor-pointer">
+            <div class="h-8 w-8 bg-primary rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(0,101,209,0.4)]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary-foreground"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg>
+            </div>
+            <span class="text-lg font-black tracking-tighter uppercase">Flip</span>
+          </div>
+          
+          <nav class="hidden md:flex items-center gap-16 text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground/40">
+            <a href="#features" class="hover:text-primary transition-all">Sistemas</a>
+            <a href="#preview" class="hover:text-primary transition-all">Vista</a>
+            <a href="#pricing" class="hover:text-primary transition-all">Planes</a>
+          </nav>
+
+          <a 
+            href={appUrl}
+            class="px-8 py-3 bg-foreground text-background text-[11px] font-black uppercase tracking-widest rounded-full hover:bg-primary hover:text-primary-foreground hover:scale-105 transition-all shadow-2xl"
+          >
+            Lanzar App
+          </a>
+        </div>
+      </header>
+
+      <main class="flex-1">
+        
+        <!-- HERO SECTION -->
+        <section class="min-h-screen flex flex-col items-center justify-center relative px-6 overflow-hidden">
+          <div class="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none">
+            <div class="absolute w-[180%] aspect-square orbital-bg opacity-40 animate-spin-slow scale-150"></div>
+            <div class="absolute w-[140%] aspect-square orbital-bg opacity-20 animate-reverse-spin-slow scale-110"></div>
+            <div class="absolute w-[800px] h-[800px] bg-primary/10 rounded-full blur-[180px] animate-pulse"></div>
+            <div class="absolute top-1/4 -right-1/4 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px]"></div>
+          </div>
+
+          <div class="container mx-auto text-center relative z-10">
+            <div class="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-[10px] font-black uppercase tracking-[0.4em] mb-12">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              New Era of Management
+            </div>
+
+            <h1 class="text-huge mb-12 drop-shadow-2xl">
+              Futuro <br /> 
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/80 to-primary/40">Conectado.</span>
+            </h1>
+            
+            <p class="text-xl sm:text-2xl text-muted-foreground mb-16 max-w-2xl mx-auto font-medium leading-relaxed opacity-60">
+              Coordinación institucional llevada al límite de la eficiencia.
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-8">
+              <a 
+                href={appUrl}
+                class="group relative px-12 py-5 bg-primary text-primary-foreground font-black text-sm rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_20px_60px_rgba(0,101,209,0.3)] overflow-hidden"
+              >
+                <span class="relative z-10 flex items-center gap-3">
+                   Empezar Ahora
+                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </span>
+                <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              </a>
+              <a 
+                href="#tutorial"
+                class="px-12 py-5 border border-foreground/10 text-foreground font-black text-sm rounded-full hover:bg-foreground/5 transition-all"
+              >
+                Ver Tutorial
+              </a>
+            </div>
+          </div>
+          
+          <div class="absolute bottom-20 left-1/2 -translate-x-1/2 animate-bounce opacity-20">
+             <div class="w-[1px] h-12 bg-gradient-to-b from-primary to-transparent"></div>
+          </div>
+        </section>
+
+        <!-- VIDEOTUTORIAL SECTION -->
+        <section id="tutorial" class="py-60 px-6 relative overflow-hidden bg-foreground/5">
+          <div class="container mx-auto">
+             <div class="grid lg:grid-cols-2 gap-24 items-center">
+                <div class="order-2 lg:order-1">
+                   <div class="inline-flex items-center gap-2 mb-8 text-primary font-black uppercase tracking-[0.4em] text-[10px]">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                      Domina Flip en 3 minutos
+                   </div>
+                   <h2 class="text-6xl sm:text-8xl font-black tracking-tighter mb-10 leading-[0.9]">Manual <br/>de Vuelo.</h2>
+                   <p class="text-xl text-muted-foreground max-w-md mb-12 font-medium opacity-60 leading-relaxed">
+                      Observa cómo la coordinación institucional trasciende hacia la simplicidad absoluta en nuestra guía de alta definición.
+                   </p>
+                   <div class="flex items-center gap-6">
+                      <div class="h-14 w-14 rounded-full border border-primary/20 flex items-center justify-center group cursor-pointer hover:bg-primary hover:border-primary transition-all">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:fill-primary-foreground transition-colors"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                      </div>
+                      <span class="text-xs font-black uppercase tracking-[0.3em] opacity-40">Ver demo extendida</span>
+                   </div>
+                </div>
+                
+                <div class="order-1 lg:order-2 relative group">
+                   <div class="aspect-video glass-card rounded-[3rem] overflow-hidden relative border border-foreground/5 shadow-2xl group-hover:scale-[1.02] transition-transform duration-700">
+                      <div class="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-transparent opacity-40"></div>
+                      <div class="absolute inset-0 flex items-center justify-center">
+                         <div class="h-24 w-24 bg-background/20 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform shadow-2xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-1"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                         </div>
+                      </div>
+                      <div class="absolute top-8 left-8 flex gap-2">
+                         <div class="h-2 w-2 rounded-full bg-red-400/40"></div>
+                         <div class="h-2 w-2 rounded-full bg-yellow-400/40"></div>
+                         <div class="h-2 w-2 rounded-full bg-green-400/40"></div>
+                      </div>
+                   </div>
+                   <div class="absolute -inset-10 bg-primary/20 blur-[100px] -z-10 opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                </div>
+             </div>
+          </div>
+        </section>
+
+        <!-- PRODUCT PILLARS -->
+        <section id="features" class="py-60 px-6">
+          <div class="container mx-auto">
+            <div class="grid lg:grid-cols-3 gap-12">
+              
+              <div class="glass-card glow-border p-12 rounded-[3rem] group hover:-translate-y-2 transition-all duration-500">
+                <div class="mb-10 h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-transparent flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                </div>
+                <h3 class="text-3xl font-black tracking-tighter mb-6">Gestión Fluida</h3>
+                <p class="text-muted-foreground leading-relaxed font-medium opacity-60">
+                  Arquitectura diseñada para la velocidad absoluta. Sin esperas, sin fricción.
+                </p>
+              </div>
+
+              <div class="glass-card glow-border p-12 rounded-[3rem] group hover:-translate-y-2 transition-all duration-500">
+                <div class="mb-10 h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/20 to-transparent flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+                <h3 class="text-3xl font-black tracking-tighter mb-6">Integridad Total</h3>
+                <p class="text-muted-foreground leading-relaxed font-medium opacity-60">
+                  Trazabilidad quirúrgica de cada recurso institucional en tiempo real.
+                </p>
+              </div>
+
+              <div class="glass-card glow-border p-12 rounded-[3rem] group hover:-translate-y-2 transition-all duration-500">
+                <div class="mb-10 h-16 w-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-transparent flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                </div>
+                <h3 class="text-3xl font-black tracking-tighter mb-6">Dashboard Pro</h3>
+                <p class="text-muted-foreground leading-relaxed font-medium opacity-60">
+                  Control total mediante una interfaz utilitaria de alto impacto visual.
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- INNOVATION VIEW -->
+        <section id="preview" class="py-60 px-6 bg-muted/5 relative">
+          <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent"></div>
+          <div class="container mx-auto text-center mb-32">
+            <h2 class="text-5xl sm:text-7xl font-black tracking-tighter mb-8">La Vista del Éxito.</h2>
+            <p class="text-xl text-muted-foreground max-w-2xl mx-auto font-medium opacity-60">
+              Una plataforma diseñada para coordinadores que exigen lo mejor.
+            </p>
+          </div>
+          
+          <div class="container mx-auto max-w-6xl">
+            <div class="relative group p-4 border border-foreground/5 rounded-[4rem] bg-foreground/5">
+               <div class="bg-background rounded-[3rem] overflow-hidden aspect-video relative shadow-2xl border border-foreground/5">
+                  <div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-40"></div>
+                  
+                  <div class="p-12 h-full flex flex-col gap-10">
+                    <div class="flex justify-between items-center bg-foreground/5 p-6 rounded-3xl border border-foreground/5">
+                      <div class="flex gap-4">
+                        <div class="h-3 w-3 rounded-full bg-red-500/40"></div>
+                        <div class="h-3 w-3 rounded-full bg-yellow-500/40"></div>
+                        <div class="h-3 w-3 rounded-full bg-green-500/40"></div>
+                      </div>
+                      <div class="h-4 w-40 bg-foreground/10 rounded-full"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-12 gap-10 flex-1">
+                      <div class="col-span-3 bg-foreground/5 rounded-[2rem] border border-foreground/5"></div>
+                      <div class="col-span-9 grid grid-rows-3 gap-8">
+                        <div class="row-span-1 bg-primary/5 rounded-[2rem] border border-primary/10"></div>
+                        <div class="row-span-2 bg-foreground/5 rounded-[2rem] border border-foreground/5"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="absolute inset-0 bg-background/20 backdrop-blur-[2px] group-hover:backdrop-blur-0 transition-all duration-1000"></div>
+                  <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                     <div class="px-12 py-5 bg-primary text-primary-foreground rounded-full font-black text-sm shadow-2xl cursor-pointer hover:scale-105 transition-transform">
+                        Explorar Interfaz en Vivo
+                     </div>
+                  </div>
+               </div>
+               
+               <div class="absolute -inset-10 bg-primary/20 blur-[100px] -z-10 opacity-30 group-hover:opacity-50 transition-opacity"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CHANGELOG -->
+        <section id="changelog" class="py-60 px-6">
+          <div class="container mx-auto max-w-4xl">
+             <div class="flex items-end justify-between mb-24 border-b border-foreground/5 pb-12">
+               <h2 class="text-6xl font-black tracking-tighter">Novedades.</h2>
+               <div class="h-12 w-12 rounded-full border border-foreground/10 flex items-center justify-center">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-40"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+               </div>
+             </div>
+             
+             <div class="space-y-16">
+               <div class="group flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:translate-x-2 transition-transform cursor-default">
+                  <div class="flex items-center gap-8">
+                     <span class="text-[10px] font-black text-primary uppercase tracking-[0.5em]">v2.6.0</span>
+                     <h4 class="text-4xl font-black tracking-tighter group-hover:text-primary transition-colors">Módulo de Alta Densidad</h4>
+                  </div>
+                  <span class="text-sm font-bold text-muted-foreground/40">Marzo 2026</span>
+               </div>
+
+               <div class="group flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:translate-x-2 transition-transform cursor-default">
+                  <div class="flex items-center gap-8">
+                     <span class="text-[10px] font-black text-primary uppercase tracking-[0.5em]">v2.5.0</span>
+                     <h4 class="text-4xl font-black tracking-tighter group-hover:text-primary transition-colors">Next.js 15 Engine</h4>
+                  </div>
+                  <span class="text-sm font-bold text-muted-foreground/40">Marzo 2026</span>
+               </div>
+
+               <div class="group flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:translate-x-2 transition-transform cursor-default">
+                  <div class="flex items-center gap-8">
+                     <span class="text-[10px] font-black text-primary uppercase tracking-[0.5em]">v2.4.0</span>
+                     <h4 class="text-4xl font-black tracking-tighter group-hover:text-primary transition-colors">Refactor de Préstamos</h4>
+                  </div>
+                  <span class="text-sm font-bold text-muted-foreground/40">Febrero 2026</span>
+               </div>
+             </div>
+          </div>
+        </section>
+
+        <!-- PRICING -->
+        <section id="pricing" class="py-60 px-6 bg-foreground text-background relative overflow-hidden">
+          <div class="container mx-auto text-center mb-32 relative z-10">
+            <h2 class="text-huge mb-8 text-background">Precios.</h2>
+            <p class="text-xl opacity-60 max-w-xl mx-auto font-medium">Inversión tecnológica sin complicaciones.</p>
+          </div>
+          
+          <div class="container mx-auto max-w-6xl grid md:grid-cols-3 gap-8 relative z-10">
+            
+            <div class="p-16 rounded-[4rem] border transition-all duration-700 flex flex-col bg-background/5 border-background/10 text-background">
+              <h3 class="text-2xl font-black tracking-tighter mb-2">Standard</h3>
+              <div class="text-6xl font-black tracking-tighter mb-10">$0</div>
+              <p class="text-sm font-medium opacity-60 mb-12 flex-1 leading-relaxed">
+                Inventario básico, 50 recursos, 1 admin.
+              </p>
+              <div class="w-full py-5 rounded-full font-black text-sm text-center transition-all bg-background/10 text-background border border-background/20 hover:bg-background/20">
+                 Empezar
+              </div>
+            </div>
+
+            <div class="p-16 rounded-[4rem] border transition-all duration-700 flex flex-col bg-primary border-primary text-primary-foreground scale-105">
+              <h3 class="text-2xl font-black tracking-tighter mb-2">Professional</h3>
+              <div class="text-6xl font-black tracking-tighter mb-10">$49</div>
+              <p class="text-sm font-medium opacity-60 mb-12 flex-1 leading-relaxed">
+                Ilimitado, Préstamos, Multi-user, Soporte 24/7.
+              </p>
+              <div class="w-full py-5 rounded-full font-black text-sm text-center transition-all bg-background text-foreground">
+                 Empezar
+              </div>
+            </div>
+
+            <div class="p-16 rounded-[4rem] border transition-all duration-700 flex flex-col bg-background/5 border-background/10 text-background">
+              <h3 class="text-2xl font-black tracking-tighter mb-2">Enterprise</h3>
+              <div class="text-6xl font-black tracking-tighter mb-10">Custom</div>
+              <p class="text-sm font-medium opacity-60 mb-12 flex-1 leading-relaxed">
+                Multi-sede, API, Training, SLA dedicado.
+              </p>
+              <div class="w-full py-5 rounded-full font-black text-sm text-center transition-all bg-background/10 text-background border border-background/20 hover:bg-background/20">
+                 Empezar
+              </div>
+            </div>
+
+          </div>
+          
+          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[30vw] font-black text-background/5 -z-10 pointer-events-none select-none">
+            FLIP
+          </div>
+        </section>
+
+        <!-- FINAL CTA -->
+        <section class="py-80 px-6 text-center relative overflow-hidden">
+           <div class="absolute inset-0 orbital-bg opacity-10 animate-spin-slow"></div>
+           <div class="container mx-auto max-w-4xl relative z-10">
+              <h2 class="text-huge mb-16 tracking-[0.02em]">LLEGAMOS <br/>AL FUTURO.</h2>
+              <a 
+                href={appUrl}
+                class="inline-flex items-center gap-6 px-16 py-6 bg-primary text-primary-foreground font-black text-2xl rounded-full hover:scale-105 active:scale-95 transition-all shadow-[0_30px_60px_rgba(0,101,209,0.4)]"
+              >
+                Instalar Flip
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </a>
+           </div>
+        </section>
+
+      </main>
+
+      <footer class="py-20 px-12 border-t border-foreground/5">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-12 text-[10px] font-black uppercase tracking-[0.5em] text-muted-foreground/30">
+          <div class="flex items-center gap-3 text-foreground/40">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg>
+            <span>© 2026 Flip OS</span>
+          </div>
+          <div class="flex gap-12">
+            <a href="#" class="hover:text-primary transition-colors">Twitter</a>
+            <a href="#" class="hover:text-primary transition-colors">Github</a>
+            <a href="#" class="hover:text-primary transition-colors">Discord</a>
+          </div>
+          <span>Built for the new web</span>
+        </div>
+      </footer>
+
+    </div>
+  </body>
+</html>
