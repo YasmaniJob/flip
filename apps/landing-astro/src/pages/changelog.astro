@@ -12,6 +12,9 @@ try {
     .from(changelog)
     .where(eq(changelog.published, true))
     .orderBy(asc(changelog.sortOrder));
+
+  // Reverse so newest version is first
+  versions.reverse();
 } catch (error) {
   console.error('Error loading changelog:', error);
   // Fallback data si falla la conexión
@@ -34,13 +37,21 @@ try {
 }
 
 // Format dates
+// NOTE: We insert Date.now() (ms) via raw SQL, but Drizzle's integer mode:timestamp
+// reads the value and multiplies by 1000 (expecting seconds in DB).
+// Result: the Date object represents a year ~58000. Fix by dividing by 1000.
 const formattedVersions = versions.map(v => ({
   ...v,
-  dateFormatted: new Date(v.date).toLocaleDateString('es-ES', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  })
+  dateFormatted: (() => {
+    const raw = v.date instanceof Date ? v.date.getTime() : Number(v.date);
+    // If year > 2100 the value is in ms stored directly (bypassed Drizzle ORM)
+    const ts = raw > 4102444800000 ? raw / 1000 : raw;
+    return new Date(ts).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  })()
 }));
 ---
 
@@ -98,17 +109,6 @@ const formattedVersions = versions.map(v => ({
         </div>
       </section>
 
-      <!-- Info Banner -->
-      <section class="px-6 mb-16">
-        <div class="container mx-auto max-w-5xl">
-          <div class="bg-blue-50 border border-blue-200 rounded-2xl p-6 flex items-start gap-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgb(37, 99, 235)" stroke-width="2" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-            <p class="text-sm text-gray-700">
-              Las actualizaciones se despliegan automáticamente. Todas las mejoras están disponibles inmediatamente para todos los usuarios.
-            </p>
-          </div>
-        </div>
-      </section>
 
       <!-- Versions List -->
       <section class="px-6">
