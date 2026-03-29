@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { requireSuperAdmin } from '@/lib/auth/helpers';
 import { successResponse, errorResponse } from '@/lib/utils/response';
 import { validateBody } from '@/lib/validations/helpers';
@@ -7,7 +7,8 @@ import { db } from '@/lib/db';
 import { institutions, subscriptionHistory, users as usersTable } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { z } from 'zod';
-import { NotFoundError, ValidationError } from '@/lib/utils/errors';
+import { NotFoundError, ValidationError, TooManyRequestsError } from '@/lib/utils/errors';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET(
   request: NextRequest,
@@ -65,12 +66,8 @@ export async function GET(
       subscriptionHistory: history,
       institutionalUsers,
     });
-  } catch (error: any) {
-    console.error('[SUBSCRIPTION_GET_ERROR]', error.message, error.stack);
-    return NextResponse.json({ 
-      error: error.message || 'Error desconocido',
-      stack: error.stack,
-    }, { status: 500 });
+  } catch (error) {
+    return errorResponse(error);
   }
 }
 
@@ -89,6 +86,11 @@ export async function PATCH(
   try {
     await requireSuperAdmin(request);
     const { id } = await params;
+
+    // Rate limit: 5 requests per minute for this institution update
+    if (!rateLimit(`admin-sub-update-${id}`, 5, 60 * 1000)) {
+       throw new TooManyRequestsError();
+    }
 
     const body = await request.json();
     const data = validateBody(updateSubscriptionSchema, body);
