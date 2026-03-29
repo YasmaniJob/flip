@@ -2,7 +2,7 @@
 import '../styles/global.css';
 import { db } from '../lib/db';
 import { changelog } from '../lib/schema';
-import { desc, eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 
 let versions = [];
 
@@ -11,7 +11,7 @@ try {
     .select()
     .from(changelog)
     .where(eq(changelog.published, true))
-    .orderBy(desc(changelog.sortOrder));
+    .orderBy(asc(changelog.sortOrder));
 } catch (error) {
   console.error('Error loading changelog:', error);
   // Fallback data si falla la conexión
