@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { getBrandColor } from "@/lib/brand-color";
 import { useInstitution } from "@/hooks/use-institution";
 import { createPortal } from "react-dom";
+import { APP_VERSION } from "@/lib/version";
 import {
   Popover,
   PopoverContent,
@@ -445,7 +446,6 @@ function ProfileDropdown({
 }
 
 // ── Main sidebar ───────────────────────────────────────────────
-export import { APP_VERSION } from "@/lib/version";
 
 function Sidebar() {
   const pathname = usePathname();
