@@ -445,7 +445,9 @@ function ProfileDropdown({
 }
 
 // ── Main sidebar ───────────────────────────────────────────────
-export function Sidebar() {
+export import { APP_VERSION } from "@/lib/version";
+
+function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { brandColor } = useBrandColor();
@@ -667,7 +669,7 @@ export function Sidebar() {
           </div>
           {!collapsed && (
             <span className="text-[9px] text-sidebar-muted-foreground/40 font-medium">
-              v0.0.1
+              v{APP_VERSION}
             </span>
           )}
         </div>

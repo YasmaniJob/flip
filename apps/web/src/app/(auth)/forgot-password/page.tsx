@@ -12,6 +12,7 @@ import { ArrowLeft, GraduationCap, MailCheck } from "lucide-react";
 import { sileo } from "sileo";
 import { AuthHeader } from "@/components/auth/AuthHeader";
 import { useAuthBranding } from "@/lib/use-auth-branding";
+import { APP_VERSION } from "@/lib/version";
 
 const forgotPasswordSchema = z.object({
     email: z.string().email("Ingresa un correo válido"),
@@ -112,7 +113,7 @@ export default function ForgotPasswordPage() {
                     </div>
                     <span className="text-xs text-muted-foreground/50 font-medium">Flip</span>
                     <span className="text-xs text-muted-foreground/30">·</span>
-                    <span className="text-xs text-muted-foreground/50">v0.0.1</span>
+                    <span className="text-xs text-muted-foreground/50">v{APP_VERSION}</span>
                 </div>
             </div>
         );
@@ -192,7 +193,7 @@ export default function ForgotPasswordPage() {
                 </div>
                 <span className="text-xs text-muted-foreground/50 font-medium">Flip</span>
                 <span className="text-xs text-muted-foreground/30">·</span>
-                <span className="text-xs text-muted-foreground/50">v0.0.1</span>
+                <span className="text-xs text-muted-foreground/50">v{APP_VERSION}</span>
             </div>
         </div>
     );

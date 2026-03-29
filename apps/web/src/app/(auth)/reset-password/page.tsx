@@ -14,6 +14,7 @@ import { sileo } from "sileo";
 import { AuthHeader } from "@/components/auth/AuthHeader";
 import { useAuthBranding } from "@/lib/use-auth-branding";
 import { useRouter } from "next/navigation";
+import { APP_VERSION } from "@/lib/version";
 
 const resetPasswordSchema = z.object({
     password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
@@ -98,7 +99,7 @@ function ResetPasswordForm() {
             </div>
             <span className="text-xs text-muted-foreground/50 font-medium">Flip</span>
             <span className="text-xs text-muted-foreground/30">·</span>
-            <span className="text-xs text-muted-foreground/50">v0.0.1</span>
+            <span className="text-xs text-muted-foreground/50">v{APP_VERSION}</span>
         </div>
     );
 

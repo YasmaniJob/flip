@@ -1,5 +1,12 @@
 import type { NextConfig } from "next";
 import withPWA from "@ducanh2912/next-pwa";
+import { readFileSync } from "fs";
+import { join } from "path";
+
+// Leer versión del package.json
+const packageJson = JSON.parse(
+    readFileSync(join(__dirname, "package.json"), "utf-8")
+);
 
 const nextConfig: NextConfig = {
     // Enable React strict mode
@@ -16,9 +23,10 @@ const nextConfig: NextConfig = {
         ignoreBuildErrors: true,
     },
 
-    // Make VERCEL_URL available to the server
+    // Make VERCEL_URL and APP_VERSION available
     env: {
         VERCEL_URL: process.env.VERCEL_URL,
+        NEXT_PUBLIC_APP_VERSION: packageJson.version,
     },
 
     // Experimental features

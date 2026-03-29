@@ -16,6 +16,7 @@ import { SocialAuth } from "@/components/auth/SocialAuth";
 import { loginSchema, LoginValues } from "@/lib/auth-schemas";
 import { useAuthBranding } from "@/lib/use-auth-branding";
 import { InstitutionSelectorModal } from "@/components/auth/institution-selector-modal";
+import { APP_VERSION } from "@/lib/version";
 
 interface Institution {
     id: string;
@@ -421,7 +422,7 @@ function LoginForm() {
                 </div>
                 <span className="text-xs text-muted-foreground/50 font-medium">Flip</span>
                 <span className="text-xs text-muted-foreground/30">·</span>
-                <span className="text-xs text-muted-foreground/50">v0.0.1</span>
+                <span className="text-xs text-muted-foreground/50">v{APP_VERSION}</span>
             </div>
 
             <InstitutionSelectorModal

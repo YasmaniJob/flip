@@ -139,7 +139,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
         {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border/40">
           <div className="text-center">
-            <p className="text-xs text-muted-foreground">Flip v0.0.1</p>
+            <p className="text-xs text-muted-foreground">Flip v{APP_VERSION}</p>
             <p className="text-xs text-muted-foreground/60 mt-1">
               {session?.user?.institution?.name || "Sin institución"}
             </p>

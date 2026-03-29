@@ -11,7 +11,8 @@
         "seed:minedu": "tsx scripts/seed-minedu-institutions.ts",
         "import:minedu": "dotenv -e .env.local -- tsx scripts/import-minedu-data.ts",
         "db:size": "dotenv -e .env.local -- tsx scripts/check-db-size.ts",
-        "db:analyze": "dotenv -e .env.local -- tsx scripts/analyze-db-tables.ts"
+        "db:analyze": "dotenv -e .env.local -- tsx scripts/analyze-db-tables.ts",
+        "release:changelog": "dotenv -e .env.local -- tsx scripts/release-changelog.ts"
     },
     "dependencies": {
         "@ducanh2912/next-pwa": "^10.2.9",
