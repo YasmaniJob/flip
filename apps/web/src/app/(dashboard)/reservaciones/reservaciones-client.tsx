@@ -14,16 +14,7 @@ import { useClassrooms } from "@/features/classrooms/hooks/use-classrooms";
 import { usePedagogicalHours } from "@/features/settings/hooks/use-pedagogical-hours";
 import { ReservationSlot } from "@/features/reservations/api/reservations.api";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ActionConfirm } from '@/components/molecules/action-confirm';
 import { AnimatePresence } from "framer-motion";
 import { useUserRole } from "@/hooks/use-user-role";
 import { useAcademicDefaults } from "../../../hooks/use-academic-defaults";
@@ -367,34 +358,24 @@ export function ReservacionesClient() {
                     )}
                 </div>
 
-                {/* Common Dialogs and Overlays */}
-                {/* Cancel Confirmation Dialog */}
-                <AlertDialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
-                    <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
-                        <AlertDialogHeader>
-                            <AlertDialogTitle className="text-xl font-black tracking-tight text-slate-900">¿Cancelar esta reserva?</AlertDialogTitle>
-                            <AlertDialogDescription className="text-sm font-medium text-slate-500 leading-relaxed">
-                                Esta acción no se puede deshacer. Se liberará el horario para {mobileSheetSlot?.staff?.name || 'la sesión'} en el calendario del AIP.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter className="mt-6">
-                            <AlertDialogCancel className="rounded-xl h-11 border-slate-200 font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-slate-50">Volver</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={async () => {
-                                    if (mobileSheetSlot?.id) {
-                                        await cancelSlotMutation.mutateAsync(mobileSheetSlot.id);
-                                        setConfirmCancelOpen(false);
-                                        setMobileSheetSlot(null);
-                                    }
-                                }}
-                                className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-11 font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-red-600/20"
-                                disabled={cancelSlotMutation.isPending}
-                            >
-                                {cancelSlotMutation.isPending ? 'Cancelando...' : 'Confirmar Cancelación'}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                {/* Cancel Confirmation: Institutional Action Box */}
+                <ActionConfirm
+                    open={confirmCancelOpen}
+                    onOpenChange={setConfirmCancelOpen}
+                    title="¿Confirmar cancelación de reserva?"
+                    description={`Estás por liberar el bloque de ${mobileSheetSlot?.staff?.name || 'la sesión'} en el AIP. Esta acción permitirá que otros docentes ocupen el aula en este horario.`}
+                    onConfirm={async () => {
+                        if (mobileSheetSlot?.id) {
+                            await cancelSlotMutation.mutateAsync(mobileSheetSlot.id);
+                            setConfirmCancelOpen(false);
+                            setMobileSheetSlot(null);
+                        }
+                    }}
+                    confirmText="Confirmar cancelación"
+                    cancelText="Mantener reserva"
+                    variant="destructive"
+                    isLoading={cancelSlotMutation.isPending}
+                />
 
                 {/* Reschedule Dialog */}
                 {mobileSheetSlot && rescheduleOpen && (

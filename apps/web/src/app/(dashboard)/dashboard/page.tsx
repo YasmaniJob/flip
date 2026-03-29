@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useSession, signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
@@ -14,6 +13,7 @@ import { ActiveInventory } from "@/features/dashboard/components/active-inventor
 import { SuperAdminDashboard } from "@/features/dashboard/components/super-admin-dashboard";
 import { Users, Database, Wrench, Landmark } from "lucide-react";
 import { StatCard } from "@/features/dashboard/components/stat-card";
+import { useMyInstitution } from "@/features/institutions/hooks/use-my-institution";
 
 // Mobile components
 import { MobileMetricsGrid } from "@/features/dashboard/components/mobile-metrics-grid";
@@ -24,23 +24,10 @@ import { MobileRecentActivity } from "@/features/dashboard/components/mobile-rec
 export default function DashboardPage() {
     const router = useRouter();
     const { data: session } = useSession();
-    const [institution, setInstitution] = useState<any>(null);
+    const { data: institution } = useMyInstitution();
     const user = session?.user as any;
     const isSuperAdmin = user?.isSuperAdmin;
     // const isInstitutionAdmin = user?.role === 'admin' && !isSuperAdmin;
-
-    useEffect(() => {
-        if (session && user && user.institutionId && !user.isSuperAdmin && !institution) {
-            fetch('/api/institutions/my-institution')
-                .then(async res => {
-                    if (res.ok) {
-                        const data = await res.json();
-                        setInstitution(data);
-                    }
-                })
-                .catch(console.error);
-        }
-    }, [session, user, institution]);
 
     const handleSignOut = async () => {
         await signOut();

@@ -12,16 +12,8 @@ import {
     type Category,
 } from '@/features/settings/hooks/use-categories';
 import { Plus, Trash2, Loader2, Package, Sparkles, AlertCircle, Pencil, X, Check } from 'lucide-react';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ActionConfirm } from '@/components/molecules/action-confirm';
+import { Dialog, DialogContent, DialogTitle, DialogHeader } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { ImportTemplatesDialog } from './import-templates-dialog';
 
@@ -218,42 +210,42 @@ export function CategoriesSettings() {
             )}
 
             {/* Create/Edit Modal - Jira Style */}
-            <AlertDialog open={showModal} onOpenChange={(val) => {
+            <Dialog open={showModal} onOpenChange={(val) => {
                 if (!val) {
                     setShowModal(false);
                     setEditingCategory(null);
                 }
             }}>
-                <AlertDialogContent className="max-w-xl p-0 flex flex-col overflow-hidden border border-border shadow-none rounded-lg bg-white max-h-[85dvh] sm:max-h-[90vh] z-[100]">
-                    <AlertDialogHeader className="sr-only">
-                        <AlertDialogTitle>{editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}</AlertDialogTitle>
-                    </AlertDialogHeader>
+                <DialogContent showCloseButton={false} className="max-w-xl p-0 flex flex-col overflow-hidden border border-border shadow-none rounded-sm bg-background max-h-[85dvh] sm:max-h-[90vh] z-[100]">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>{editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}</DialogTitle>
+                    </DialogHeader>
 
                     {/* Header */}
-                    <div className="shrink-0 px-6 py-5 border-b border-border bg-white flex items-center justify-between">
+                    <div className="shrink-0 px-6 py-5 border-b border-border bg-card/10 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div 
-                                className="w-10 h-10 rounded-md flex items-center justify-center text-white shrink-0 border border-black/5"
+                                className="w-10 h-10 rounded-sm flex items-center justify-center text-white shrink-0 border border-black/5"
                                 style={{ backgroundColor: formData.color }}
                             >
                                 <span className="text-xl">{formData.icon}</span>
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-foreground tracking-tight">
+                                <h3 className="text-sm font-black text-foreground tracking-tight uppercase">
                                     {editingCategory ? 'Editar Categoría' : 'Nueva Categoría'}
                                 </h3>
                             </div>
                         </div>
                         <button 
                             onClick={() => { setShowModal(false); setEditingCategory(null); }}
-                            className="p-2 rounded-md hover:bg-muted text-muted-foreground transition-colors"
+                            className="p-2 rounded-sm hover:bg-muted text-muted-foreground transition-colors"
                         >
                             <X className="h-4 w-4" />
                         </button>
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8 bg-[#f4f5f7]/30">
+                    <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8">
                         {/* Name Field */}
                         <div className="space-y-3">
                             <Label htmlFor="category-name" className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
@@ -264,7 +256,7 @@ export function CategoriesSettings() {
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 placeholder="Ej: Laptops, Tablets, Muebles..."
-                                className="h-11 text-sm rounded-md border-border focus:ring-4 focus:ring-primary/5 focus:border-primary/50 bg-white shadow-none font-bold placeholder:text-muted-foreground/40 transition-all font-sans"
+                                className="h-11 text-sm rounded-sm border-border focus:ring-4 focus:ring-primary/5 focus:border-primary/50 bg-background shadow-none font-bold placeholder:text-muted-foreground/30 transition-all"
                                 autoFocus
                             />
                         </div>
@@ -274,17 +266,17 @@ export function CategoriesSettings() {
                             <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
                                 Icono Representativo
                             </Label>
-                            <div className="grid grid-cols-8 gap-2 bg-white p-3 rounded-md border border-border">
+                            <div className="grid grid-cols-8 gap-2 bg-muted/10 p-4 rounded-sm border border-border">
                                 {DEFAULT_ICONS.map((icon) => (
                                     <button
                                         key={icon}
                                         type="button"
                                         onClick={() => setFormData({ ...formData, icon })}
                                         className={cn(
-                                            "h-10 w-10 rounded-md flex items-center justify-center text-xl transition-all border",
+                                            "h-10 w-10 rounded-sm flex items-center justify-center text-xl transition-all border",
                                             formData.icon === icon
-                                                ? 'bg-[#0052cc] text-white border-[#0052cc] scale-110 z-10'
-                                                : 'bg-muted/30 border-transparent hover:bg-muted/50 hover:border-border'
+                                                ? 'bg-primary text-white border-primary scale-110 z-10'
+                                                : 'bg-background border-transparent hover:bg-muted hover:border-border'
                                         )}
                                     >
                                         {icon}
@@ -298,7 +290,7 @@ export function CategoriesSettings() {
                             <Label className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
                                 Color de Identificación
                             </Label>
-                            <div className="flex flex-wrap gap-2.5 bg-white p-3 rounded-md border border-border">
+                            <div className="flex flex-wrap gap-2.5 bg-muted/10 p-4 rounded-sm border border-border">
                                 {DEFAULT_COLORS.map((color) => (
                                     <button
                                         key={color}
@@ -307,7 +299,7 @@ export function CategoriesSettings() {
                                         className={cn(
                                             "h-8 w-8 rounded-full transition-all border-2",
                                             formData.color === color
-                                                ? 'border-white ring-2 ring-[#0052cc] scale-110'
+                                                ? 'border-white ring-2 ring-primary scale-110'
                                                 : 'border-transparent hover:scale-105'
                                         )}
                                         style={{ backgroundColor: color }}
@@ -318,19 +310,18 @@ export function CategoriesSettings() {
                     </div>
 
                     {/* Footer */}
-                    <div className="shrink-0 p-5 border-t border-border bg-white flex items-center justify-between">
+                    <div className="shrink-0 p-5 border-t border-border bg-muted/10 flex items-center justify-between">
                         <Button
                             variant="ghost"
                             onClick={() => { setShowModal(false); setEditingCategory(null); }}
-                            className="text-[11px] font-black uppercase tracking-widest h-10 px-6 rounded-md hover:bg-muted text-muted-foreground"
+                            className="text-[11px] font-black uppercase tracking-widest h-10 px-6 rounded-sm hover:bg-muted text-muted-foreground"
                         >
                             Cancelar
                         </Button>
                         <Button
                             onClick={handleSave}
                             disabled={formData.name.trim().length === 0 || (createMutation.isPending || updateMutation.isPending)}
-                            variant="jira"
-                            className="h-10 px-8 rounded-md font-black uppercase tracking-widest text-[11px] active:scale-95 transition-all shadow-none flex items-center gap-2"
+                            className="h-10 px-8 rounded-sm font-black uppercase tracking-widest text-[11px] active:scale-95 transition-all shadow-none flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
                         >
                             {createMutation.isPending || updateMutation.isPending ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -340,8 +331,8 @@ export function CategoriesSettings() {
                             {editingCategory ? 'Guardar Cambios' : 'Crear Categoría'}
                         </Button>
                     </div>
-                </AlertDialogContent>
-            </AlertDialog>
+                </DialogContent>
+            </Dialog>
 
             {/* Import Dialog */}
             <ImportTemplatesDialog
@@ -353,30 +344,18 @@ export function CategoriesSettings() {
                 }}
             />
 
-            {/* Delete Confirmation */}
-            <AlertDialog open={!!deletingCategory} onOpenChange={() => setDeletingCategory(null)}>
-                <AlertDialogContent className="shadow-none border border-border">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tight">¿Eliminar Categoría?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-sm">
-                            La categoría <span className="font-bold text-foreground">"{deletingCategory?.name}"</span> será eliminada permanentemente.
-                            Todos los recursos asociados perderán su categoría.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="bg-muted hover:bg-muted/80 text-muted-foreground border-border h-10 text-[11px] font-black uppercase tracking-widest rounded-md focus:ring-0">
-                            Cancelar
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleDelete}
-                            className="bg-rose-600 hover:bg-rose-700 text-white border-none h-10 text-[11px] font-black uppercase tracking-widest rounded-md focus:ring-0"
-                            disabled={deleteMutation.isPending}
-                        >
-                            {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Eliminar Categoría'}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Delete Confirmation: Institutional Action Box */}
+            <ActionConfirm
+                open={!!deletingCategory}
+                onOpenChange={(open) => !open && setDeletingCategory(null)}
+                title="¿Confirmar eliminación de categoría?"
+                description={`Estás por eliminar la categoría "${deletingCategory?.name}". Todos los recursos asociados perderán su clasificación institucional. Esta acción no se puede deshacer.`}
+                onConfirm={handleDelete}
+                confirmText="Confirmar eliminación"
+                cancelText="Volver"
+                variant="destructive"
+                isLoading={deleteMutation.isPending}
+            />
         </div>
     );
 }

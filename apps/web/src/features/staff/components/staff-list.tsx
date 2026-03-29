@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 // Lazy load dialogs
 const AddStaffDialog = lazy(() => import("./add-staff-dialog").then(m => ({ default: m.AddStaffDialog })));
 const ImportStaffDialog = lazy(() => import("./import-staff-dialog").then(m => ({ default: m.ImportStaffDialog })));
-const ConfirmDeleteDialog = lazy(() => import("@/components/molecules/confirm-delete-dialog").then(m => ({ default: m.ConfirmDeleteDialog })));
+import { ActionConfirm } from '@/components/molecules/action-confirm';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -286,12 +286,20 @@ export function StaffList() {
                     <ImportStaffDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
                 )}
                 {deletingStaff && (
-                    <ConfirmDeleteDialog
+                    <ActionConfirm
                         open={!!deletingStaff}
-                        onOpenChange={open => !open && setDeletingStaff(null)}
-                        onConfirm={async () => { if (deletingStaff) { await deleteStaff.mutateAsync(deletingStaff.id); setDeletingStaff(null); } }}
-                        title="¿Eliminar personal?"
-                        description={<span>Vas a eliminar a <span className="font-bold">{deletingStaff?.name}</span> del sistema. Esta acción no se puede deshacer.</span>}
+                        onOpenChange={(open) => !open && setDeletingStaff(null)}
+                        title="¿Confirmar eliminación de personal?"
+                        description={`Estás por eliminar a ${deletingStaff?.name} del registro institucional. Esta acción no se puede deshacer y el personal perderá el acceso a la plataforma.`}
+                        onConfirm={() => {
+                            if (deletingStaff) {
+                                deleteStaff.mutate(deletingStaff.id);
+                                setDeletingStaff(null);
+                            }
+                        }}
+                        confirmText="Confirmar eliminación"
+                        cancelText="Volver"
+                        variant="destructive"
                         isLoading={deleteStaff.isPending}
                     />
                 )}

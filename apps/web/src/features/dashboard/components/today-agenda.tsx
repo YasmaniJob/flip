@@ -43,7 +43,7 @@ export function TodayAgenda() {
     const checkIn = useCheckInReservation();
 
     const { data: todayReservations, isLoading: isReservationsLoading } = useMyTodayReservations();
-    const { data: allMeetings, isLoading: isMeetingsLoading } = useMeetings();
+    const { data: allMeetings, isLoading: isMeetingsLoading } = useMeetings(5);
 
     const isLoading = isReservationsLoading || isMeetingsLoading;
 

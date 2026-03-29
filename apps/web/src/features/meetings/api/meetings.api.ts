@@ -56,8 +56,8 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const meetingsApi = {
-    findAll: async (): Promise<Meeting[]> => {
-        const res = await fetch('/api/meetings?limit=1000');
+    findAll: async (limit: number = 1000): Promise<Meeting[]> => {
+        const res = await fetch(`/api/meetings?limit=${limit}`);
         const data = await handleResponse<{ data: Meeting[] }>(res);
         return data.data || [];
     },

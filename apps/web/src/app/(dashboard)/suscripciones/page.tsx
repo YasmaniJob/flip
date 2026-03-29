@@ -14,17 +14,7 @@ import {
   Ban, 
   AlertCircle
 } from "lucide-react";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
-} from "@/components/ui/alert-dialog";
+import { ActionConfirm } from "@/components/molecules/action-confirm";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -179,99 +169,96 @@ function MoreActionsMenu({
   sub: Subscription, 
   onViewDetails: (s: Subscription) => void 
 }) {
+  const [showDeactivate, setShowDeactivate] = useState(false);
+  const [showResetTrial, setShowResetTrial] = useState(false);
   const updateMutation = useUpdateSubscription();
 
   const handleDeactivate = async () => {
     try {
       await updateMutation.mutateAsync({ id: sub.id, data: { action: 'deactivate' } });
       toast.success("Institución desactivada");
+      setShowDeactivate(false);
     } catch (e) {
       toast.error("Error al desactivar");
     }
   };
 
+  const handleResetTrial = async () => {
+    try {
+      await updateMutation.mutateAsync({ id: sub.id, data: { action: 'reset_to_trial' } });
+      toast.success("Institución revertida a trial");
+      setShowResetTrial(false);
+    } catch (e) {
+      toast.error("Error al revertir");
+    }
+  };
+
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-48 p-1.5 space-y-0.5 shadow-none">
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start text-xs font-bold uppercase tracking-tight h-9"
-          onClick={() => onViewDetails(sub)}
-        >
-          <Eye className="h-3.5 w-3.5 mr-2" />
-          Ver detalles
-        </Button>
-        
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
+    <>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-8 w-8">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-48 p-1.5 space-y-0.5 shadow-none rounded-sm bg-background border-border">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-[10px] font-black uppercase tracking-tight h-9 rounded-sm"
+            onClick={() => onViewDetails(sub)}
+          >
+            <Eye className="h-3.5 w-3.5 mr-2" />
+            Ver detalles
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-[10px] font-black uppercase tracking-tight h-9 text-rose-600 hover:text-rose-600 hover:bg-rose-500/5 rounded-sm"
+            onClick={() => setShowDeactivate(true)}
+          >
+            <Ban className="h-3.5 w-3.5 mr-2" />
+            Desactivar institución
+          </Button>
+
+          {sub.subscriptionStatus !== 'trial' && (
             <Button 
               variant="ghost" 
-              className="w-full justify-start text-xs font-bold uppercase tracking-tight h-9 text-rose-600 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+              className="w-full justify-start text-[10px] font-black uppercase tracking-tight h-9 text-amber-600 hover:text-amber-600 hover:bg-amber-500/5 rounded-sm"
+              onClick={() => setShowResetTrial(true)}
             >
-              <Ban className="h-3.5 w-3.5 mr-2" />
-              Desactivar
+              <Plus className="h-3.5 w-3.5 mr-2 rotate-45" />
+              Revertir a periodo de prueba
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent className="shadow-none">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="font-black uppercase tracking-tight">¿Confirmar Desactivación?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta acción desactivará la institución "{sub.name}". Los usuarios perderán acceso al sistema inmediatamente.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="text-xs font-bold uppercase">Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeactivate} className="bg-rose-600 hover:bg-rose-700 text-xs font-bold uppercase">
-                Confirmar Desactivación
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          )}
+        </PopoverContent>
+      </Popover>
 
-        {sub.subscriptionStatus !== 'trial' && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-xs font-bold uppercase tracking-tight h-9 text-amber-600 hover:text-amber-600 hover:bg-amber-50"
-              >
-                <Plus className="h-3.5 w-3.5 mr-2 rotate-45" />
-                Volver a Trial
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="shadow-none">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="font-black uppercase tracking-tight">¿Revertir a Trial?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Se eliminará el plan actual de "{sub.name}" y se le otorgarán 30 días de prueba gratuita.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="text-xs font-bold uppercase">Cancelar</AlertDialogCancel>
-                <AlertDialogAction 
-                  onClick={async () => {
-                    try {
-                      await updateMutation.mutateAsync({ id: sub.id, data: { action: 'reset_to_trial' } });
-                      toast.success("Institución revertida a trial");
-                    } catch (e) {
-                      toast.error("Error al revertir");
-                    }
-                  }} 
-                  className="bg-amber-600 hover:bg-amber-700 text-xs font-bold uppercase"
-                >
-                  Confirmar Reversión
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
-      </PopoverContent>
-    </Popover>
+      {/* Deactivation Confirmation */}
+      <ActionConfirm
+        open={showDeactivate}
+        onOpenChange={setShowDeactivate}
+        title="¿Confirmar desactivación institucional?"
+        description={`Estás por suspender el acceso de la institución "${sub.name}". Esta acción impedirá que todos sus usuarios ingresen al sistema inmediatamente.`}
+        onConfirm={handleDeactivate}
+        confirmText="Confirmar suspensión"
+        cancelText="Volver"
+        variant="destructive"
+        isLoading={updateMutation.isPending}
+      />
+
+      {/* Reset to Trial Confirmation */}
+      <ActionConfirm
+        open={showResetTrial}
+        onOpenChange={setShowResetTrial}
+        title="¿Revertir a periodo de prueba?"
+        description={`Se anulará el plan actual de "${sub.name}" y se habilitarán 30 días de acceso gratuito bajo el esquema de Trial.`}
+        onConfirm={handleResetTrial}
+        confirmText="Confirmar actualización"
+        cancelText="Mantenimiento"
+        variant="warning"
+        isLoading={updateMutation.isPending}
+      />
+    </>
   );
 }
 

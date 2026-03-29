@@ -18,7 +18,7 @@ import { toast } from "sonner";
 
 // Lazy load dialogs and modals
 const ResourceWizard = lazy(() => import("@/features/inventory/components/resource-wizard").then(m => ({ default: m.ResourceWizard })));
-const ConfirmDeleteDialog = lazy(() => import("@/components/molecules/confirm-delete-dialog").then(m => ({ default: m.ConfirmDeleteDialog })));
+import { ActionConfirm } from '@/components/molecules/action-confirm';
 const ResourceDialog = lazy(() => import("@/features/inventory/components/resource-dialog").then(m => ({ default: m.ResourceDialog })));
 const AddStockModal = lazy(() => import("@/features/inventory/components/add-stock-modal").then(m => ({ default: m.AddStockModal })));
 
@@ -230,23 +230,27 @@ export default function InventarioClient() {
                 )}
                 
                 {deletingResource && (
-                    <ConfirmDeleteDialog 
-                        open 
+                    <ActionConfirm
+                        open={!!deletingResource} 
                         onOpenChange={(open) => !open && setDeletingResource(null)} 
                         title={`¿Eliminar "${deletingResource.name}"?`} 
-                        description="Esta acción eliminará permanentemente el recurso del inventario. No se puede deshacer." 
+                        description="Estás por eliminar permanentemente este recurso del catálogo institucional. Esta acción no se puede deshacer y afectará a los reportes históricos." 
                         onConfirm={() => deleteMutation.mutate(deletingResource.id)} 
+                        confirmText="Confirmar eliminación"
+                        variant="destructive"
                         isLoading={deleteMutation.isPending} 
                     />
                 )}
-
+                
                 {deletingTemplate && (
-                    <ConfirmDeleteDialog 
-                        open 
+                    <ActionConfirm
+                        open={!!deletingTemplate} 
                         onOpenChange={(open) => !open && setDeletingTemplate(null)} 
-                        title={`¿Eliminar la categoría "${deletingTemplate.name}"?`} 
-                        description="Esta acción eliminará la categoría. Solo se puede eliminar si no tiene unidades en stock asociadas." 
+                        title="¿Confirmar eliminación de categoría?" 
+                        description={`Estás por eliminar la categoría "${deletingTemplate.name}". Ten en cuenta que solo se puede borrar si no existen unidades físicas asociadas a este catálogo.`} 
                         onConfirm={() => deleteTemplateMutation.mutate(deletingTemplate.id)} 
+                        confirmText="Confirmar eliminación"
+                        variant="destructive"
                         isLoading={deleteTemplateMutation.isPending} 
                     />
                 )}

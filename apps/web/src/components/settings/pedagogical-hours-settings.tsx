@@ -9,16 +9,7 @@ import {
     type PedagogicalHour,
 } from '@/features/settings/hooks/use-pedagogical-hours';
 import { Plus, Trash2, Loader2, AlertCircle, Sun, Moon } from 'lucide-react';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ActionConfirm } from '@/components/molecules/action-confirm';
 import { cn } from '@/lib/utils';
 
 export function PedagogicalHoursSettings() {
@@ -172,23 +163,18 @@ export function PedagogicalHoursSettings() {
                 />
             </div>
 
-            {/* Delete Confirmation */}
-            <AlertDialog open={!!deletingHour} onOpenChange={() => setDeletingHour(null)}>
-                <AlertDialogContent className="shadow-none border border-border">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tight">Confirmar Eliminación</AlertDialogTitle>
-                        <AlertDialogDescription className="text-sm">
-                            ¿Estás seguro de que deseas eliminar la <span className="font-bold text-foreground">"{deletingHour?.name}"</span>? Esta acción no se puede deshacer.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="rounded-md h-10 text-xs font-black uppercase tracking-widest border-border shadow-none">Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-rose-600 hover:bg-rose-700 text-white rounded-md h-10 text-xs font-black uppercase tracking-widest shadow-none">
-                            {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Eliminar Registro'}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Delete Confirmation: Institutional Action Box */}
+            <ActionConfirm
+                open={!!deletingHour}
+                onOpenChange={(open) => !open && setDeletingHour(null)}
+                title="¿Confirmar eliminación de horario?"
+                description={`Estás por eliminar la "${deletingHour?.name}" del cronograma institucional. Esta acción no se puede deshacer y afectará la visualización de todos los calendarios.`}
+                onConfirm={handleDelete}
+                confirmText="Confirmar eliminación"
+                cancelText="Mantenimiento"
+                variant="destructive"
+                isLoading={deleteMutation.isPending}
+            />
         </div>
     );
 }

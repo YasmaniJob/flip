@@ -20,7 +20,7 @@ interface InventoryAlert {
 
 export function ActiveInventory() {
     const router = useRouter();
-    const { data: allLoans, isLoading: loansLoading } = useLoans();
+    const { data: allLoans, isLoading: loansLoading } = useLoans(5);
     const { data: stats } = useInstitutionStats();
 
     const isLoading = loansLoading;

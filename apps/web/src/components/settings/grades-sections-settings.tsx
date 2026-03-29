@@ -16,22 +16,13 @@ import {
     useDeleteSection,
     type Section,
 } from '@/features/settings/hooks/use-sections';
-import { Plus, Trash2, Loader2, Check, AlertCircle, Layers } from 'lucide-react';
+import { Plus, Trash2, Loader2, Check, Layers } from 'lucide-react';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ActionConfirm } from '@/components/molecules/action-confirm';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -136,14 +127,14 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
             </div>
 
             {/* Grades List (Jira Style Table) */}
-            <div className="border border-border rounded-lg bg-card overflow-hidden">
+            <div className="border border-border rounded-sm bg-card overflow-hidden">
                 <div className="divide-y divide-border/60">
                     {sortedGrades.map(grade => (
                         <div key={grade.id} className="group flex flex-col md:flex-row md:items-center gap-6 py-4 px-6 hover:bg-muted/20 transition-colors bg-white">
                             {/* Grade Info */}
                             <div className="flex items-center justify-between min-w-[180px]">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-9 h-9 shrink-0 rounded-md flex items-center justify-center font-black bg-primary/10 text-primary border border-primary/20 text-xs">
+                                    <div className="w-9 h-9 shrink-0 rounded-sm flex items-center justify-center font-black bg-primary/10 text-primary border border-primary/20 text-xs">
                                         {grade.name.split(' ')[0]}
                                     </div>
                                     <div className="flex flex-col">
@@ -172,7 +163,7 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => setDeletingGrade(grade)}
-                                    className="h-8 w-8 text-muted-foreground hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all"
+                                    className="h-8 w-8 text-muted-foreground hover:text-rose-600 hover:bg-rose-50 rounded-sm transition-all"
                                 >
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -194,49 +185,32 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
                 </div>
             </div>
 
-            {/* Delete Grade Confirmation */}
-            <AlertDialog open={!!deletingGrade} onOpenChange={() => { setDeletingGrade(null); setDeleteError(null); }}>
-                <AlertDialogContent className="shadow-none border border-border">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tight">¿Eliminar Grado?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-sm">
-                            El grado <span className="font-bold text-foreground">"{deletingGrade?.name}"</span> será eliminado permanentemente. Asegúrate de que no tenga secciones asociadas para proceder.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    {deleteError && (
-                        <div className="flex items-center gap-3 p-3 rounded-md bg-rose-50 border border-rose-100 text-rose-700 text-[13px] font-bold">
-                            <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
-                            <span>{deleteError}</span>
-                        </div>
-                    )}
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="rounded-md h-10 text-xs font-black uppercase tracking-widest border-border shadow-none">Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteGrade} className="bg-rose-600 hover:bg-rose-700 text-white rounded-md h-10 text-xs font-black uppercase tracking-widest shadow-none">
-                            {deleteGradeMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Eliminar Registro'}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Delete Grade Confirmation: Institutional Action Box */}
+            <ActionConfirm
+                open={!!deletingGrade}
+                onOpenChange={(open) => { !open && setDeletingGrade(null); setDeleteError(null); }}
+                title="¿Confirmar eliminación de grado?"
+                description={`Estás por eliminar el "${deletingGrade?.name}" del catálogo institucional. Asegúrate de que no existan secciones vinculadas para proceder con la baja técnica.`}
+                onConfirm={handleDeleteGrade}
+                confirmText="Confirmar eliminación"
+                cancelText="Mantenimiento"
+                variant="destructive"
+                isLoading={deleteGradeMutation.isPending}
+                error={deleteError || undefined}
+            />
 
-            {/* Delete Section Confirmation */}
-            <AlertDialog open={!!deletingSection} onOpenChange={() => setDeletingSection(null)}>
-                <AlertDialogContent className="shadow-none border border-border">
-                    <AlertDialogHeader>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle className="text-xl font-black uppercase tracking-tight">¿Eliminar Sección?</AlertDialogTitle>
-                            <AlertDialogDescription className="text-sm">
-                                La sección <span className="font-bold text-foreground">"{deletingSection?.name}"</span> será eliminada permanentemente.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel className="rounded-md h-10 text-xs font-black uppercase tracking-widest border-border shadow-none">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteSection} className="bg-rose-600 hover:bg-rose-700 text-white rounded-md h-10 text-xs font-black uppercase tracking-widest shadow-none">
-                                {deleteSectionMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Eliminar'}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogHeader>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Delete Section Confirmation: Institutional Action Box */}
+            <ActionConfirm
+                open={!!deletingSection}
+                onOpenChange={(open) => !open && setDeletingSection(null)}
+                title="¿Confirmar eliminación de sección?"
+                description={`Estás por dar de baja la sección "${deletingSection?.name}" del registro académico institutional. Esta acción no se puede deshacer.`}
+                onConfirm={handleDeleteSection}
+                confirmText="Confirmar eliminación"
+                cancelText="Volver"
+                variant="destructive"
+                isLoading={deleteSectionMutation.isPending}
+            />
         </div>
     );
 }

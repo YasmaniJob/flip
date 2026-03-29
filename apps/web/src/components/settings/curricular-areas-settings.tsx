@@ -13,16 +13,8 @@ import {
     type CurricularArea,
 } from '@/features/settings/hooks/use-curricular-areas';
 import { Plus, Trash2, Loader2, BookOpen, Sparkles, AlertCircle, Pencil, X, Check } from 'lucide-react';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ActionConfirm } from '@/components/molecules/action-confirm';
+import { Dialog, DialogContent, DialogTitle, DialogHeader } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { ImportCurricularAreasDialog } from './import-curricular-areas-dialog';
 
@@ -252,43 +244,43 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
             )}
 
             {/* Create/Edit Modal - Jira Single Column Style */}
-            <AlertDialog open={showModal} onOpenChange={(val) => {
+            <Dialog open={showModal} onOpenChange={(val) => {
                 if (!val) {
                     setShowModal(false);
                     setEditingArea(null);
                 }
             }}>
-                {/* We use AlertDialogContent or DialogContent with no shadow-none and border-border */}
-                <AlertDialogContent className="max-w-xl p-0 flex flex-col overflow-hidden border border-border shadow-none rounded-lg bg-white">
-                    <AlertDialogHeader className="sr-only">
-                        <AlertDialogTitle>{editingArea ? 'Editar Área Curricular' : 'Nueva Área Curricular'}</AlertDialogTitle>
-                    </AlertDialogHeader>
+                {/* We use DialogContent with no shadow-none and border-border */}
+                <DialogContent showCloseButton={false} className="max-w-xl p-0 flex flex-col overflow-hidden border border-border shadow-none rounded-sm bg-background">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>{editingArea ? 'Editar Área Curricular' : 'Nueva Área Curricular'}</DialogTitle>
+                    </DialogHeader>
 
                     {/* ── Header ────────────────────────────────────────────────────────── */}
-                    <div className="shrink-0 px-6 py-5 border-b border-border bg-white flex items-center justify-between">
+                    <div className="shrink-0 px-6 py-5 border-b border-border bg-card/10 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-md bg-primary/5 flex items-center justify-center text-primary shrink-0 border border-primary/10">
+                            <div className="w-10 h-10 rounded-sm bg-primary/5 flex items-center justify-center text-primary shrink-0 border border-primary/10">
                                 <BookOpen className="h-5 w-5" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-foreground tracking-tight">
+                                <h3 className="text-sm font-black text-foreground tracking-tight uppercase">
                                     {editingArea ? 'Editar Área' : 'Nueva Área Curricular'}
                                 </h3>
-                                <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
+                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
                                     {editingArea ? 'Modifica los detalles del registro' : 'Configura un área personalizada'}
                                 </p>
                             </div>
                         </div>
                         <button 
                             onClick={() => { setShowModal(false); setEditingArea(null); }}
-                            className="p-2 rounded-md hover:bg-muted text-muted-foreground transition-colors"
+                            className="p-2 rounded-sm hover:bg-muted text-muted-foreground transition-colors"
                         >
                             <X className="h-4 w-4" />
                         </button>
                     </div>
 
                     {/* ── Content ───────────────────────────────────────────────────────── */}
-                    <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8 bg-[#f4f5f7]/30">
+                    <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8">
                         {/* Area Name Field */}
                         <div className="space-y-3">
                             <Label htmlFor="area-name" className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
@@ -299,7 +291,7 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 placeholder="Ej: Logística Digital o Arte Dramático"
-                                className="h-11 text-sm rounded-md border-border focus:ring-4 focus:ring-primary/5 focus:border-primary/50 bg-white shadow-none font-bold placeholder:text-muted-foreground/40 transition-all"
+                                className="h-11 text-sm rounded-sm border-border focus:ring-4 focus:ring-primary/5 focus:border-primary/50 bg-background shadow-none font-bold placeholder:text-muted-foreground/30 transition-all"
                                 autoFocus
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && formData.name.trim().length > 0) {
@@ -335,24 +327,24 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
                                                 }
                                             })}
                                             className={cn(
-                                                "group flex items-center justify-between p-4 rounded-md border transition-all cursor-pointer bg-white select-none",
+                                                "group flex items-center justify-between p-4 rounded-sm border transition-all cursor-pointer bg-card/10 select-none",
                                                 isSelected 
-                                                    ? "border-[#0052cc] bg-[#ebf2ff]" 
+                                                    ? "border-primary bg-primary/5" 
                                                     : "border-border hover:border-primary/30 hover:bg-muted/10",
                                                 !isAvailable && "opacity-50 cursor-not-allowed border-dashed bg-muted/5"
                                             )}
                                         >
                                             <span className={cn(
                                                 "text-[10px] font-black uppercase tracking-widest",
-                                                isSelected ? "text-[#0052cc]" : "text-muted-foreground"
+                                                isSelected ? "text-primary" : "text-muted-foreground"
                                             )}>
                                                 {level}
                                             </span>
                                             
                                             <div className={cn(
-                                                "w-5 h-5 rounded border transition-all flex items-center justify-center",
+                                                "w-5 h-5 rounded-sm border transition-all flex items-center justify-center",
                                                 isSelected 
-                                                    ? "bg-[#0052cc] border-[#0052cc]" 
+                                                    ? "bg-primary border-primary" 
                                                     : "border-border/60 group-hover:border-primary/50"
                                             )}>
                                                 {isSelected && <Check className="h-3.5 w-3.5 text-white stroke-[3]" />}
@@ -361,26 +353,22 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
                                     );
                                 })}
                             </div>
-                            <p className="text-[11px] font-medium text-muted-foreground leading-relaxed italic">
-                                Marca los niveles donde estará disponible esta área (Gran Unidad Escolar).
-                            </p>
                         </div>
                     </div>
 
                     {/* ── Footer ────────────────────────────────────────────────────────── */}
-                    <div className="shrink-0 p-5 border-t border-border bg-white flex items-center justify-between">
+                    <div className="shrink-0 p-5 border-t border-border bg-muted/10 flex items-center justify-between">
                         <Button
                             variant="ghost"
                             onClick={() => { setShowModal(false); setEditingArea(null); }}
-                            className="text-[11px] font-black uppercase tracking-widest h-10 px-6 rounded-md hover:bg-muted text-muted-foreground"
+                            className="text-[11px] font-black uppercase tracking-widest h-10 px-6 rounded-sm hover:bg-muted text-muted-foreground"
                         >
                             Cancelar
                         </Button>
                         <Button
                             onClick={handleSave}
                             disabled={formData.name.trim().length === 0 || (createMutation.isPending || updateMutation.isPending)}
-                            variant="jira"
-                            className="h-10 px-8 rounded-md font-black uppercase tracking-widest text-[11px] active:scale-95 transition-all shadow-none flex items-center gap-2"
+                            className="h-10 px-8 rounded-sm font-black uppercase tracking-widest text-[11px] active:scale-95 transition-all shadow-none flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
                         >
                             {createMutation.isPending || updateMutation.isPending ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -390,8 +378,8 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
                             {editingArea ? 'Guardar Cambios' : 'Crear Registro'}
                         </Button>
                     </div>
-                </AlertDialogContent>
-            </AlertDialog>
+                </DialogContent>
+            </Dialog>
 
             {/* Import Dialog */}
             <ImportCurricularAreasDialog
@@ -403,32 +391,18 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
                 }}
             />
 
-            {/* Delete Confirmation */}
-            <AlertDialog open={!!deletingArea} onOpenChange={() => setDeletingArea(null)}>
-                <AlertDialogContent className="shadow-none border border-border">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tight">¿Eliminar Área?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-sm">
-                            El área <span className="font-bold text-foreground">"{deletingArea?.name}"</span> será eliminada permanentemente.
-                            {deletingArea?.isStandard && (
-                                <span className="block mt-2 text-[11px] font-medium text-muted-foreground leading-relaxed">
-                                    Nota: Al ser un área estándar del CNEB, podrás volver a importarla en cualquier momento si es necesario.
-                                </span>
-                            )}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="rounded-md h-10 text-xs font-black uppercase tracking-widest border-border shadow-none">Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleDelete}
-                            className="bg-rose-600 hover:bg-rose-700 text-white rounded-md h-10 text-xs font-black uppercase tracking-widest shadow-none"
-                            disabled={deleteMutation.isPending}
-                        >
-                            {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Eliminar Registro'}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Delete Confirmation: Institutional Action Box */}
+            <ActionConfirm
+                open={!!deletingArea}
+                onOpenChange={(open) => !open && setDeletingArea(null)}
+                title="¿Confirmar eliminación de área curricular?"
+                description={`Estás por eliminar permanentemente el área "${deletingArea?.name}" del catálogo institucional. Esta acción afectará los reportes académicos asociados a este registro.`}
+                onConfirm={handleDelete}
+                confirmText="Confirmar eliminación"
+                cancelText="Mantenimiento"
+                variant="destructive"
+                isLoading={deleteMutation.isPending}
+            />
         </div >
     );
 }

@@ -7,16 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Pencil, Trash2, Star, Loader2, AlertCircle, DoorOpen } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { ActionConfirm } from '@/components/molecules/action-confirm';
 import { SimpleFormModal } from '@/components/molecules/wizard-modal';
 
 interface AulasClientProps {
@@ -314,28 +305,18 @@ export function AulasClient({ showCreateModal, setShowCreateModal }: AulasClient
                 </div>
             </SimpleFormModal>
 
-            {/* Delete Confirmation */}
-            <AlertDialog open={!!deletingClassroom} onOpenChange={() => setDeletingClassroom(null)}>
-                <AlertDialogContent className="shadow-none border border-border">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tight">¿Eliminar Aula?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-sm">
-                            El aula <span className="font-bold text-foreground">"{deletingClassroom?.name}"</span> será eliminada permanentemente.
-                            Las reservaciones existentes vinculadas a este aula no serán afectadas, pero no se podrán realizar nuevas.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="rounded-md h-10 text-xs font-black uppercase tracking-widest border-border shadow-none">Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleDelete}
-                            className="bg-rose-600 hover:bg-rose-700 text-white rounded-md h-10 text-xs font-black uppercase tracking-widest shadow-none"
-                            disabled={deleteMutation.isPending}
-                        >
-                            {deleteMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Eliminar Registro'}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {/* Delete Confirmation: Institutional Action Box */}
+            <ActionConfirm
+                open={!!deletingClassroom}
+                onOpenChange={(open) => !open && setDeletingClassroom(null)}
+                title="¿Confirmar eliminación de aula?"
+                description={`Estás por eliminar permanentemente el aula "${deletingClassroom?.name}" del catálogo institucional. No podrás realizar nuevas reservas en este espacio.`}
+                onConfirm={handleDelete}
+                confirmText="Confirmar eliminación"
+                cancelText="Mantenimiento"
+                variant="destructive"
+                isLoading={deleteMutation.isPending}
+            />
         </div>
     );
 }

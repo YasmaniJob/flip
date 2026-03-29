@@ -3,6 +3,7 @@
 import { useSession } from "@/lib/auth-client";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useMyInstitution } from "@/features/institutions/hooks/use-my-institution";
 import { Sidebar } from "@/components/sidebar";
 import { QueryProvider } from "@/providers/query-provider";
 import { Sparkles, ArrowRight, X } from "lucide-react";
@@ -20,7 +21,7 @@ export default function DashboardLayout({
     const pathname = usePathname();
     const { data: session, isPending } = useSession();
 
-    const [institution, setInstitution] = useState<any>(null);
+    const { data: institution } = useMyInstitution();
     const [isBannerDismissed, setIsBannerDismissed] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const [hideBottomNav, setHideBottomNav] = useState(false);
@@ -47,17 +48,6 @@ export default function DashboardLayout({
             setIsBannerDismissed(true);
         }
 
-        if (session?.user && (session.user as any).institutionId && !(session.user as any).isSuperAdmin && !institution) {
-            fetch('/api/institutions/my-institution')
-                .then(async res => {
-                    if (res.ok) {
-                        const data = await res.json();
-                        setInstitution(data);
-                    }
-                })
-                .catch(console.error);
-        }
-
         // Listen for bottom nav visibility changes
         const handleShowBottomNav = () => setHideBottomNav(false);
         const handleHideBottomNav = () => setHideBottomNav(true);
@@ -69,7 +59,7 @@ export default function DashboardLayout({
             window.removeEventListener('show-bottom-nav', handleShowBottomNav);
             window.removeEventListener('hide-bottom-nav', handleHideBottomNav);
         };
-    }, [session, institution]);
+    }, []);
 
     useEffect(() => {
         if (!isPending && !session) {

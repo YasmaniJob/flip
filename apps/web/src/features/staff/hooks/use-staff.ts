@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CreateStaffInput } from "@flip/shared";
 import { useApiClient } from "@/lib/api-client";
-import { useSession } from "@/lib/auth-client";
 import { handleApiError, showSuccess } from "@/lib/error-handler";
 
 type Staff = {
@@ -42,7 +41,6 @@ type UseStaffParams = {
 };
 
 export const useStaff = (params: UseStaffParams = {}) => {
-    const { data: session } = useSession();
     const api = useApiClient();
     const queryClient = useQueryClient();
 
@@ -72,7 +70,7 @@ export const useStaff = (params: UseStaffParams = {}) => {
 
             return api.get<PaginatedResponse<Staff>>(`/staff?${searchParams.toString()}`);
         },
-        enabled: enabled && !!session,
+        enabled: enabled,
         staleTime: 2 * 60 * 1000, // 2 minutes - staff data doesn't change that often
         // Keep previous data while fetching next page for better UX
         placeholderData: (previousData) => previousData,
@@ -153,23 +151,21 @@ export const useStaff = (params: UseStaffParams = {}) => {
 };
 
 export const useRecurrentStaff = (limit: number = 6) => {
-    const { data: session } = useSession();
     const api = useApiClient();
 
     return useQuery({
         queryKey: ['staff', 'recurrent', limit],
         queryFn: () => api.get<Staff[]>(`/staff/recurrent?limit=${limit}`),
-        enabled: !!session,
+        enabled: true,
     });
 };
 
 export const useMyStaff = () => {
-    const { data: session } = useSession();
     const api = useApiClient();
 
     return useQuery({
-        queryKey: ['staff', 'me', session?.user?.id],
+        queryKey: ['staff', 'me'],
         queryFn: () => api.get<Staff>('/staff/me'),
-        enabled: !!session?.user?.id,
+        enabled: true,
     });
 };

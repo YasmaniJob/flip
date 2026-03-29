@@ -4,10 +4,10 @@ import { handleApiError, showSuccess } from "@/lib/error-handler";
 
 const STALE_TIME = 1000 * 60 * 5; // 5 minutes cache
 
-export function useMeetings() {
+export function useMeetings(limit?: number) {
     return useQuery({
-        queryKey: ['meetings'],
-        queryFn: meetingsApi.findAll,
+        queryKey: ['meetings', limit],
+        queryFn: () => meetingsApi.findAll(limit),
         staleTime: STALE_TIME,
         retry: 1,
     });

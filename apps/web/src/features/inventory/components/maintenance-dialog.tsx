@@ -1,4 +1,4 @@
-import { ConfirmDeleteDialog } from '@/components/molecules/confirm-delete-dialog';
+import { ActionConfirm } from '@/components/molecules/action-confirm';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -354,13 +354,15 @@ export function MaintenanceDialog({
                 </DialogContent>
             </Dialog>
 
-            <ConfirmDeleteDialog
+            <ActionConfirm
                 open={showDecommissionConfirm}
                 onOpenChange={setShowDecommissionConfirm}
                 onConfirm={confirmDecommission}
-                title="¿Dar de baja el recurso?"
-                description={<span>Esta acción cambiará el estado a <span className="font-bold text-destructive">Baja</span> y no podrá ser prestado. ¿Deseas continuar?</span>}
-                confirmText="Sí, dar de baja"
+                title="¿Confirmar baja del recurso?"
+                description="Estás por cambiar el estado del activo a Baja. Esto lo inhabilitará permanentemente para préstamos y uso en talleres técnicos."
+                confirmText="Confirmar baja"
+                cancelText="Mantenimiento"
+                variant="destructive"
                 isLoading={isSubmitting}
             />
         </>
