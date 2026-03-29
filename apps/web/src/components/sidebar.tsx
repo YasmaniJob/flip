@@ -677,3 +677,5 @@ function Sidebar() {
     </aside>
   );
 }
+
+export { Sidebar };
