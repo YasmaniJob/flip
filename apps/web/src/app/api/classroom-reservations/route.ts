@@ -13,7 +13,7 @@ import { createReservationSchema, reservationsQuerySchema } from '@/lib/validati
 import { successResponse, paginatedResponse, errorResponse } from '@/lib/utils/response';
 import { NotFoundError, ValidationError } from '@/lib/utils/errors';
 import { validateSlotsNoConflicts, normalizeDate } from '@/lib/utils/reservations';
-import { eq, desc, and, or, asc, gte, lte } from 'drizzle-orm';
+import { eq, desc, and, or, asc, gte, lte, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
 // GET /api/classroom-reservations - List reservations with filters
@@ -26,8 +26,9 @@ export async function GET(request: NextRequest) {
     const searchParams = Object.fromEntries(request.nextUrl.searchParams);
     const query = validateQuery(reservationsQuerySchema, searchParams);
 
+    const limit = Math.min(parseInt(query.limit || '50'), 200);
     const page = parseInt(query.page || '1');
-    const limit = parseInt(query.limit || '10');
+    const offset = (page - 1) * limit;
 
     // Build where conditions for reservations
     const conditions = [
@@ -77,7 +78,8 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: [desc(classroomReservations.createdAt)],
-      limit: 1000, // Fetch more to allow in-memory filtering for shift
+      limit,
+      offset,
     });
 
     // Filter by shift if provided (calculate shift based on startTime)
@@ -99,14 +101,15 @@ export async function GET(request: NextRequest) {
     // Filter out reservations with no slots (after date/shift filtering)
     filteredReservations = filteredReservations.filter((reservation) => reservation.slots.length > 0);
 
-    const total = filteredReservations.length;
+    // For now, if shit filtering was used, total might be different than requested
+    // but we can't easily count shift-filtered results in Drizzle without complex joins.
+    // However, for standard pagination, we should include the total count from DB.
+    const totalResult = await db.select({ count: sql<number>`count(*)` }).from(classroomReservations).where(and(...conditions));
+    const total = Number(totalResult[0]?.count || 0);
     const totalPages = Math.ceil(total / limit);
-    
-    // Apply pagination in-memory for now due to complex shift filtering
-    const paginatedItems = filteredReservations.slice((page - 1) * limit, page * limit);
 
     console.log(`[TIMING] classroom-reservations GET: ${Date.now() - start}ms`);
-    return paginatedResponse(paginatedItems, {
+    return paginatedResponse(filteredReservations, {
       page,
       limit,
       total,
