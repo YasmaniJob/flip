@@ -1,71 +1,79 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { meetingTasks } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
+import { requireAuth, getInstitutionId } from '@/lib/auth/helpers';
+import { validateBody } from '@/lib/validations/helpers';
+import { updateTaskSchema } from '@/lib/validations/schemas/meetings';
+import { successResponse, errorResponse } from '@/lib/utils/response';
+import { NotFoundError } from '@/lib/utils/errors';
 
+// PATCH /api/meetings/tasks/:taskId - Update task (acuerdo)
 export async function PATCH(
     request: NextRequest,
     { params }: { params: { taskId: string } }
 ) {
     try {
-        const session = await auth.api.getSession({
-            headers: request.headers,
+        const { user } = await requireAuth(request);
+        const institutionId = await getInstitutionId(user);
+        const { taskId } = params;
+
+        // C1 FIX: Verify task exists AND belongs to the user's institution before updating
+        const task = await db.query.meetingTasks.findFirst({
+            where: eq(meetingTasks.id, taskId),
+            with: { meeting: true },
         });
 
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        if (!task || task.meeting.institutionId !== institutionId) {
+            throw new NotFoundError('Acuerdo no encontrado');
         }
 
-        const { taskId } = params;
         const body = await request.json();
+        // C2 FIX: Use validated schema instead of spreading raw body to prevent mass assignment
+        const data = validateBody(updateTaskSchema, body);
 
         const [updatedTask] = await db
             .update(meetingTasks)
             .set({
-                ...body,
+                description: data.description,
+                assignedStaffId: data.assignedStaffId,
+                status: data.status,
+                dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
                 updatedAt: new Date(),
             })
             .where(eq(meetingTasks.id, taskId))
             .returning();
 
-        if (!updatedTask) {
-            return NextResponse.json({ error: 'Acuerdo no encontrado' }, { status: 404 });
-        }
-
-        return NextResponse.json(updatedTask);
+        return successResponse(updatedTask);
     } catch (error) {
-        console.error('Error updating meeting task:', error);
-        return NextResponse.json(
-            { error: 'Error al actualizar el acuerdo' },
-            { status: 500 }
-        );
+        return errorResponse(error);
     }
 }
 
+// DELETE /api/meetings/tasks/:taskId - Delete task (acuerdo)
 export async function DELETE(
     request: NextRequest,
     { params }: { params: { taskId: string } }
 ) {
     try {
-        const session = await auth.api.getSession({
-            headers: request.headers,
+        const { user } = await requireAuth(request);
+        const institutionId = await getInstitutionId(user);
+        const { taskId } = params;
+
+        // C1 FIX: Verify task exists AND belongs to the user's institution before deleting
+        const task = await db.query.meetingTasks.findFirst({
+            where: eq(meetingTasks.id, taskId),
+            with: { meeting: true },
         });
 
-        if (!session?.user?.id) {
-            return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+        if (!task || task.meeting.institutionId !== institutionId) {
+            throw new NotFoundError('Acuerdo no encontrado');
         }
-
-        const { taskId } = params;
 
         await db.delete(meetingTasks).where(eq(meetingTasks.id, taskId));
 
-        return NextResponse.json({ success: true });
+        return successResponse({ success: true });
     } catch (error) {
-        console.error('Error deleting meeting task:', error);
-        return NextResponse.json(
-            { error: 'Error al eliminar el acuerdo' },
-            { status: 500 }
-        );
+        return errorResponse(error);
     }
 }
