@@ -29,15 +29,14 @@ export async function PATCH(
         }
 
         const body = await request.json();
-        // C2 FIX: Use validated schema instead of spreading raw body to prevent mass assignment
         const data = validateBody(updateTaskSchema, body);
 
         const [updatedTask] = await db
             .update(meetingTasks)
             .set({
                 description: data.description,
-                assignedStaffId: data.assignedStaffId,
                 status: data.status,
+                assignedStaffId: data.assignedStaffId,
                 dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
                 updatedAt: new Date(),
             })
