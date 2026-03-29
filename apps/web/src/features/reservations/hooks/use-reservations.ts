@@ -130,23 +130,25 @@ export function useRescheduleBlock() {
 // RESERVATION ATTENDANCE HOOKS (per-person for workshops)
 // ============================================
 
-export function useReservationAttendance(reservationId: string) {
+export function useReservationAttendance(reservationId: string, options?: any) {
     return useQuery({
         queryKey: reservationKeys.attendance(reservationId),
         queryFn: () => ReservationsApi.getAttendance(reservationId),
-        enabled: !!reservationId,
-        retry: 2,
+        enabled: !!reservationId && (options?.enabled !== false),
+        ...options,
     });
 }
 
 export function useAddReservationAttendee() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ reservationId, staffId }: { reservationId: string; staffId: string }) =>
-            ReservationsApi.addAttendee(reservationId, staffId),
-        onSuccess: (_, vars) => {
+        mutationFn: ({ reservationId, staffId, staffIds }: { reservationId: string; staffId?: string; staffIds?: string[] }) =>
+            ReservationsApi.addAttendee(reservationId, { staffId, staffIds }),
+        onSuccess: (data, vars) => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.attendance(vars.reservationId) });
-            showSuccess('Participante agregado');
+            queryClient.invalidateQueries({ queryKey: ['staff'] }); // Invalidate staff to refresh exclusion filters
+            const count = data.count || (vars.staffIds?.length || 1);
+            showSuccess(count > 1 ? `${count} participantes agregados` : 'Participante agregado');
         },
         onError: (error) => {
             handleApiError(error, 'No se pudo agregar el participante');
@@ -182,16 +184,30 @@ export function useRemoveReservationAttendee() {
     });
 }
 
+export function useCheckInReservation() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (reservationId: string) => ReservationsApi.checkIn(reservationId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: reservationKeys.all });
+            showSuccess('¡Asistencia registrada!');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo registrar la asistencia');
+        },
+    });
+}
+
 // ============================================
 // RESERVATION TASKS HOOKS (agreements for workshops)
 // ============================================
 
-export function useReservationTasks(reservationId: string) {
+export function useReservationTasks(reservationId: string, options?: any) {
     return useQuery({
         queryKey: reservationKeys.tasks(reservationId),
         queryFn: () => ReservationsApi.getTasks(reservationId),
-        enabled: !!reservationId,
-        retry: 2,
+        enabled: !!reservationId && (options?.enabled !== false),
+        ...options,
     });
 }
 

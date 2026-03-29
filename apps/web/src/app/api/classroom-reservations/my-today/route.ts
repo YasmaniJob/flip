@@ -1,10 +1,15 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { classroomReservations, reservationSlots, staff } from '@/lib/db/schema';
+import { 
+  classroomReservations, 
+  reservationSlots, 
+  staff, 
+  reservationAttendance 
+} from '@/lib/db/schema';
 import { requireAuth, getInstitutionId } from '@/lib/auth/helpers';
 import { successResponse, errorResponse } from '@/lib/utils/response';
 import { normalizeDate } from '@/lib/utils/reservations';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or, desc } from 'drizzle-orm';
 
 // GET /api/classroom-reservations/my-today - Get current user's reservations for today
 export async function GET(request: NextRequest) {
@@ -15,31 +20,52 @@ export async function GET(request: NextRequest) {
     // Get today's date normalized
     const today = normalizeDate(new Date().toISOString());
 
-    // Get user's staff record
-    const staffRecord = await db.query.staff.findFirst({
+    const isSuperAdmin = user.role === 'superadmin' || user.isSuperAdmin;
+
+    // Get user's staff record (if they have one)
+    let staffRecord = await db.query.staff.findFirst({
       where: and(
         eq(staff.email, user.email),
         eq(staff.institutionId, institutionId)
       ),
     });
 
-    if (!staffRecord) {
+    // If superadmin but no staff record, we don't return [] yet, we continue
+    if (!staffRecord && !isSuperAdmin) {
       return successResponse([]);
     }
 
-    // Get reservations for this staff member
-    const reservationsList = await db.query.classroomReservations.findMany({
-      where: and(
-        eq(classroomReservations.staffId, staffRecord.id),
+    // Get reservations:
+    // 1. Owned by this staff member (if any)
+    // 2. OR Type is workshop (Institutional Workshops)
+    // 3. IF SUPERADMIN: All active reservations in the institution
+    const searchConditions = [
         eq(classroomReservations.institutionId, institutionId),
-        eq(classroomReservations.status, 'active')
-      ),
+        eq(classroomReservations.status, 'active'),
+    ];
+
+    if (!isSuperAdmin && staffRecord) {
+        searchConditions.push(
+            or(
+                eq(classroomReservations.staffId, staffRecord.id),
+                eq(classroomReservations.type, 'workshop')
+            ) as any
+        );
+    }
+
+    const reservationsList = await db.query.classroomReservations.findMany({
+      where: and(...searchConditions),
       with: {
         classroom: true,
-        staff: true,
+        staff: {
+          columns: { id: true, name: true, role: true }
+        },
         grade: true,
         section: true,
         curricularArea: true,
+        attendance: staffRecord ? {
+           where: eq(reservationAttendance.staffId, staffRecord.id)
+        } : undefined,
         slots: {
           where: eq(reservationSlots.date, today),
           with: {
@@ -47,6 +73,7 @@ export async function GET(request: NextRequest) {
           },
         },
       },
+      orderBy: [desc(classroomReservations.createdAt)],
     });
 
     // Filter out reservations with no slots for today

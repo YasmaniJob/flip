@@ -22,6 +22,13 @@ export async function GET(request: NextRequest) {
 
     const results = await db.query.sections.findMany({
       where: and(...conditions),
+      columns: {
+        id: true,
+        name: true,
+        gradeId: true,
+        areaId: true,
+        studentCount: true,
+      },
       orderBy: [asc(sections.name)],
     });
 

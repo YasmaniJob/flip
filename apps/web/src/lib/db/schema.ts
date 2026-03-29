@@ -78,6 +78,8 @@ export const users = pgTable('users', {
 }, (table) => ({
     institutionIdx: index('idx_user_institution').on(table.institutionId),
     emailIdx: index('idx_user_email').on(table.email),
+    dniIdx: index('idx_user_dni').on(table.dni),
+    roleIdx: index('idx_user_role').on(table.role),
 }));
 
 // ============================================
@@ -293,6 +295,7 @@ export const grades = pgTable('grades', {
     sortOrder: integer('sort_order').default(0),
     createdAt: timestamp('created_at').defaultNow(),
 }, (table) => ({
+    institutionIdx: index('idx_grade_institution').on(table.institutionId),
     institutionLevelIdx: index('idx_grade_institution_level').on(table.institutionId, table.level),
 }));
 
@@ -308,6 +311,7 @@ export const sections = pgTable('sections', {
     studentCount: integer('student_count'),
     createdAt: timestamp('created_at').defaultNow(),
 }, (table) => ({
+    institutionIdx: index('idx_section_institution').on(table.institutionId),
     gradeIdx: index('idx_section_grade').on(table.gradeId),
 }));
 
@@ -385,6 +389,8 @@ export const reservationSlots = pgTable('reservation_slots', {
 }, (table) => ({
     reservationIdx: index('idx_slot_reservation').on(table.reservationId),
     classroomIdx: index('idx_slot_classroom').on(table.classroomId),
+    institutionIdx: index('idx_slot_institution').on(table.institutionId),
+    institutionDateIdx: index('idx_slot_institution_date').on(table.institutionId, table.date),
     // Unique constraint: only one reservation per classroom + date + hour
     uniqueSlot: uniqueIndex('idx_slot_unique').on(table.classroomId, table.date, table.pedagogicalHourId),
 }));

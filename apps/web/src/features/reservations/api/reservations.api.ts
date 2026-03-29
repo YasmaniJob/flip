@@ -15,6 +15,7 @@ export interface ReservationSlot {
     staff?: {
         id: string;
         name: string;
+        role?: string;
     };
     grade?: {
         id: string;
@@ -33,6 +34,7 @@ export interface ReservationSlot {
     title?: string | null;
     reservationMainId?: string;
     classroomId?: string;
+    attendance?: any[];
 }
 
 export interface ReservationAttendance {
@@ -118,6 +120,7 @@ export const ReservationsApi = {
                         staff: reservation.staff ? {
                             id: reservation.staff.id,
                             name: reservation.staff.user?.name || reservation.staff.name || 'Sin nombre',
+                            role: reservation.staff.role,
                         } : undefined,
                         grade: reservation.grade,
                         section: reservation.section,
@@ -195,13 +198,13 @@ export const ReservationsApi = {
         return handleResponse<ReservationAttendance[]>(res);
     },
 
-    addAttendee: async (reservationId: string, staffId: string): Promise<ReservationAttendance> => {
+    addAttendee: async (reservationId: string, data: { staffId?: string; staffIds?: string[] }): Promise<{ count: number }> => {
         const res = await fetch(`${BASE_URL}/${reservationId}/attendance`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ staffId }),
+            body: JSON.stringify(data),
         });
-        return handleResponse<ReservationAttendance>(res);
+        return handleResponse<{ count: number }>(res);
     },
 
     bulkUpdateAttendance: async (reservationId: string, updates: { attendanceId: string; status: string }[]): Promise<void> => {
@@ -216,6 +219,11 @@ export const ReservationsApi = {
     removeAttendee: async (attendanceId: string): Promise<void> => {
         const res = await fetch(`${BASE_URL}/attendance/${attendanceId}`, { method: 'DELETE' });
         return handleResponse<void>(res);
+    },
+
+    checkIn: async (reservationId: string): Promise<any> => {
+        const res = await fetch(`${BASE_URL}/${reservationId}/attendance/check-in`, { method: 'POST' });
+        return handleResponse<any>(res);
     },
 
     // ============================================

@@ -7,6 +7,7 @@ import { createTaskSchema } from '@/lib/validations/schemas/reservations';
 import { successResponse, errorResponse } from '@/lib/utils/response';
 import { NotFoundError } from '@/lib/utils/errors';
 import { eq, and } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
 
 // GET /api/classroom-reservations/:id/tasks - List tasks for reservation
 export async function GET(
@@ -87,7 +88,7 @@ export async function POST(
     const [task] = await db
       .insert(reservationTasks)
       .values({
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         reservationId: id,
         description: data.description,
         assignedStaffId: data.assignedStaffId,

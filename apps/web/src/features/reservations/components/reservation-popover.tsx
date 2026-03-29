@@ -182,22 +182,21 @@ export function ReservationPopover({ slot, children, classroomId, shift }: Reser
 
             {/* Cancel Confirmation Dialog */}
             <AlertDialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
-                <AlertDialogContent>
+                <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle>¿Cancelar reserva?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Esta acción no se puede deshacer. La reserva de {slot.staff?.name}
-                            para el {format(slotDate, "d 'de' MMMM", { locale: es })} será cancelada.
+                        <AlertDialogTitle className="text-xl font-black tracking-tight text-slate-900">¿Cancelar esta reserva?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm font-medium text-slate-500 leading-relaxed">
+                            Esta acción no se puede deshacer. Se liberará el horario para {slot.staff?.name || 'la sesión'} en el calendario del AIP.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Volver</AlertDialogCancel>
+                    <AlertDialogFooter className="mt-6">
+                        <AlertDialogCancel className="rounded-xl h-11 border-slate-200 font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-slate-50">Volver</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleCancel}
-                            className="bg-red-600 hover:bg-red-700"
+                            className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-11 font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-red-600/20"
                             disabled={cancelMutation.isPending}
                         >
-                            {cancelMutation.isPending ? 'Cancelando...' : 'Sí, cancelar'}
+                            {cancelMutation.isPending ? 'Cancelando...' : 'Confirmar Cancelación'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

@@ -26,6 +26,7 @@ export const staffQuerySchema = z.object({
   role: z.string().optional(),
   status: z.string().optional(),
   include_admins: z.string().optional(), // 'true' | 'false'
+  exclude_reservation_id: z.string().optional(),
 });
 
 // Query params for recurrent staff

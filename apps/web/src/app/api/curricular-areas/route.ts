@@ -31,6 +31,13 @@ export async function GET(request: NextRequest) {
 
     const results = await db.query.curricularAreas.findMany({
       where: and(...conditions),
+      columns: {
+        id: true,
+        name: true,
+        levels: true,
+        isStandard: true,
+        active: true,
+      },
       orderBy: [asc(curricularAreas.name)],
     });
 

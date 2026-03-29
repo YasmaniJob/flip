@@ -93,13 +93,13 @@ export function ReservationDialog({
     const { data: myStaff } = useMyStaff();
     const { canManage, user } = useUserRole();
 
-    // Auto-set teacher staff ID when not admin/manager
+    // Auto-set staff ID to current user by default
     useEffect(() => {
-        if (!canManage && myStaff?.id) {
+        if (open && myStaff?.id && !selectedStaffId) {
             setSelectedStaffId(myStaff.id);
             setSelectedStaffName(myStaff.name || '');
         }
-    }, [canManage, myStaff]);
+    }, [open, myStaff, selectedStaffId]);
 
     // UI States
     const [staffSearch, setStaffSearch] = useState('');

@@ -15,6 +15,14 @@ export async function GET(request: NextRequest) {
 
     const results = await db.query.classrooms.findMany({
       where: eq(classrooms.institutionId, institutionId),
+      columns: {
+        id: true,
+        name: true,
+        code: true,
+        isPrimary: true,
+        sortOrder: true,
+        active: true,
+      },
       orderBy: [asc(classrooms.sortOrder), asc(classrooms.name)],
     });
 

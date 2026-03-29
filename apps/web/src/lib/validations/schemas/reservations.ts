@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isoDateTimeSchema, flexibleDateSchema, optionalIsoDateTimeSchema, optionalSimpleDateSchema } from '../date-schemas';
+import { flexibleDateSchema, optionalIsoDateTimeSchema, optionalSimpleDateSchema } from '../date-schemas';
 
 // Reservation type enum
 export const reservationTypeEnum = z.enum(['class', 'workshop']);
@@ -15,18 +15,18 @@ export const taskStatusEnum = z.enum(['pending', 'completed']);
 
 // Slot schema (for creating reservation)
 export const slotSchema = z.object({
-  pedagogicalHourId: z.string().uuid('ID de hora pedagógica inválido'),
+  pedagogicalHourId: z.string().min(1, 'ID de hora pedagógica inválido'),
   date: flexibleDateSchema,
 });
 
 // Create reservation
 export const createReservationSchema = z.object({
-  staffId: z.string().uuid('ID de staff inválido'),
-  classroomId: z.string().uuid('ID de aula inválido').optional(),
+  staffId: z.string().min(1, 'ID de staff inválido'),
+  classroomId: z.string().min(1, 'ID de aula inválido').optional(),
   slots: z.array(slotSchema).min(1, 'Debe incluir al menos un slot'),
-  gradeId: z.string().uuid().optional(),
-  sectionId: z.string().uuid().optional(),
-  curricularAreaId: z.string().uuid().optional(),
+  gradeId: z.string().optional(),
+  sectionId: z.string().optional(),
+  curricularAreaId: z.string().optional(),
   purpose: z.string().optional(),
   type: reservationTypeEnum.optional().default('class'),
   title: z.string().optional(),
@@ -36,7 +36,7 @@ export const createReservationSchema = z.object({
 export const reservationsQuerySchema = z.object({
   startDate: optionalSimpleDateSchema,
   endDate: optionalSimpleDateSchema,
-  classroomId: z.string().uuid().optional(),
+  classroomId: z.string().min(1).optional(),
   shift: z.string().optional(),
   page: z.string().optional(),
   limit: z.string().optional(),
@@ -45,7 +45,7 @@ export const reservationsQuerySchema = z.object({
 // Reschedule single slot
 export const rescheduleSlotSchema = z.object({
   newDate: flexibleDateSchema,
-  newPedagogicalHourId: z.string().uuid('ID de hora pedagógica inválido'),
+  newPedagogicalHourId: z.string().min(1, 'ID de hora pedagógica inválido'),
 });
 
 // Reschedule block (all slots)
@@ -60,14 +60,18 @@ export const markAttendanceSchema = z.object({
 
 // Create attendance (workshop)
 export const createAttendanceSchema = z.object({
-  staffId: z.string().uuid('ID de staff inválido'),
+  staffId: z.string().min(1, 'ID de staff inválido').optional(),
+  staffIds: z.array(z.string()).optional(),
+}).refine(data => data.staffId || (data.staffIds && data.staffIds.length > 0), {
+  message: "Debe proporcionar al menos un ID de personal",
+  path: ["staffId"]
 });
 
 // Bulk update attendance
 export const bulkUpdateAttendanceSchema = z.object({
   updates: z.array(
     z.object({
-      attendanceId: z.string().uuid('ID de asistencia inválido'),
+      attendanceId: z.string().min(1, 'ID de asistencia inválido'),
       status: attendanceStatusEnum,
     })
   ).min(1, 'Debe incluir al menos una actualización'),
@@ -76,7 +80,7 @@ export const bulkUpdateAttendanceSchema = z.object({
 // Create task
 export const createTaskSchema = z.object({
   description: z.string().min(1, 'La descripción es requerida'),
-  assignedStaffId: z.string().uuid().optional(),
+  assignedStaffId: z.string().optional(),
   dueDate: optionalIsoDateTimeSchema,
   status: taskStatusEnum.optional().default('pending'),
 });
@@ -84,7 +88,7 @@ export const createTaskSchema = z.object({
 // Update task
 export const updateTaskSchema = z.object({
   description: z.string().min(1).optional(),
-  assignedStaffId: z.string().uuid().optional(),
+  assignedStaffId: z.string().optional(),
   dueDate: optionalIsoDateTimeSchema,
   status: taskStatusEnum.optional(),
 });

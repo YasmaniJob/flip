@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireSuperAdmin } from '@/lib/auth/helpers';
 import { successResponse, errorResponse } from '@/lib/utils/response';
 import { validateBody } from '@/lib/validations/helpers';
+import { randomUUID } from 'crypto';
 import { db } from '@/lib/db';
 import { institutions, subscriptionHistory, users as usersTable } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -191,7 +192,7 @@ export async function PATCH(
 
       if (historyEvent) {
         await tx.insert(subscriptionHistory).values({
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           institutionId: id,
           ...historyEvent,
         });

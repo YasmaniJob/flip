@@ -47,7 +47,10 @@ export function errorResponse(error: unknown) {
   }
 
   // Handle unknown errors
-  console.error('Unexpected error:', error);
+  console.error('[ERROR] Unexpected server error:', error);
+  if (error instanceof Error && error.stack) {
+    console.error(error.stack);
+  }
   return NextResponse.json(
     {
       error: 'Error interno del servidor',

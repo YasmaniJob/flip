@@ -15,6 +15,15 @@ export async function GET(request: NextRequest) {
 
     const results = await db.query.pedagogicalHours.findMany({
       where: eq(pedagogicalHours.institutionId, institutionId),
+      columns: {
+        id: true,
+        name: true,
+        startTime: true,
+        endTime: true,
+        sortOrder: true,
+        isBreak: true,
+        active: true,
+      },
       orderBy: [asc(pedagogicalHours.sortOrder)],
     });
 

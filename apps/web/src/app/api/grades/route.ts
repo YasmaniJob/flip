@@ -22,6 +22,12 @@ export async function GET(request: NextRequest) {
 
     const results = await db.query.grades.findMany({
       where: and(...conditions),
+      columns: {
+        id: true,
+        name: true,
+        level: true,
+        sortOrder: true,
+      },
       orderBy: [asc(grades.level), asc(grades.sortOrder)],
     });
 

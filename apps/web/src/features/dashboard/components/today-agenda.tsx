@@ -1,15 +1,17 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Loader2, Calendar, Plus, CheckCircle2, Clock } from 'lucide-react';
+import { Loader2, Calendar, Plus, CheckCircle2, Clock, Users } from 'lucide-react';
 import { Button } from '@/components/atoms/button';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useMyTodayReservations } from '@/features/reservations/hooks/use-reservations';
+import { useMyTodayReservations, useCheckInReservation } from '@/features/reservations/hooks/use-reservations';
 import { useMeetings } from '@/features/meetings/hooks/use-meetings';
+import { useSession } from '@/lib/auth-client';
 
 interface AgendaItem {
     id: string;
+    reservationId?: string; // Original ID
     type: 'class' | 'workshop' | 'meeting';
     title: string;
     timeStart: string;
@@ -19,6 +21,8 @@ interface AgendaItem {
     isCompleted: boolean;
     isPast: boolean;
     isNext: boolean; // The next upcoming item
+    canCheckIn?: boolean;
+    isOwner?: boolean;
 }
 
 function getTypeLabel(type: AgendaItem['type']) {
@@ -26,8 +30,6 @@ function getTypeLabel(type: AgendaItem['type']) {
     if (type === 'workshop') return 'Taller';
     return 'Clase de Aula';
 }
-
-
 
 // Utility for time parsing
 const parseTime = (time: string) => {
@@ -37,6 +39,8 @@ const parseTime = (time: string) => {
 
 export function TodayAgenda() {
     const router = useRouter();
+    const { data: session } = useSession();
+    const checkIn = useCheckInReservation();
 
     const { data: todayReservations, isLoading: isReservationsLoading } = useMyTodayReservations();
     const { data: allMeetings, isLoading: isMeetingsLoading } = useMeetings();
@@ -47,6 +51,8 @@ export function TodayAgenda() {
         const agenda: AgendaItem[] = [];
         const now = new Date();
         const nowMinutes = now.getHours() * 60 + now.getMinutes();
+        const staffId = (session?.user as any)?.staffId;
+        const isSuperAdmin = (session?.user as any)?.role === 'superadmin' || !!(session?.user as any)?.isSuperAdmin;
 
         if (todayReservations) {
             todayReservations.forEach(slot => {
@@ -55,10 +61,17 @@ export function TodayAgenda() {
                 const startVal = parseTime(start);
                 const endVal = parseTime(end);
 
-                const isCompleted = slot.attended || nowMinutes > endVal;
+                const isOwner = staffId && slot.staff?.id === staffId;
+                // If workshop and not owner and not attended yet
+                const isWorkshop = slot.type === 'workshop';
+                const hasAttended = (slot.attendance && slot.attendance.length > 0) || slot.attended;
+                const isCompleted = isOwner ? slot.attended : hasAttended;
+
+                const canCheckIn = (isWorkshop || isSuperAdmin) && !isOwner && !hasAttended && !isCompleted;
 
                 agenda.push({
                     id: `slot-${slot.id}`,
+                    reservationId: slot.reservationMainId || slot.id,
                     type: (slot.type as any) || 'class',
                     title: slot.title || slot.purpose || (slot.type === 'workshop' ? 'Taller' : 'Clase Regular'),
                     timeStart: start,
@@ -66,8 +79,10 @@ export function TodayAgenda() {
                     sortTime: startVal,
                     statusLabel: isCompleted ? 'Realizada' : 'Reservada',
                     isCompleted,
-                    isPast: nowMinutes > endVal && !slot.attended,
+                    isPast: nowMinutes > endVal && !isCompleted,
                     isNext: false,
+                    canCheckIn,
+                    isOwner
                 });
             });
         }
@@ -105,7 +120,7 @@ export function TodayAgenda() {
         if (nextIndex !== -1) sorted[nextIndex].isNext = true;
 
         return sorted;
-    }, [todayReservations, allMeetings]);
+    }, [todayReservations, allMeetings, session]);
 
     const completedCount = items.filter(i => i.isCompleted).length;
     const nextItem = items.find(i => i.isNext);
@@ -175,7 +190,7 @@ export function TodayAgenda() {
                             )}
                         >
                             {/* Time Pillar */}
-                            <div className="w-16 sm:w-20 shrink-0 flex flex-col items-center justify-center border-r border-border/40 py-3 tabular-nums">
+                            <div className="w-16 sm:w-20 shrink-0 flex flex-col items-center justify-center border-r border-border/40 py-3 tabular-nums text-center">
                                 <span className={cn(
                                     "text-xs font-black tracking-tighter transition-colors",
                                     item.isCompleted ? "text-muted-foreground/50" : "text-foreground"
@@ -188,12 +203,12 @@ export function TodayAgenda() {
 
                             {/* Event Space */}
                             <div className="flex-1 p-3 min-w-0 relative">
-                                <div className="flex items-start justify-between gap-4 mb-2">
-                                    <div className="flex flex-col min-w-0">
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex flex-col min-w-0 flex-1">
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className={cn(
                                                 "text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded",
-                                                item.isCompleted ? "bg-muted text-muted-foreground/60" : "bg-primary/10 text-primary"
+                                                item.isCompleted ? "bg-muted text-muted-foreground/60" : "bg-primary/20 text-primary"
                                             )}>
                                                 {getTypeLabel(item.type)}
                                             </span>
@@ -202,7 +217,7 @@ export function TodayAgenda() {
                                             )}
                                         </div>
                                         <h3 className={cn(
-                                            "text-sm font-bold tracking-tight truncate transition-colors",
+                                            "text-sm font-black tracking-tight truncate transition-colors uppercase",
                                             item.isCompleted ? "text-muted-foreground/50 line-through" : "text-foreground group-hover:text-primary"
                                         )}>
                                             {item.title}
@@ -210,20 +225,35 @@ export function TodayAgenda() {
                                     </div>
 
                                     {/* Action/Status Icon */}
-                                    <div className={cn(
-                                        "h-8 w-8 rounded-lg flex items-center justify-center border transition-all",
-                                        item.isCompleted
-                                            ? "border-success/20 bg-success/[0.02] text-success"
-                                            : "border-border/60 bg-muted/20 text-muted-foreground group-hover:border-primary/40 group-hover:text-primary"
-                                    )}>
-                                        {item.isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {item.canCheckIn && (
+                                            <Button
+                                                size="sm"
+                                                onClick={() => item.reservationId && checkIn.mutate(item.reservationId)}
+                                                disabled={checkIn.isPending}
+                                                className="h-8 rounded-full px-4 text-[9px] font-black uppercase bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+                                            >
+                                                {checkIn.isPending ? "Espere..." : "Confirmar"}
+                                            </Button>
+                                        )}
+                                        
+                                        <div className={cn(
+                                            "h-9 w-9 rounded-xl flex items-center justify-center border transition-all",
+                                            item.isCompleted
+                                                ? "border-success/20 bg-success/[0.02] text-success"
+                                                : "border-border/60 bg-muted/30 text-muted-foreground group-hover:border-primary/40 group-hover:text-primary"
+                                        )}>
+                                            {item.isCompleted ? <CheckCircle2 className="h-4 w-4" /> : 
+                                             item.type === 'workshop' ? <Users className="h-4 w-4" /> :
+                                             <Calendar className="h-4 w-4" />}
+                                        </div>
                                     </div>
                                 </div>
 
                                 {/* Item Progress visual (for current) */}
                                 {item.isNext && !item.isCompleted && (
-                                    <div className="absolute bottom-0 left-0 h-0.5 bg-primary/20 w-full overflow-hidden">
-                                        <div className="h-full bg-primary/60 animate-[progress_3s_ease-in-out_infinite]" style={{ width: '30%' }} />
+                                    <div className="absolute bottom-0 left-0 h-0.5 bg-primary/10 w-full overflow-hidden">
+                                        <div className="h-full bg-primary/40 animate-[progress_3s_ease-in-out_infinite]" style={{ width: '30%' }} />
                                     </div>
                                 )}
                             </div>

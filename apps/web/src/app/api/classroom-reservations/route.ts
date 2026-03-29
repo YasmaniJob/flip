@@ -5,23 +5,18 @@ import {
   reservationSlots, 
   staff, 
   classrooms,
-  pedagogicalHours,
-  grades,
-  sections,
-  curricularAreas,
   users
 } from '@/lib/db/schema';
 import { requireAuth, getInstitutionId } from '@/lib/auth/helpers';
 import { validateBody, validateQuery } from '@/lib/validations/helpers';
 import { createReservationSchema, reservationsQuerySchema } from '@/lib/validations/schemas/reservations';
 import { successResponse, paginatedResponse, errorResponse } from '@/lib/utils/response';
-import { NotFoundError } from '@/lib/utils/errors';
+import { NotFoundError, ValidationError } from '@/lib/utils/errors';
 import { validateSlotsNoConflicts, normalizeDate } from '@/lib/utils/reservations';
-import { eq, desc, and, asc, gte, lte, sql } from 'drizzle-orm';
+import { eq, desc, and, or, asc, gte, lte } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
 // GET /api/classroom-reservations - List reservations with filters
-// Updated: 2026-03-22 12:30 - Optimized with single query using Drizzle relations
 export async function GET(request: NextRequest) {
   const start = Date.now();
   try {
@@ -33,10 +28,12 @@ export async function GET(request: NextRequest) {
 
     const page = parseInt(query.page || '1');
     const limit = parseInt(query.limit || '10');
-    const offset = (page - 1) * limit;
 
     // Build where conditions for reservations
-    const conditions = [eq(classroomReservations.institutionId, institutionId)];
+    const conditions = [
+        eq(classroomReservations.institutionId, institutionId),
+        eq(classroomReservations.status, 'active')
+    ];
 
     if (query.classroomId) {
       conditions.push(eq(classroomReservations.classroomId, query.classroomId));
@@ -51,10 +48,6 @@ export async function GET(request: NextRequest) {
       slotsWhereConditions.push(lte(reservationSlots.date, new Date(normalizeDate(query.endDate))));
     }
 
-    // Get reservations WITH all nested relations in a single query
-    // Only select active reservations to reduce data
-    conditions.push(eq(classroomReservations.status, 'active'));
-    
     const reservationsWithRelations = await db.query.classroomReservations.findMany({
       where: and(...conditions),
       with: {
@@ -62,7 +55,7 @@ export async function GET(request: NextRequest) {
           columns: { id: true, name: true }
         },
         staff: {
-          columns: { id: true, name: true }
+          columns: { id: true, name: true, role: true }
         },
         grade: {
           columns: { id: true, name: true }
@@ -84,7 +77,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: [desc(classroomReservations.createdAt)],
-      limit: 1000, // Increase limit to avoid pagination issues
+      limit: 1000, // Fetch more to allow in-memory filtering for shift
     });
 
     // Filter by shift if provided (calculate shift based on startTime)
@@ -96,27 +89,31 @@ export async function GET(request: NextRequest) {
           slots: reservation.slots.filter((slot) => {
             if (!slot.pedagogicalHour) return false;
             const isMorning = slot.pedagogicalHour.startTime < '13:00';
-            const shift = isMorning ? 'mañana' : 'tarde';
-            return shift === query.shift;
+            const shiftName = isMorning ? 'mañana' : 'tarde';
+            return shiftName === query.shift;
           }),
         }))
         .filter((reservation) => reservation.slots.length > 0);
     }
 
-    // Filter out reservations with no slots (after date filtering in DB)
+    // Filter out reservations with no slots (after date/shift filtering)
     filteredReservations = filteredReservations.filter((reservation) => reservation.slots.length > 0);
 
     const total = filteredReservations.length;
+    const totalPages = Math.ceil(total / limit);
+    
+    // Apply pagination in-memory for now due to complex shift filtering
+    const paginatedItems = filteredReservations.slice((page - 1) * limit, page * limit);
 
     console.log(`[TIMING] classroom-reservations GET: ${Date.now() - start}ms`);
-    return paginatedResponse(filteredReservations, {
+    return paginatedResponse(paginatedItems, {
       page,
       limit,
       total,
+      lastPage: totalPages
     });
   } catch (error) {
     console.error('[ERROR] classroom-reservations GET:', error);
-    console.log(`[TIMING] classroom-reservations GET ERROR: ${Date.now() - start}ms`);
     return errorResponse(error);
   }
 }
@@ -131,29 +128,57 @@ export async function POST(request: NextRequest) {
     const data = validateBody(createReservationSchema, body);
 
     // Verify staff exists and belongs to institution
-    const staffRecord = await db.query.staff.findFirst({
+    let staffRecord = await db.query.staff.findFirst({
       where: and(
         eq(staff.id, data.staffId),
         eq(staff.institutionId, institutionId)
       ),
     });
 
+    // If not found, check if this is a userId belonging to an Admin/SuperAdmin
     if (!staffRecord) {
-      throw new NotFoundError('Personal no encontrado');
+        const potentialAdmin = await db.query.users.findFirst({
+            where: and(
+                eq(users.id, data.staffId),
+                or(eq(users.role, 'admin'), eq(users.role, 'pip'), eq(users.isSuperAdmin, true)) as any
+            ),
+        });
+
+        if (potentialAdmin) {
+            // Auto-create staff record for this admin/PIP in this institution
+            const [newStaff] = await db.insert(staff).values({
+                id: randomUUID(),
+                institutionId,
+                name: potentialAdmin.name,
+                email: potentialAdmin.email,
+                role: (potentialAdmin as any).isSuperAdmin ? 'superadmin' : (potentialAdmin.role === 'pip' ? 'pip' : 'admin'),
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            }).returning();
+            
+            staffRecord = newStaff;
+            data.staffId = newStaff.id;
+        }
     }
 
-    // If classroomId provided, verify it exists
-    if (data.classroomId) {
-      const classroom = await db.query.classrooms.findFirst({
-        where: and(
-          eq(classrooms.id, data.classroomId),
-          eq(classrooms.institutionId, institutionId)
-        ),
-      });
+    if (!staffRecord) {
+      throw new NotFoundError('Responsable no encontrado');
+    }
 
-      if (!classroom) {
-        throw new NotFoundError('Aula no encontrada');
-      }
+    if (!data.classroomId) {
+        throw new ValidationError('El aula es obligatoria');
+    }
+
+    // Verify classroom exists
+    const classroom = await db.query.classrooms.findFirst({
+      where: and(
+        eq(classrooms.id, data.classroomId),
+        eq(classrooms.institutionId, institutionId)
+      ),
+    });
+
+    if (!classroom) {
+      throw new NotFoundError('Aula no encontrada');
     }
 
     // Validate no conflicts for all slots
@@ -174,13 +199,13 @@ export async function POST(request: NextRequest) {
           id: randomUUID(),
           institutionId,
           staffId: data.staffId,
-          classroomId: data.classroomId,
-          gradeId: data.gradeId,
-          sectionId: data.sectionId,
-          curricularAreaId: data.curricularAreaId,
+          classroomId: data.classroomId!,
+          gradeId: data.gradeId || null,
+          sectionId: data.sectionId || null,
+          curricularAreaId: data.curricularAreaId || null,
           type: data.type || 'class',
-          title: data.title,
-          purpose: data.purpose,
+          title: data.title || null,
+          purpose: data.purpose || null,
           status: 'active',
         })
         .returning();
@@ -192,7 +217,7 @@ export async function POST(request: NextRequest) {
         institutionId,
         classroomId: data.classroomId!,
         pedagogicalHourId: slot.pedagogicalHourId,
-        date: normalizeDate(slot.date),
+        date: new Date(normalizeDate(slot.date)),
         attended: false,
       }));
 
@@ -223,6 +248,7 @@ export async function POST(request: NextRequest) {
 
     return successResponse(reservationWithRelations, 'Reserva creada exitosamente', 201);
   } catch (error) {
+    console.error('[ERROR] classroom-reservations POST:', error);
     return errorResponse(error);
   }
 }

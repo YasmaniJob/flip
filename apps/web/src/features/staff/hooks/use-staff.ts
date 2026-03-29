@@ -37,6 +37,8 @@ type UseStaffParams = {
     role?: string;
     status?: string;
     includeAdmins?: boolean;
+    excludeReservationId?: string;
+    enabled?: boolean;
 };
 
 export const useStaff = (params: UseStaffParams = {}) => {
@@ -44,11 +46,19 @@ export const useStaff = (params: UseStaffParams = {}) => {
     const api = useApiClient();
     const queryClient = useQueryClient();
 
-    const { page = 1, limit = 10, search = '', role, status, includeAdmins } = params;
+    const { 
+        page = 1, 
+        limit = 10, 
+        search = '', 
+        role, 
+        status, 
+        includeAdmins,
+        excludeReservationId,
+        enabled = true 
+    } = params;
 
-    // Fetch Staff (Paginated)
     const { data, isLoading, error } = useQuery({
-        queryKey: ['staff', { page, limit, search, role, status, includeAdmins }],
+        queryKey: ['staff', { page, limit, search, role, status, includeAdmins, excludeReservationId }],
         queryFn: async () => {
             // Build query string
             const searchParams = new URLSearchParams();
@@ -58,10 +68,11 @@ export const useStaff = (params: UseStaffParams = {}) => {
             if (role) searchParams.set('role', role);
             if (status) searchParams.set('status', status);
             if (includeAdmins) searchParams.set('include_admins', 'true');
+            if (excludeReservationId) searchParams.set('exclude_reservation_id', excludeReservationId);
 
             return api.get<PaginatedResponse<Staff>>(`/staff?${searchParams.toString()}`);
         },
-        enabled: !!session,
+        enabled: enabled && !!session,
         staleTime: 2 * 60 * 1000, // 2 minutes - staff data doesn't change that often
         // Keep previous data while fetching next page for better UX
         placeholderData: (previousData) => previousData,

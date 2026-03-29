@@ -5,8 +5,8 @@ import { validateBody, validateQuery } from '@/lib/validations/helpers';
 import { createStaffSchema, staffQuerySchema } from '@/lib/validations/schemas/staff';
 import { ValidationError, ForbiddenError } from '@/lib/utils/errors';
 import { db } from '@/lib/db';
-import { staff, users } from '@/lib/db/schema';
-import { eq, and, ilike, or, count } from 'drizzle-orm';
+import { staff, users, reservationAttendance } from '@/lib/db/schema';
+import { eq, and, ilike, or, count, notInArray } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
 // GET /api/staff - List staff with optional filters and admin inclusion
@@ -15,13 +15,19 @@ export async function GET(request: NextRequest) {
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
 
-    const { searchParams } = new URL(request.url);
+    const searchParams = new URL(request.url).searchParams;
     const query = validateQuery(staffQuerySchema, searchParams);
 
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 10;
-    const { search, role, status, include_admins } = query;
-    const offset = (page - 1) * limit;
+    const { 
+        page = 1, 
+        limit = 10, 
+        search, 
+        role, 
+        status, 
+        include_admins, 
+        exclude_reservation_id 
+    } = query;
+    const offset = ((page || 1) - 1) * (limit || 10);
 
     // Build where conditions for staff
     const conditions = [eq(staff.institutionId, institutionId)];
@@ -47,6 +53,28 @@ export async function GET(request: NextRequest) {
     if (status) {
       conditions.push(eq(staff.status, status));
     }
+    
+    // Prepare exclusion lists
+    const excludedEmails = new Set<string>();
+    const excludedDnis = new Set<string>();
+    const excludedStaffIds = new Set<string>();
+
+    if (exclude_reservation_id) {
+        const attendees = await db.query.reservationAttendance.findMany({
+            where: eq(reservationAttendance.reservationId, exclude_reservation_id),
+            with: { staff: true }
+        });
+        
+        attendees.forEach(a => {
+            if (a.staffId) excludedStaffIds.add(a.staffId);
+            if (a.staff?.email) excludedEmails.add(a.staff.email.toLowerCase());
+            if (a.staff?.dni) excludedDnis.add(a.staff.dni);
+        });
+        
+        if (excludedStaffIds.size > 0) {
+            conditions.push(notInArray(staff.id, Array.from(excludedStaffIds)));
+        }
+    }
 
     const whereClause = and(...conditions);
 
@@ -56,7 +84,19 @@ export async function GET(request: NextRequest) {
         where: whereClause,
         limit,
         offset,
-        orderBy: (staff, { desc }) => [desc(staff.createdAt)],
+        columns: {
+          id: true,
+          institutionId: true,
+          name: true,
+          dni: true,
+          email: true,
+          role: true,
+          status: true,
+          area: true,
+          phone: true,
+          createdAt: true,
+        },
+        orderBy: (columns, { desc }) => [desc(columns.createdAt)],
       }),
       db.select({ value: count() }).from(staff).where(whereClause),
     ]);
@@ -68,7 +108,12 @@ export async function GET(request: NextRequest) {
     if (include_admins === 'true' && page === 1) {
       const adminConditions: any[] = [
         eq(users.institutionId, institutionId),
-        or(eq(users.role, 'admin'), eq(users.isSuperAdmin, true)),
+        or(
+          eq(users.role, 'admin'), 
+          eq(users.role, 'superadmin'), 
+          eq(users.role, 'pip'),
+          eq(users.isSuperAdmin, true)
+        ) as any,
       ];
 
       if (search) {
@@ -105,20 +150,35 @@ export async function GET(request: NextRequest) {
         email: u.email,
         phone: null,
         area: null,
-        role: u.isSuperAdmin ? 'SuperAdmin' : 'Admin',
+        role: u.isSuperAdmin ? 'SuperAdmin' : (u.role === 'pip' ? 'PIP' : (u.role === 'admin' ? 'Admin' : u.role || 'Admin')),
         status: 'active',
         createdAt: u.createdAt,
       }));
 
-      // Use Set for O(1) lookups instead of Map
+      // Use Set for O(1) lookups
       const staffEmailSet = new Set(
         staffData.map((s) => s.email?.toLowerCase()).filter(Boolean)
       );
       
-      // Filter out admins that already exist in staff
-      const uniqueAdmins = mappedAdmins.filter(
-        (admin) => !admin.email || !staffEmailSet.has(admin.email.toLowerCase())
+      const staffDniSet = new Set(
+        staffData.map((s) => s.dni).filter(Boolean)
       );
+      
+      // Filter out admins that already exist in staff OR are already in attendance
+      const uniqueAdmins = mappedAdmins.filter((admin) => {
+        const email = admin.email?.toLowerCase();
+        const dni = admin.dni;
+        
+        // Exclude if already in staff list (resolved from staff table)
+        const inStaffList = (email && staffEmailSet.has(email)) || (dni && staffDniSet.has(dni));
+        if (inStaffList) return false;
+        
+        // Exclude if already in attendance for this specific reservation (by email/dni)
+        const inAttendance = (email && excludedEmails.has(email)) || (dni && excludedDnis.has(dni));
+        if (inAttendance) return false;
+        
+        return true;
+      });
 
       mixedData = [...uniqueAdmins, ...staffData];
       total = totalStaffResult[0].value + uniqueAdmins.length;
