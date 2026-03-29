@@ -65,6 +65,8 @@ export const resourcesQuerySchema = z.object({
   categoryId: z.string().uuid().optional(),
   status: resourceStatusEnum.optional(),
   condition: resourceConditionEnum.optional(),
+  limit: z.string().optional(),
+  offset: z.string().optional(),
 });
 
 // Infer types
