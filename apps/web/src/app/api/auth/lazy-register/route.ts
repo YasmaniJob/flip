@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHmac } from 'crypto';
 import { db } from '@/lib/db';
 import { staff, users, sessions } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
+import { rateLimit } from '@/lib/rate-limit';
+import { TooManyRequestsError } from '@/lib/utils/errors';
+import { errorResponse } from '@/lib/utils/response';
 
 type LazyRegisterRequest = {
   email: string;
@@ -12,6 +16,10 @@ type LazyRegisterRequest = {
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for') || 'anonymous';
+    if (!rateLimit(`lazy-register-${ip}`, 5, 60 * 1000)) {
+       throw new TooManyRequestsError();
+    }
     const body: LazyRegisterRequest = await request.json();
     const { email, dni, selectedInstitutionId } = body;
 
@@ -129,8 +137,14 @@ export async function POST(request: NextRequest) {
       // 5. Crear nuevo usuario con Better Auth
       console.log('[Lazy Register] Creating new user account');
       
-      // Generar password interno (nunca se muestra al usuario)
-      const internalPassword = `LAZY_${dni}_${targetInstitutionId.slice(-6)}`;
+      // Password interno derivado de un HMAC del servidor:
+      // - Impredecible sin conocer BETTER_AUTH_SECRET
+      // - Determinístico: mismo resultado para la misma cuenta
+      // - Nunca expuesto al usuario; solo usado internamente
+      const secret = process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET || '';
+      const internalPassword = createHmac('sha256', secret)
+        .update(`lazy:${email.toLowerCase()}:${dni}`)
+        .digest('hex');
       
       try {
         // Usar Better Auth para crear el usuario
@@ -182,10 +196,16 @@ export async function POST(request: NextRequest) {
     
     try {
       // Con nextCookies, Better Auth maneja las cookies de Next.js nativamente
+      // El password se deriva del mismo HMAC determinístico para garantizar consistencia
+      const secret = process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET || '';
+      const internalPassword = createHmac('sha256', secret)
+        .update(`lazy:${email.toLowerCase()}:${dni}`)
+        .digest('hex');
+
       await auth.api.signInEmail({
         body: {
           email: email.toLowerCase(),
-          password: `LAZY_${dni}_${targetInstitutionId.slice(-6)}`,
+          password: internalPassword,
         },
       });
 
@@ -222,10 +242,6 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('[Lazy Register] Unexpected error:', error);
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    );
+    return errorResponse(error);
   }
 }

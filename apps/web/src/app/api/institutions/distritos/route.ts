@@ -2,13 +2,18 @@ import { NextRequest } from 'next/server';
 import { turso } from '@/lib/db/turso';
 import { educationInstitutionsMinedu } from '@/lib/db/schema-turso';
 import { successResponse, errorResponse } from '@/lib/utils/response';
-import { ValidationError } from '@/lib/utils/errors';
+import { ValidationError, TooManyRequestsError } from '@/lib/utils/errors';
 import { sql } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
+import { rateLimit } from '@/lib/rate-limit';
 
 // GET /api/institutions/distritos - Get districts for a province (PUBLIC)
 export async function GET(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for') || 'anonymous';
+    if (!rateLimit(`distritos-${ip}`, 30, 60 * 1000)) {
+       throw new TooManyRequestsError();
+    }
     const departamento = request.nextUrl.searchParams.get('departamento');
     const provincia = request.nextUrl.searchParams.get('provincia');
 

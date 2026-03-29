@@ -3,15 +3,20 @@ import { requireAuth, getInstitutionId } from '@/lib/auth/helpers';
 import { successResponse, errorResponse } from '@/lib/utils/response';
 import { validateBody, validateQuery } from '@/lib/validations/helpers';
 import { createStaffSchema, staffQuerySchema } from '@/lib/validations/schemas/staff';
-import { ValidationError, ForbiddenError } from '@/lib/utils/errors';
+import { ValidationError, ForbiddenError, TooManyRequestsError } from '@/lib/utils/errors';
 import { db } from '@/lib/db';
 import { staff, users, reservationAttendance } from '@/lib/db/schema';
 import { eq, and, ilike, or, count, notInArray } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import { rateLimit } from '@/lib/rate-limit';
 
 // GET /api/staff - List staff with optional filters and admin inclusion
 export async function GET(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for') || 'anonymous';
+    if (!rateLimit(`staff-search-${ip}`, 20, 60 * 1000)) {
+       throw new TooManyRequestsError();
+    }
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
 

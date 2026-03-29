@@ -7,6 +7,8 @@ import { db } from '@/lib/db';
 import { resources, categories, categorySequences } from '@/lib/db/schema';
 import { eq, and, sql, like, or } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import { rateLimit } from '@/lib/rate-limit';
+import { TooManyRequestsError } from '@/lib/utils/errors';
 
 // Helper: Generate prefix from category name
 function generatePrefix(categoryName: string): string {
@@ -62,6 +64,10 @@ async function generateInternalId(
 export async function GET(request: NextRequest) {
   const start = Date.now();
   try {
+    const ip = request.headers.get('x-forwarded-for') || 'anonymous';
+    if (!rateLimit(`resources-search-${ip}`, 20, 60 * 1000)) {
+       throw new TooManyRequestsError();
+    }
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
 
@@ -69,6 +75,8 @@ export async function GET(request: NextRequest) {
     const query = validateQuery(resourcesQuerySchema, searchParams);
 
     const { search, categoryId, status, condition } = query;
+    const limit = Math.min(parseInt(query.limit || '20'), 100);
+    const offset = parseInt(query.offset || '0');
 
     // Build where conditions
     const conditions = [eq(resources.institutionId, institutionId)];
@@ -100,13 +108,29 @@ export async function GET(request: NextRequest) {
 
     const whereCondition = and(...conditions);
 
-    const results = await db.query.resources.findMany({
-      where: whereCondition,
-      orderBy: (r, { asc }) => [asc(r.internalId), asc(r.createdAt)],
-    });
+    // Parallel queries for pagination
+    const [results, totalResult] = await Promise.all([
+      db.query.resources.findMany({
+        where: whereCondition,
+        limit,
+        offset,
+        orderBy: (r, { asc }) => [asc(r.internalId), asc(r.createdAt)],
+      }),
+      db.select({ count: sql<number>`count(*)` }).from(resources).where(whereCondition)
+    ]);
+
+    const total = Number(totalResult[0]?.count || 0);
 
     console.log(`[TIMING] resources GET: ${Date.now() - start}ms`);
-    return successResponse(results);
+    return successResponse({
+      data: results,
+      meta: {
+        total,
+        page: Math.floor(offset / limit) + 1,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (error) {
     console.log(`[TIMING] resources GET ERROR: ${Date.now() - start}ms`);
     return errorResponse(error);
