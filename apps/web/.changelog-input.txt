@@ -1,0 +1,5 @@
+Mejoras de Usabilidad
+Editor de acuerdos con botones visuales (check/cancelar) para mejor experiencia
+Sistema de sincronización de versiones entre app y landing
+
+Corrección de errores de sintaxis en componentes
