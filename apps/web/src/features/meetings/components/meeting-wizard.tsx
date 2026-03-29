@@ -380,92 +380,100 @@ function AgreementsEditor({
     items: string[];
     onChange: (items: string[]) => void;
 }) {
-    // rows = existing items + one empty trailing row
-    const rows = [...items, ''];
-    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const [currentInput, setCurrentInput] = useState('');
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    const focusRow = useCallback((index: number) => {
-        setTimeout(() => inputRefs.current[index]?.focus(), 0);
-    }, []);
-
-    const handleChange = (index: number, value: string) => {
-        if (index === rows.length - 1) {
-            // Typing in the empty tail row → append
-            onChange([...items, value]);
-        } else {
-            onChange(items.map((item, i) => (i === index ? value : item)));
+    const addAgreement = () => {
+        if (currentInput.trim()) {
+            onChange([...items, currentInput.trim()]);
+            setCurrentInput('');
+            inputRef.current?.focus();
         }
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-        if (e.key === 'Enter' || e.key === 'Tab') {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
             e.preventDefault();
-            focusRow(Math.min(index + 1, rows.length - 1));
-        }
-        if (e.key === 'Backspace' && e.currentTarget.value === '' && index < rows.length - 1) {
-            e.preventDefault();
-            onChange(items.filter((_, i) => i !== index));
-            focusRow(Math.max(0, index - 1));
+            addAgreement();
         }
     };
 
-    const removeRow = (index: number) => {
+    const removeAgreement = (index: number) => {
         onChange(items.filter((_, i) => i !== index));
-        focusRow(Math.max(0, index - 1));
+    };
+
+    const editAgreement = (index: number, value: string) => {
+        onChange(items.map((item, i) => (i === index ? value : item)));
     };
 
     return (
-        <div className="space-y-2">
+        <div className="space-y-3">
             <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Editor de Acuerdos</h3>
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Acuerdos</h3>
                 {items.length > 0 && (
-                    <span className="text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md uppercase tracking-wide shadow-none">
-                        {items.length} {items.length === 1 ? 'acuerdo' : 'acuerdos'}
+                    <span className="text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md uppercase tracking-wide">
+                        {items.length}
                     </span>
                 )}
             </div>
 
-            <div className="space-y-0.5">
-                {rows.map((row, index) => {
-                    const isLast = index === rows.length - 1;
-                    return (
-                        <div key={index} className="group flex items-center gap-2">
-                            <span className={cn(
-                                'text-xs font-mono w-5 text-right shrink-0 select-none transition-colors mt-1',
-                                isLast ? 'text-muted-foreground/30' : 'text-muted-foreground/50'
-                            )}>
-                                {isLast ? '+' : index + 1}
-                            </span>
-                            <div className="flex-1 flex items-center gap-2 group/input">
-                                <input
-                                    ref={(el) => { inputRefs.current[index] = el; }}
-                                    type="text"
-                                    value={row}
-                                    onChange={(e) => handleChange(index, e.target.value)}
-                                    onKeyDown={(e) => handleKeyDown(e, index)}
-                                    placeholder={isLast ? 'Agregar acuerdo rápido...' : ''}
-                                    className={cn(
-                                        'flex-1 py-2 px-3 text-sm rounded-lg border outline-none transition-all shadow-none font-medium',
-                                        isLast
-                                            ? 'border-transparent bg-transparent text-muted-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:bg-primary/5 focus:text-foreground'
-                                            : 'border-transparent bg-transparent text-foreground hover:bg-accent focus:bg-primary/5 focus:border-primary/30'
-                                    )}
-                                />
-                                {!isLast && (
-                                    <button
-                                        type="button"
-                                        onClick={() => removeRow(index)}
-                                        className="opacity-0 group-hover/input:opacity-100 text-muted-foreground/40 hover:text-destructive transition-all p-1 shrink-0"
-                                    >
-                                        <X className="h-3.5 w-3.5" />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
+            {/* Input para agregar nuevo acuerdo */}
+            <div className="flex gap-2">
+                <input
+                    ref={inputRef}
+                    type="text"
+                    value={currentInput}
+                    onChange={(e) => setCurrentInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Escribe un acuerdo..."
+                    className="flex-1 py-2 px-3 text-sm rounded-lg border border-input bg-background focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                />
+                <button
+                    type="button"
+                    onClick={addAgreement}
+                    disabled={!currentInput.trim()}
+                    className="shrink-0 p-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    title="Agregar acuerdo"
+                >
+                    <CheckCircle2 className="h-4 w-4" />
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setCurrentInput('')}
+                    disabled={!currentInput}
+                    className="shrink-0 p-2 rounded-lg bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    title="Limpiar"
+                >
+                    <X className="h-4 w-4" />
+                </button>
             </div>
+
+            {/* Lista de acuerdos agregados */}
+            {items.length > 0 && (
+                <div className="space-y-2 mt-4">
+                    {items.map((item, index) => (
+                        <div key={index} className="group flex items-start gap-2 p-2 rounded-lg hover:bg-accent/50 transition-colors">
+                            <span className="text-xs font-mono text-muted-foreground/50 mt-1 w-5 shrink-0">
+                                {index + 1}.
+                            </span>
+                            <input
+                                type="text"
+                                value={item}
+                                onChange={(e) => editAgreement(index, e.target.value)}
+                                className="flex-1 text-sm bg-transparent border-none outline-none focus:bg-background focus:px-2 focus:py-1 focus:rounded transition-all"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => removeAgreement(index)}
+                                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all p-1 shrink-0"
+                            >
+                                <X className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
