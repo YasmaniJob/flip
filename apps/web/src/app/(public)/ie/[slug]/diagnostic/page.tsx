@@ -198,6 +198,10 @@ export default function DiagnosticPage() {
     return acc;
   }, {} as Record<string, string>);
   
+  // Get current question's category name
+  const currentQuestion = config.questions[currentQuestionIndex];
+  const currentCategoryName = currentQuestion ? categoryNames[currentQuestion.categoryId] : undefined;
+  
   return (
     <>
       {step === 'landing' && (
@@ -214,15 +218,18 @@ export default function DiagnosticPage() {
         />
       )}
       
-      {step === 'quiz' && config.questions[currentQuestionIndex] && (
+      {step === 'quiz' && currentQuestion && (
         <QuizCard
-          question={config.questions[currentQuestionIndex]}
+          question={currentQuestion}
           questionNumber={currentQuestionIndex + 1}
           totalQuestions={config.questions.length}
-          currentScore={responses[config.questions[currentQuestionIndex].id]}
+          currentScore={responses[currentQuestion.id]}
+          categoryName={currentCategoryName}
           onAnswer={handleAnswer}
           onPrevious={previousQuestion}
+          onNext={nextQuestion}
           canGoPrevious={currentQuestionIndex > 0}
+          canGoNext={currentQuestionIndex < config.questions.length - 1}
         />
       )}
       

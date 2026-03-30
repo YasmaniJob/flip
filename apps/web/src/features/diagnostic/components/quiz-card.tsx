@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { DiagnosticQuestion, DiagnosticScore } from '../types';
 import { SCORE_LABELS, SCORE_ICONS } from '../types';
 
@@ -12,9 +12,12 @@ interface QuizCardProps {
   questionNumber: number;
   totalQuestions: number;
   currentScore?: DiagnosticScore;
+  categoryName?: string;
   onAnswer: (score: DiagnosticScore) => void;
   onPrevious?: () => void;
+  onNext?: () => void;
   canGoPrevious: boolean;
+  canGoNext: boolean;
 }
 
 const scoreOptions: DiagnosticScore[] = [0, 1, 2, 3];
@@ -24,9 +27,12 @@ export function QuizCard({
   questionNumber,
   totalQuestions,
   currentScore,
+  categoryName,
   onAnswer,
   onPrevious,
+  onNext,
   canGoPrevious,
+  canGoNext,
 }: QuizCardProps) {
   const progress = (questionNumber / totalQuestions) * 100;
   
@@ -40,15 +46,33 @@ export function QuizCard({
             size="sm"
             onClick={onPrevious}
             disabled={!canGoPrevious}
-            className="text-gray-600"
+            className="text-gray-600 disabled:opacity-50"
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
             Anterior
           </Button>
           
-          <span className="text-sm font-medium text-gray-600">
-            Pregunta {questionNumber} de {totalQuestions}
-          </span>
+          <div className="text-center">
+            <span className="text-sm font-medium text-gray-600">
+              Pregunta {questionNumber} de {totalQuestions}
+            </span>
+            {categoryName && (
+              <p className="text-xs text-gray-500 mt-1">
+                {categoryName}
+              </p>
+            )}
+          </div>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onNext}
+            disabled={!canGoNext || currentScore === undefined}
+            className="text-gray-600 disabled:opacity-50"
+          >
+            Siguiente
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
         </div>
         
         <div className="max-w-4xl mx-auto">
@@ -68,6 +92,15 @@ export function QuizCard({
             className="max-w-2xl w-full"
           >
             <div className="bg-white rounded-2xl shadow-xl p-8 space-y-8">
+              {/* Category Badge */}
+              {categoryName && (
+                <div className="flex justify-center">
+                  <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    {categoryName}
+                  </span>
+                </div>
+              )}
+              
               {/* Question Text */}
               <div className="text-center space-y-4">
                 <h2 className="text-2xl md:text-3xl font-bold text-gray-900">

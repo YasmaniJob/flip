@@ -93,6 +93,22 @@ export async function GET(
     // Filter questions by active categories
     const activeQuestions = questions.filter(q => categoryIds.includes(q.categoryId));
     
+    // Sort questions by category order first, then by question order
+    const sortedQuestions = activeQuestions.sort((a, b) => {
+      const catA = categories.find(c => c.id === a.categoryId);
+      const catB = categories.find(c => c.id === b.categoryId);
+      
+      if (!catA || !catB) return 0;
+      
+      // First sort by category order
+      if (catA.order !== catB.order) {
+        return catA.order - catB.order;
+      }
+      
+      // Then sort by question order within category
+      return a.order - b.order;
+    });
+    
     return NextResponse.json({
       enabled: true,
       requiresApproval: institution.diagnosticRequiresApproval,
@@ -104,14 +120,14 @@ export async function GET(
         description: c.description,
         order: c.order,
       })),
-      questions: activeQuestions.map(q => ({
+      questions: sortedQuestions.map(q => ({
         id: q.id,
         code: q.code,
         categoryId: q.categoryId,
         text: q.text,
         order: q.order,
       })),
-      totalQuestions: activeQuestions.length,
+      totalQuestions: sortedQuestions.length,
     });
     
   } catch (error) {

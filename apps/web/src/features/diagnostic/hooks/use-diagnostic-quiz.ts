@@ -4,7 +4,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { DiagnosticConfig, DiagnosticScore } from '../types';
+import type { DiagnosticConfig, DiagnosticScore, DiagnosticLevel } from '../types';
 
 interface QuizState {
   // Configuration
@@ -26,9 +26,9 @@ interface QuizState {
   
   // Results
   overallScore: number | null;
-  level: string | null;
+  level: DiagnosticLevel | null;
   categoryScores: Record<string, number> | null;
-  setResults: (overallScore: number, level: string, categoryScores: Record<string, number>) => void;
+  setResults: (overallScore: number, level: DiagnosticLevel, categoryScores: Record<string, number>) => void;
   
   // UI State
   isLoading: boolean;
