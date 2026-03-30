@@ -426,7 +426,9 @@ const appUrl = "https://app.flip.org.pe/";
     (function () {
       const line1El = document.getElementById('typewriter-line1');
       const line2El = document.getElementById('typewriter-line2');
-      const cursorEl = document.getElementById('typewriter-cursor');
+      const cursorEl = document.getElementById('typewriter-cursor') as HTMLElement | null;
+
+      if (!line1El || !line2El || !cursorEl) return;
 
       const line1 = 'Gestión digital';
       const line2 = 'para tu AIP';
@@ -441,7 +443,7 @@ const appUrl = "https://app.flip.org.pe/";
       function typeNext() {
         if (phase === 1) {
           if (i < line1.length) {
-            line1El.textContent += line1[i++];
+            line1El!.textContent += line1[i++];
             setTimeout(typeNext, speed);
           } else {
             // Pause briefly before typing line 2
@@ -451,7 +453,7 @@ const appUrl = "https://app.flip.org.pe/";
           }
         } else {
           if (i < line2.length) {
-            line2El.textContent += line2[i++];
+            line2El!.textContent += line2[i++];
             setTimeout(typeNext, speed);
           }
           // Cursor stays blinking after done
