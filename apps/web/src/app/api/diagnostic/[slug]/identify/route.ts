@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { institutions } from '@/lib/db/schema';
+import { institutions, diagnosticQuestions } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { rateLimit } from '@/features/diagnostic/lib/rate-limit';
 import { identifyRequestSchema } from '@/features/diagnostic/lib/validation';
@@ -76,9 +76,8 @@ export async function POST(
     const existingStaff = await findExistingStaff(institution.id, dni, email);
     
     // Get total questions count (we'll need this for the session)
-    // For now, we'll fetch it from the config endpoint logic
     const questions = await db.query.diagnosticQuestions.findMany({
-      where: eq(db.query.diagnosticQuestions.isActive, true),
+      where: eq(diagnosticQuestions.isActive, true),
     });
     
     // Create or resume session
