@@ -39,6 +39,10 @@ export const institutions = pgTable('institutions', {
     trialEndsAt: timestamp('trial_ends_at'),
     subscriptionEndsAt: timestamp('subscription_ends_at'),
     settings: jsonb('settings'),
+    // Diagnostic Module Settings
+    diagnosticEnabled: boolean('diagnostic_enabled').default(false),
+    diagnosticRequiresApproval: boolean('diagnostic_requires_approval').default(true),
+    diagnosticCustomMessage: text('diagnostic_custom_message'),
     createdAt: timestamp('created_at').defaultNow(),
 }, (table) => ({
     slugIdx: index('idx_institution_slug').on(table.slug),
@@ -727,4 +731,128 @@ export const changelog = pgTable('changelog', {
     versionIdx: index('idx_changelog_version').on(table.version),
     publishedIdx: index('idx_changelog_published').on(table.published),
     sortOrderIdx: index('idx_changelog_sort').on(table.sortOrder),
+}));
+
+// ============================================
+// DIAGNOSTIC MODULE
+// ============================================
+
+// Diagnostic Categories (Dimensions)
+export const diagnosticCategories = pgTable('diagnostic_categories', {
+    id: text('id').primaryKey(),
+    code: text('code').unique().notNull(), // e.g., 'MANEJO_INFO', 'IA_GENERATIVA'
+    institutionId: text('institution_id').references(() => institutions.id), // NULL = standard Flip category
+    name: text('name').notNull(),
+    description: text('description'),
+    order: integer('order').notNull(),
+    isActive: boolean('is_active').default(true),
+    createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+    codeIdx: uniqueIndex('idx_diagnostic_category_code').on(table.code),
+    institutionIdx: index('idx_diagnostic_category_institution').on(table.institutionId),
+    orderIdx: index('idx_diagnostic_category_order').on(table.order),
+}));
+
+// Diagnostic Questions
+export const diagnosticQuestions = pgTable('diagnostic_questions', {
+    id: text('id').primaryKey(),
+    code: text('code').unique().notNull(), // e.g., 'MANEJO_INFO_01'
+    categoryId: text('category_id').references(() => diagnosticCategories.id).notNull(),
+    institutionId: text('institution_id').references(() => institutions.id), // NULL = standard Flip question
+    text: text('text').notNull(),
+    order: integer('order').notNull(),
+    isActive: boolean('is_active').default(true),
+    createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+    codeIdx: uniqueIndex('idx_diagnostic_question_code').on(table.code),
+    categoryIdx: index('idx_diagnostic_question_category').on(table.categoryId),
+    institutionIdx: index('idx_diagnostic_question_institution').on(table.institutionId),
+    orderIdx: index('idx_diagnostic_question_order').on(table.order),
+}));
+
+// Diagnostic Sessions (One per teacher)
+export const diagnosticSessions = pgTable('diagnostic_sessions', {
+    id: text('id').primaryKey(),
+    token: text('token').unique().notNull(), // UUID for public access
+    institutionId: text('institution_id').references(() => institutions.id).notNull(),
+    staffId: text('staff_id').references(() => staff.id), // NULL until approved
+    name: text('name').notNull(),
+    dni: text('dni'),
+    email: text('email'),
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
+    status: text('status').default('in_progress'), // 'in_progress' | 'completed' | 'approved'
+    progress: integer('progress').default(0), // Number of questions answered
+    totalQuestions: integer('total_questions').default(0),
+    overallScore: integer('overall_score'), // 0-100
+    level: text('level'), // 'explorador' | 'en_desarrollo' | 'competente' | 'mentor'
+    categoryScores: jsonb('category_scores').$type<Record<string, number>>(), // { categoryId: score }
+    expiresAt: timestamp('expires_at').notNull(),
+    completedAt: timestamp('completed_at'),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+    tokenIdx: uniqueIndex('idx_diagnostic_session_token').on(table.token),
+    institutionIdx: index('idx_diagnostic_session_institution').on(table.institutionId),
+    staffIdx: index('idx_diagnostic_session_staff').on(table.staffId),
+    statusIdx: index('idx_diagnostic_session_status').on(table.status),
+    dniIdx: index('idx_diagnostic_session_dni').on(table.dni),
+    emailIdx: index('idx_diagnostic_session_email').on(table.email),
+}));
+
+// Diagnostic Responses (Individual answers)
+export const diagnosticResponses = pgTable('diagnostic_responses', {
+    id: text('id').primaryKey(),
+    sessionId: text('session_id').references(() => diagnosticSessions.id).notNull(),
+    questionId: text('question_id').references(() => diagnosticQuestions.id).notNull(),
+    score: integer('score').notNull(), // 0-3 (No sé | Con ayuda | Solo | Oriento)
+    answeredAt: timestamp('answered_at').defaultNow(),
+}, (table) => ({
+    sessionIdx: index('idx_diagnostic_response_session').on(table.sessionId),
+    questionIdx: index('idx_diagnostic_response_question').on(table.questionId),
+    sessionQuestionIdx: uniqueIndex('idx_diagnostic_response_session_question').on(table.sessionId, table.questionId),
+}));
+
+// Relations
+export const diagnosticCategoriesRelations = relations(diagnosticCategories, ({ one, many }) => ({
+    institution: one(institutions, {
+        fields: [diagnosticCategories.institutionId],
+        references: [institutions.id],
+    }),
+    questions: many(diagnosticQuestions),
+}));
+
+export const diagnosticQuestionsRelations = relations(diagnosticQuestions, ({ one, many }) => ({
+    category: one(diagnosticCategories, {
+        fields: [diagnosticQuestions.categoryId],
+        references: [diagnosticCategories.id],
+    }),
+    institution: one(institutions, {
+        fields: [diagnosticQuestions.institutionId],
+        references: [institutions.id],
+    }),
+    responses: many(diagnosticResponses),
+}));
+
+export const diagnosticSessionsRelations = relations(diagnosticSessions, ({ one, many }) => ({
+    institution: one(institutions, {
+        fields: [diagnosticSessions.institutionId],
+        references: [institutions.id],
+    }),
+    staff: one(staff, {
+        fields: [diagnosticSessions.staffId],
+        references: [staff.id],
+    }),
+    responses: many(diagnosticResponses),
+}));
+
+export const diagnosticResponsesRelations = relations(diagnosticResponses, ({ one }) => ({
+    session: one(diagnosticSessions, {
+        fields: [diagnosticResponses.sessionId],
+        references: [diagnosticSessions.id],
+    }),
+    question: one(diagnosticQuestions, {
+        fields: [diagnosticResponses.questionId],
+        references: [diagnosticQuestions.id],
+    }),
 }));
