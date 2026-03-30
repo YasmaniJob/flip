@@ -23,11 +23,16 @@ export type Institution = {
     };
 };
 
+// Query keys for cache invalidation
+export const institutionKeys = {
+    myInstitution: ['my-institution'] as const,
+};
+
 export function useMyInstitution() {
     const api = useApiClient();
 
     return useQuery<Institution>({
-        queryKey: ['my-institution'],
+        queryKey: institutionKeys.myInstitution,
         queryFn: () => api.get<Institution>('/institutions/my-institution'),
         staleTime: 10 * 60 * 1000, // 10 minutes cache
         retry: 1,
