@@ -391,9 +391,9 @@ const appUrl = "https://app.flip.org.pe/";
         <div class="absolute inset-0 bg-gradient-to-b from-transparent via-blue-50/50 to-transparent pointer-events-none"></div>
         
         <div class="container mx-auto max-w-4xl relative z-10">
-          <h2 class="text-6xl md:text-8xl font-light tracking-tight mb-12 leading-none flex items-center justify-center gap-6">
-            <span class="w-1 h-20 bg-blue-600 animate-blink"></span>
-            <span>Transforma tu<br/>AIP hoy</span>
+          <h2 id="cta-section-heading" class="text-6xl md:text-8xl font-light tracking-tight mb-12 leading-none">
+            <span id="cta-line1"></span><br>
+            <span id="cta-line2" class="font-semibold"></span><span id="cta-cursor" class="inline-block w-[5px] h-[0.85em] bg-blue-600 ml-2 align-middle animate-blink" style="display:none"></span>
           </h2>
           
           <p class="text-xl text-gray-600 mb-12 font-light">
@@ -424,46 +424,64 @@ const appUrl = "https://app.flip.org.pe/";
 
   </body>
 
-  <script>
+  <script translate="no">
     (function () {
-      const line1El = document.getElementById('typewriter-line1');
-      const line2El = document.getElementById('typewriter-line2');
-      const cursorEl = document.getElementById('typewriter-cursor') as HTMLElement | null;
+      function setupTypewriter(config) {
+        const { line1El, line2El, cursorEl, line1, line2, triggerEl } = config;
+        
+        if (!line1El || !line2El || !cursorEl) return;
 
-      if (!line1El || !line2El || !cursorEl) return;
+        const speed = 40;
+        let i = 0;
+        let phase = 1;
 
-      const line1 = 'Gestión digital';
-      const line2 = 'para tu AIP';
-      const speed = 42; // ms per character
-
-      let i = 0;
-      let phase = 1; // 1 = typing line1, 2 = typing line2
-
-      // Show cursor immediately
-      cursorEl.style.display = 'inline-block';
-
-      function typeNext() {
-        if (phase === 1) {
-          if (i < line1.length) {
-            line1El!.textContent += line1[i++];
-            setTimeout(typeNext, speed);
-          } else {
-            // Pause briefly before typing line 2
-            phase = 2;
-            i = 0;
-            setTimeout(typeNext, 220);
+        function typeNext() {
+          if (phase === 1) {
+            if (i < line1.length) {
+              line1El.textContent += line1[i++];
+              setTimeout(typeNext, speed);
+            } else {
+              phase = 2;
+              i = 0;
+              setTimeout(typeNext, 250);
+            }
+          } else if (phase === 2) {
+            if (i < line2.length) {
+              line2El.textContent += line2[i++];
+              setTimeout(typeNext, speed);
+            }
           }
-        } else {
-          if (i < line2.length) {
-            line2El!.textContent += line2[i++];
-            setTimeout(typeNext, speed);
-          }
-          // Cursor stays blinking after done
         }
+
+        const observer = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+            cursorEl.style.display = 'inline-block';
+            setTimeout(typeNext, 300);
+            observer.disconnect();
+          }
+        }, { threshold: 0.5 });
+
+        observer.observe(triggerEl || line1El);
       }
 
-      // Small initial delay so page renders first
-      setTimeout(typeNext, 300);
+      // Hero Typewriter
+      setupTypewriter({
+        line1El: document.getElementById('typewriter-line1'),
+        line2El: document.getElementById('typewriter-line2'),
+        cursorEl: document.getElementById('typewriter-cursor'),
+        line1: 'Gestión digital',
+        line2: 'para tu AIP'
+      });
+
+      // CTA Typewriter
+      setupTypewriter({
+        line1El: document.getElementById('cta-line1'),
+        line2El: document.getElementById('cta-line2'),
+        cursorEl: document.getElementById('cta-cursor'),
+        line1: 'Transforma tu',
+        line2: 'AIP hoy',
+        triggerEl: document.getElementById('cta-section-heading')
+      });
     })();
   </script>
 </html>
