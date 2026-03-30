@@ -3,13 +3,16 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, FileQuestion, Users, BarChart3 } from 'lucide-react';
+import { useMyInstitution } from '@/features/institutions/hooks/use-my-institution';
 import { DiagnosticConfigTab } from '@/features/diagnostic/components/admin/config-tab';
 import { DiagnosticQuestionsTab } from '@/features/diagnostic/components/admin/questions-tab';
 import { DiagnosticPendingTab } from '@/features/diagnostic/components/admin/pending-tab';
 import { DiagnosticResultsTab } from '@/features/diagnostic/components/admin/results-tab';
+import { Loader2 } from 'lucide-react';
 
 export function DiagnosticSettingsClient() {
   const [activeTab, setActiveTab] = useState('config');
+  const { data: institution, isLoading } = useMyInstitution();
   
   // Check feature flag
   const diagnosticAdminEnabled = process.env.NEXT_PUBLIC_FEATURE_DIAGNOSTIC_ADMIN_PANEL === 'true';
@@ -19,6 +22,24 @@ export function DiagnosticSettingsClient() {
       <div className="p-8 text-center">
         <p className="text-gray-600">
           El panel de diagnóstico no está disponible actualmente.
+        </p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  if (!institution) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-gray-600">
+          No se pudo cargar la información de la institución.
         </p>
       </div>
     );
@@ -60,15 +81,15 @@ export function DiagnosticSettingsClient() {
         </TabsContent>
         
         <TabsContent value="questions">
-          <DiagnosticQuestionsTab />
+          <DiagnosticQuestionsTab institutionId={institution.id} />
         </TabsContent>
         
         <TabsContent value="pending">
-          <DiagnosticPendingTab />
+          <DiagnosticPendingTab institutionId={institution.id} />
         </TabsContent>
         
         <TabsContent value="results">
-          <DiagnosticResultsTab />
+          <DiagnosticResultsTab institutionId={institution.id} />
         </TabsContent>
       </Tabs>
     </div>

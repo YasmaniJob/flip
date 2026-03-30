@@ -41,6 +41,7 @@ import {
   LayoutGrid,
   BookOpen,
   School,
+  FileQuestion,
 } from "lucide-react";
 import { InstitutionHeader } from "@/components/institution-header";
 import { InstitutionSwitcher } from "@/components/institution-switcher";
@@ -98,6 +99,7 @@ const menuItems: MenuItem[] = [
       { label: "Aulas", href: "/settings/aulas", icon: School },
       { label: "Categorías", href: "/settings/categorias", icon: Package },
       { label: "Templates", href: "/settings/templates", icon: LayoutGrid },
+      { label: "Diagnóstico", href: "/settings/diagnostico", icon: FileQuestion },
     ],
   },
 ];
