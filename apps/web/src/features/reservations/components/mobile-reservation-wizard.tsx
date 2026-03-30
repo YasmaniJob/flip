@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { X, ChevronRight, ChevronLeft, Search, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStaff, useRecurrentStaff } from "@/features/staff/hooks/use-staff";
-import { useGrades } from "@/features/settings/hooks/use-grades";
-import { useSections } from "@/features/settings/hooks/use-sections";
-import { useCurricularAreas } from "@/features/settings/hooks/use-curricular-areas";
+import { useConfigLoadout } from "@/features/settings/hooks/use-config-loadout";
 import { useCreateReservation } from "../hooks/use-reservations";
 import { useDebounce } from "@/hooks/use-debounce";
 import { toast } from "sonner";
@@ -51,9 +49,19 @@ export function MobileReservationWizard({
   // Data hooks
   const { staff } = useStaff({ search: debouncedSearch, limit: 20, includeAdmins: true });
   const { data: recurrentStaff } = useRecurrentStaff(6);
-  const { data: grades } = useGrades();
-  const { data: sections } = useSections(gradeId || undefined);
-  const { data: curricularAreas } = useCurricularAreas({ activeOnly: true });
+
+  // Unified Data Loadout
+  const { data: config, isLoading: isLoadingConfig } = useConfigLoadout();
+  
+  // Extracted from loadout
+  const grades = config?.grades;
+  const curricularAreas = config?.curricularAreas;
+
+  // Local filter for sections
+  const sections = useMemo(() => {
+    if (!config?.sections || !gradeId) return [];
+    return config.sections.filter(s => s.gradeId === gradeId);
+  }, [config?.sections, gradeId]);
   
   const createMutation = useCreateReservation();
 
@@ -290,11 +298,12 @@ export function MobileReservationWizard({
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-2">Área Curricular</label>
                 <select
+                  disabled={isLoadingConfig}
                   value={curricularAreaId}
                   onChange={(e) => setCurricularAreaId(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-base focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
-                  <option value="">Seleccionar área</option>
+                  <option value="">{isLoadingConfig ? "Cargando..." : "Seleccionar área"}</option>
                   {curricularAreas?.map((area) => (
                     <option key={area.id} value={area.id}>{area.name}</option>
                   ))}
@@ -305,6 +314,7 @@ export function MobileReservationWizard({
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-2">Grado</label>
                 <select
+                  disabled={isLoadingConfig}
                   value={gradeId}
                   onChange={(e) => {
                     setGradeId(e.target.value);
@@ -312,7 +322,7 @@ export function MobileReservationWizard({
                   }}
                   className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-base focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
-                  <option value="">Seleccionar grado</option>
+                  <option value="">{isLoadingConfig ? "Cargando..." : "Seleccionar grado"}</option>
                   {grades?.map((grade) => (
                     <option key={grade.id} value={grade.id}>{grade.name}</option>
                   ))}

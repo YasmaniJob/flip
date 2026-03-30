@@ -10,10 +10,7 @@ import { X, CheckCircle2, GraduationCap, Building2, User, Search, Check, BookOpe
 import { cn } from '@/lib/utils';
 import { useStaff, useRecurrentStaff, useMyStaff } from '@/features/staff/hooks/use-staff';
 import { useDebounce } from '@/hooks/use-debounce';
-import { useGrades } from '@/features/settings/hooks/use-grades';
-import { useSections } from '@/features/settings/hooks/use-sections';
-import { useCurricularAreas } from '@/features/settings/hooks/use-curricular-areas';
-import { usePedagogicalHours } from '@/features/settings/hooks/use-pedagogical-hours';
+import { useConfigLoadout } from '@/features/settings/hooks/use-config-loadout';
 import { format, addDays, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useUserRole } from '@/hooks/use-user-role';
@@ -112,10 +109,21 @@ export function ReservationDialog({
     // Data hooks
     const { staff } = useStaff({ search: debouncedStaffSearch, limit: 20, includeAdmins: true });
     const { data: recurrentStaff } = useRecurrentStaff(6);
-    const { data: grades } = useGrades();
-    const { data: sections } = useSections(gradeId || undefined);
-    const { data: curricularAreas } = useCurricularAreas({ activeOnly: true });
-    const { data: rawPedagogicalHours } = usePedagogicalHours();
+
+    // Unified Data Loadout
+    const { data: config, isLoading: isLoadingConfig } = useConfigLoadout();
+    
+    // Extracted from loadout
+    const grades = config?.grades;
+    const curricularAreas = config?.curricularAreas;
+    const rawPedagogicalHours = config?.pedagogicalHours;
+
+    // Local filter for sections (No network round-trip when grade changes)
+    const sections = useMemo(() => {
+        if (!config?.sections || !gradeId) return [];
+        return config.sections.filter(s => s.gradeId === gradeId);
+    }, [config?.sections, gradeId]);
+
     const [selectedShift, setSelectedShift] = useState<'mañana' | 'tarde'>(initialShift);
 
     // Sync shift when prop changes or dialog opens
@@ -526,11 +534,11 @@ export function ReservationDialog({
                                                         <div className="space-y-4">
                                                             <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] block">Grado Académico</label>
                                                             <div className="flex flex-wrap gap-1">
-                                                                {grades === undefined ? (
+                                                                {isLoadingConfig ? (
                                                                     <div className="h-9 w-full flex items-center justify-center border border-dashed border-border/30 rounded-sm bg-muted/30 animate-pulse">
                                                                         <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/20 italic">Cargando grados...</span>
                                                                     </div>
-                                                                ) : grades.length === 0 ? (
+                                                                ) : !grades?.length ? (
                                                                     <div className="h-9 w-full flex items-center justify-center border border-dashed border-destructive/20 rounded-sm bg-destructive/[0.02]">
                                                                         <span className="text-[8px] font-black uppercase tracking-widest text-destructive/40 italic">No hay grados configurados</span>
                                                                     </div>
@@ -552,11 +560,7 @@ export function ReservationDialog({
                                                             <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] block">Sección</label>
                                                             <div className="flex flex-wrap gap-1">
                                                                 {gradeId ? (
-                                                                    sections === undefined ? (
-                                                                        <div className="h-9 w-full flex items-center justify-center border border-dashed border-border/30 rounded-sm bg-muted/30 animate-pulse">
-                                                                            <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/20 italic">Cargando secciones...</span>
-                                                                        </div>
-                                                                    ) : sections.length === 0 ? (
+                                                                    sections.length === 0 ? (
                                                                         <div className="h-9 w-full flex items-center justify-center border border-dashed border-destructive/20 rounded-sm bg-destructive/[0.02]">
                                                                             <span className="text-[8px] font-black uppercase tracking-widest text-destructive/40 italic">No hay secciones en este grado</span>
                                                                         </div>
