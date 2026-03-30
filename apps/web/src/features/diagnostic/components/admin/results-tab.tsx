@@ -1,38 +1,40 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { useMyInstitution } from '@/features/institutions/hooks/use-my-institution';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, XCircle, TrendingUp, Users, BarChart3 } from 'lucide-react';
-import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, Cell } from 'recharts';
+import { Loader2, XCircle, Users, TrendingUp, BarChart3 } from 'lucide-react';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { LEVEL_LABELS, LEVEL_ICONS } from '../../types';
+import type { DiagnosticLevel } from '../../types';
 
 interface ResultsData {
   totalSessions: number;
   averageScore: number;
-  levelDistribution: Record<string, number>;
+  levelDistribution: Record<DiagnosticLevel, number>;
   categoryAverages: Record<string, { name: string; average: number }>;
   sessions: Array<{
     id: string;
     name: string;
     overallScore: number;
-    level: string;
+    level: DiagnosticLevel;
     completedAt: string;
     status: string;
   }>;
 }
 
-interface ResultsTabProps {
-  institutionId: string;
-}
+export function DiagnosticResultsTab() {
+  const { data: institution } = useMyInstitution();
 
-export function DiagnosticResultsTab({ institutionId }: ResultsTabProps) {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['diagnostic-results', institutionId],
+    queryKey: ['diagnostic-results', institution?.id],
     queryFn: async () => {
-      const res = await fetch(`/api/institutions/${institutionId}/diagnostic/results`);
+      if (!institution) throw new Error('No institution');
+      const res = await fetch(`/api/institutions/${institution.id}/diagnostic/results`);
       if (!res.ok) throw new Error('Error al cargar resultados');
       return res.json() as Promise<ResultsData>;
     },
+    enabled: !!institution,
   });
 
   if (isLoading) {
@@ -83,30 +85,14 @@ export function DiagnosticResultsTab({ institutionId }: ResultsTabProps) {
   // Prepare data for charts
   const radarData = Object.entries(data.categoryAverages).map(([id, cat]) => ({
     category: cat.name,
-    score: cat.average,
+    average: cat.average,
   }));
 
   const levelData = Object.entries(data.levelDistribution).map(([level, count]) => ({
-    level,
+    level: LEVEL_LABELS[level as DiagnosticLevel],
     count,
+    icon: LEVEL_ICONS[level as DiagnosticLevel],
   }));
-
-  const levelColors: Record<string, string> = {
-    'Avanzado': '#10b981',
-    'Intermedio': '#3b82f6',
-    'Básico': '#eab308',
-    'Inicial': '#f97316',
-  };
-
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case 'Avanzado': return 'bg-green-100 text-green-800';
-      case 'Intermedio': return 'bg-blue-100 text-blue-800';
-      case 'Básico': return 'bg-yellow-100 text-yellow-800';
-      case 'Inicial': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -114,40 +100,48 @@ export function DiagnosticResultsTab({ institutionId }: ResultsTabProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Docentes</CardTitle>
-            <Users className="h-4 w-4 text-gray-600" />
+            <CardTitle className="text-sm font-medium">
+              Total Docentes
+            </CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{data.totalSessions}</div>
-            <p className="text-xs text-gray-600 mt-1">
-              Diagnósticos completados
+            <p className="text-xs text-muted-foreground">
+              Han completado el diagnóstico
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Puntaje Promedio</CardTitle>
-            <TrendingUp className="h-4 w-4 text-gray-600" />
+            <CardTitle className="text-sm font-medium">
+              Promedio General
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.averageScore}</div>
-            <p className="text-xs text-gray-600 mt-1">
-              De 100 puntos posibles
+            <div className="text-2xl font-bold">{data.averageScore}%</div>
+            <p className="text-xs text-muted-foreground">
+              Puntaje promedio institucional
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nivel Predominante</CardTitle>
-            <BarChart3 className="h-4 w-4 text-gray-600" />
+            <CardTitle className="text-sm font-medium">
+              Nivel Predominante
+            </CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {Object.entries(data.levelDistribution).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A'}
+              {levelData.reduce((prev, curr) => 
+                curr.count > prev.count ? curr : prev
+              ).level}
             </div>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-muted-foreground">
               Nivel más común
             </p>
           </CardContent>
@@ -156,93 +150,95 @@ export function DiagnosticResultsTab({ institutionId }: ResultsTabProps) {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Radar Chart - Category Averages */}
+        {/* Radar Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Promedios por Dimensión</CardTitle>
+            <CardTitle>Promedio por Dimensión</CardTitle>
             <CardDescription>
-              Puntaje promedio en cada dimensión del diagnóstico
+              Puntaje promedio en cada categoría
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <RadarChart data={radarData}>
-                <PolarGrid />
-                <PolarAngleAxis dataKey="category" tick={{ fontSize: 12 }} />
-                <PolarRadiusAxis angle={90} domain={[0, 100]} />
-                <Radar
-                  name="Puntaje"
-                  dataKey="score"
-                  stroke="#3b82f6"
-                  fill="#3b82f6"
-                  fillOpacity={0.6}
-                />
-                <Tooltip />
-              </RadarChart>
-            </ResponsiveContainer>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={radarData}>
+                  <PolarGrid stroke="#e5e7eb" />
+                  <PolarAngleAxis
+                    dataKey="category"
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                  />
+                  <PolarRadiusAxis
+                    angle={90}
+                    domain={[0, 100]}
+                    tick={{ fill: '#6b7280' }}
+                  />
+                  <Radar
+                    name="Promedio"
+                    dataKey="average"
+                    stroke="#3b82f6"
+                    fill="#3b82f6"
+                    fillOpacity={0.6}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Bar Chart - Level Distribution */}
+        {/* Bar Chart */}
         <Card>
           <CardHeader>
             <CardTitle>Distribución por Nivel</CardTitle>
             <CardDescription>
-              Cantidad de docentes en cada nivel de competencia
+              Cantidad de docentes en cada nivel
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={levelData}>
-                <XAxis dataKey="level" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" name="Docentes" radius={[8, 8, 0, 0]}>
-                  {levelData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={levelColors[entry.level] || '#6b7280'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={levelData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis
+                    dataKey="level"
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                  />
+                  <YAxis tick={{ fill: '#6b7280' }} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar
+                    dataKey="count"
+                    fill="#3b82f6"
+                    name="Docentes"
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Sessions */}
+      {/* Category Breakdown */}
       <Card>
         <CardHeader>
-          <CardTitle>Últimos Diagnósticos Completados</CardTitle>
+          <CardTitle>Desglose por Categoría</CardTitle>
           <CardDescription>
-            Listado de los diagnósticos más recientes
+            Puntajes promedio detallados
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {data.sessions.slice(0, 10).map((session) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.entries(data.categoryAverages).map(([id, cat]) => (
               <div
-                key={session.id}
-                className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                key={id}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
               >
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">{session.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(session.completedAt).toLocaleDateString('es-PE', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-900">{session.overallScore}</p>
-                    <p className="text-xs text-gray-500">puntos</p>
-                  </div>
-                  <Badge className={getLevelColor(session.level)}>
-                    {session.level}
-                  </Badge>
-                </div>
+                <span className="text-sm font-medium text-gray-700">
+                  {cat.name}
+                </span>
+                <span className="text-lg font-bold text-blue-600">
+                  {cat.average}%
+                </span>
               </div>
             ))}
           </div>

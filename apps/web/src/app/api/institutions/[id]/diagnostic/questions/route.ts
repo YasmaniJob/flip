@@ -52,14 +52,14 @@ export async function GET(
         isNull(diagnosticQuestions.institutionId),
         eq(diagnosticQuestions.institutionId, institutionId)
       ),
+      with: {
+        category: true,
+      },
       orderBy: (questions, { asc }) => [asc(questions.order)],
     });
     
-    // Group questions by category
-    const questionsByCategory: Record<string, typeof questions> = {};
-    for (const category of categories) {
-      questionsByCategory[category.id] = questions.filter(q => q.categoryId === category.id);
-    }
+    // Create category map for quick lookup
+    const categoryMap = new Map(categories.map(c => [c.id, c]));
     
     return NextResponse.json({
       categories: categories.map(c => ({
@@ -75,12 +75,12 @@ export async function GET(
         id: q.id,
         code: q.code,
         categoryId: q.categoryId,
+        categoryName: q.category?.name || categoryMap.get(q.categoryId)?.name || 'Sin categoría',
         text: q.text,
         order: q.order,
         isActive: q.isActive,
         isCustom: q.institutionId === institutionId,
       })),
-      questionsByCategory,
     });
     
   } catch (error) {
@@ -130,6 +130,20 @@ export async function POST(
     
     const data = validation.data;
     
+    // Get the highest order number for this category to append at the end
+    const existingQuestions = await db.query.diagnosticQuestions.findMany({
+      where: and(
+        eq(diagnosticQuestions.categoryId, data.categoryId),
+        or(
+          isNull(diagnosticQuestions.institutionId),
+          eq(diagnosticQuestions.institutionId, institutionId)
+        )
+      ),
+      orderBy: (questions, { desc }) => [desc(questions.order)],
+    });
+    
+    const nextOrder = existingQuestions.length > 0 ? existingQuestions[0].order + 1 : 1;
+    
     // Generate unique code for custom question
     const code = `CUSTOM_${institutionId.slice(0, 8)}_${Date.now()}`;
     
@@ -141,10 +155,15 @@ export async function POST(
         categoryId: data.categoryId,
         institutionId, // Mark as institution-specific
         text: data.text,
-        order: data.order,
-        isActive: data.isActive,
+        order: data.order ?? nextOrder,
+        isActive: data.isActive ?? true,
       })
       .returning();
+    
+    // Get category name for response
+    const category = await db.query.diagnosticCategories.findFirst({
+      where: eq(diagnosticCategories.id, data.categoryId),
+    });
     
     return NextResponse.json({
       success: true,
@@ -152,6 +171,7 @@ export async function POST(
         id: question.id,
         code: question.code,
         categoryId: question.categoryId,
+        categoryName: category?.name || 'Sin categoría',
         text: question.text,
         order: question.order,
         isActive: question.isActive,

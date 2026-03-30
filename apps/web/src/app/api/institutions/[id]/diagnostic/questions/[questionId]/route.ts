@@ -69,11 +69,17 @@ export async function PATCH(
     const [updated] = await db.update(diagnosticQuestions)
       .set({
         text: data.text,
+        categoryId: data.categoryId,
         order: data.order,
         isActive: data.isActive,
       })
       .where(eq(diagnosticQuestions.id, questionId))
       .returning();
+    
+    // Get category name for response
+    const category = await db.query.diagnosticCategories.findFirst({
+      where: eq(diagnosticCategories.id, updated.categoryId),
+    });
     
     return NextResponse.json({
       success: true,
@@ -81,6 +87,7 @@ export async function PATCH(
         id: updated.id,
         code: updated.code,
         categoryId: updated.categoryId,
+        categoryName: category?.name || 'Sin categoría',
         text: updated.text,
         order: updated.order,
         isActive: updated.isActive,

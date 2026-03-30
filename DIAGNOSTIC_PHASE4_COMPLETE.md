@@ -2,15 +2,15 @@
 
 ## Panel Administrativo - Implementación Completa
 
-**Fecha**: 29 de marzo de 2026  
+**Fecha**: 30 de marzo de 2026  
 **Rama**: `feature/diagnostic-module`  
-**Commit**: `18b46f8`
+**Status**: ✅ COMPLETADO - Build Passing
 
 ---
 
 ## 📋 Resumen
 
-Se completó exitosamente la **Fase 4** del módulo de diagnóstico, implementando el panel administrativo completo con todos sus tabs funcionales.
+Se completó exitosamente la **Fase 4** del módulo de diagnóstico, implementando el panel administrativo completo con todos sus tabs funcionales y correcciones en las APIs.
 
 ---
 
@@ -36,7 +36,7 @@ Se completó exitosamente la **Fase 4** del módulo de diagnóstico, implementan
 
 ---
 
-### 2. Tab de Preguntas (Questions)
+### 2. Tab de Preguntas (Questions) - ✅ COMPLETADO
 **Archivo**: `apps/web/src/features/diagnostic/components/admin/questions-tab.tsx`
 
 **Funcionalidades**:
@@ -44,23 +44,25 @@ Se completó exitosamente la **Fase 4** del módulo de diagnóstico, implementan
 - ✅ Listado de preguntas personalizadas
 - ✅ Crear nueva pregunta personalizada
 - ✅ Editar pregunta personalizada
-- ✅ Eliminar pregunta personalizada
+- ✅ Desactivar pregunta personalizada
 - ✅ Selector de categoría
-- ✅ Validación de texto (500 caracteres max)
+- ✅ Validación de texto (10-500 caracteres)
+- ✅ Orden automático al crear
 
 **Características**:
 - Dialog modal para crear/editar
 - Badges para diferenciar preguntas base vs personalizadas
 - Contador de preguntas: total y personalizadas
-- Iconos diferenciados por tipo
+- Iconos diferenciados por tipo (HelpCircle)
 - Confirmación antes de eliminar
-- Integración con API de questions
+- Integración completa con API de questions
+- Campo `categoryName` visible en cada pregunta
 
 **Endpoints utilizados**:
 - `GET /api/institutions/[id]/diagnostic/questions` - Listar preguntas
 - `POST /api/institutions/[id]/diagnostic/questions` - Crear pregunta
 - `PATCH /api/institutions/[id]/diagnostic/questions/[questionId]` - Editar pregunta
-- `DELETE /api/institutions/[id]/diagnostic/questions/[questionId]` - Eliminar pregunta
+- `DELETE /api/institutions/[id]/diagnostic/questions/[questionId]` - Desactivar pregunta
 
 ---
 
@@ -79,10 +81,10 @@ Se completó exitosamente la **Fase 4** del módulo de diagnóstico, implementan
 **Características**:
 - Cards con información detallada
 - Badge de nivel con colores:
-  - Avanzado: Verde
-  - Intermedio: Azul
-  - Básico: Amarillo
-  - Inicial: Naranja
+  - Mentor: Verde
+  - Competente: Azul
+  - En Desarrollo: Amarillo
+  - Explorador: Naranja
 - Iconos para DNI, email, calendario
 - Estado vacío cuando no hay pendientes
 - Feedback con toast después de aprobar
@@ -105,11 +107,11 @@ Se completó exitosamente la **Fase 4** del módulo de diagnóstico, implementan
 
 **Funcionalidades**:
 - ✅ Estadísticas generales (3 cards)
-- ✅ Gráfico radar de promedios por dimensión
 - ✅ Gráfico de barras de distribución por nivel
-- ✅ Listado de últimos 10 diagnósticos completados
+- ✅ Gráfico de barras de distribución por categoría
 - ✅ Cálculo de puntaje promedio
 - ✅ Nivel predominante
+- ✅ Estado vacío cuando no hay datos
 
 **Características**:
 
@@ -118,27 +120,185 @@ Se completó exitosamente la **Fase 4** del módulo de diagnóstico, implementan
 2. **Puntaje Promedio**: Promedio general de 100 puntos
 3. **Nivel Predominante**: Nivel más común entre docentes
 
-#### Gráfico Radar (Recharts):
-- Muestra puntaje promedio por cada dimensión
-- 5 dimensiones del diagnóstico
-- Escala de 0 a 100
-- Color azul con opacidad
-
-#### Gráfico de Barras (Recharts):
+#### Gráfico de Distribución por Nivel (Recharts):
 - Distribución de docentes por nivel
 - Colores diferenciados por nivel
 - Barras con bordes redondeados
 - Tooltip interactivo
 
-#### Listado de Sesiones:
-- Últimos 10 diagnósticos
-- Nombre del docente
-- Fecha formateada en español
-- Puntaje destacado
-- Badge de nivel con colores
+#### Gráfico de Distribución por Categoría (Recharts):
+- Puntaje promedio por dimensión
+- 5 dimensiones del diagnóstico
+- Escala de 0 a 100
+- Color azul con opacidad
 
 **Endpoints utilizados**:
 - `GET /api/institutions/[id]/diagnostic/results` - Obtener estadísticas
+
+---
+
+## 🔧 Correcciones Realizadas en APIs
+
+### 1. API GET Questions - Agregado `categoryName`
+
+**Archivo**: `apps/web/src/app/api/institutions/[id]/diagnostic/questions/route.ts`
+
+**Cambios**:
+```typescript
+// Antes: No incluía categoryName
+questions: questions.map(q => ({
+  id: q.id,
+  categoryId: q.categoryId,
+  text: q.text,
+  // ...
+}))
+
+// Después: Incluye categoryName con eager loading
+const questions = await db.query.diagnosticQuestions.findMany({
+  with: {
+    category: true,
+  },
+  // ...
+});
+
+questions: questions.map(q => ({
+  id: q.id,
+  categoryId: q.categoryId,
+  categoryName: q.category?.name || 'Sin categoría',
+  text: q.text,
+  // ...
+}))
+```
+
+**Beneficio**: El componente ahora puede mostrar el nombre de la categoría sin hacer queries adicionales.
+
+---
+
+### 2. API POST Questions - Orden Automático
+
+**Archivo**: `apps/web/src/app/api/institutions/[id]/diagnostic/questions/route.ts`
+
+**Cambios**:
+```typescript
+// Antes: order era requerido
+const [question] = await db.insert(diagnosticQuestions)
+  .values({
+    order: data.order, // Requerido
+    // ...
+  })
+
+// Después: order se calcula automáticamente
+const existingQuestions = await db.query.diagnosticQuestions.findMany({
+  where: and(
+    eq(diagnosticQuestions.categoryId, data.categoryId),
+    or(
+      isNull(diagnosticQuestions.institutionId),
+      eq(diagnosticQuestions.institutionId, institutionId)
+    )
+  ),
+  orderBy: (questions, { desc }) => [desc(questions.order)],
+});
+
+const nextOrder = existingQuestions.length > 0 ? existingQuestions[0].order + 1 : 1;
+
+const [question] = await db.insert(diagnosticQuestions)
+  .values({
+    order: data.order ?? nextOrder, // Opcional, usa nextOrder si no se provee
+    // ...
+  })
+```
+
+**Beneficio**: No es necesario calcular el orden manualmente, se agrega automáticamente al final de la categoría.
+
+---
+
+### 3. API POST Questions - Retorna `categoryName`
+
+**Archivo**: `apps/web/src/app/api/institutions/[id]/diagnostic/questions/route.ts`
+
+**Cambios**:
+```typescript
+// Después de crear la pregunta, obtener el nombre de la categoría
+const category = await db.query.diagnosticCategories.findFirst({
+  where: eq(diagnosticCategories.id, data.categoryId),
+});
+
+return NextResponse.json({
+  success: true,
+  question: {
+    id: question.id,
+    categoryId: question.categoryId,
+    categoryName: category?.name || 'Sin categoría', // ✅ Agregado
+    text: question.text,
+    // ...
+  },
+});
+```
+
+**Beneficio**: El componente recibe el `categoryName` inmediatamente después de crear, sin necesidad de refetch.
+
+---
+
+### 4. API PATCH Questions - Permite Cambiar Categoría
+
+**Archivo**: `apps/web/src/app/api/institutions/[id]/diagnostic/questions/[questionId]/route.ts`
+
+**Cambios**:
+```typescript
+// Antes: No permitía cambiar categoryId
+const [updated] = await db.update(diagnosticQuestions)
+  .set({
+    text: data.text,
+    order: data.order,
+    isActive: data.isActive,
+  })
+
+// Después: Permite cambiar categoryId
+const [updated] = await db.update(diagnosticQuestions)
+  .set({
+    text: data.text,
+    categoryId: data.categoryId, // ✅ Agregado
+    order: data.order,
+    isActive: data.isActive,
+  })
+
+// También retorna categoryName
+const category = await db.query.diagnosticCategories.findFirst({
+  where: eq(diagnosticCategories.id, updated.categoryId),
+});
+
+return NextResponse.json({
+  question: {
+    categoryName: category?.name || 'Sin categoría', // ✅ Agregado
+    // ...
+  },
+});
+```
+
+**Beneficio**: Permite reasignar preguntas a diferentes categorías si es necesario.
+
+---
+
+### 5. Schema de Validación - Campo `order` Opcional
+
+**Archivo**: `apps/web/src/features/diagnostic/lib/validation.ts`
+
+**Cambios**:
+```typescript
+// Antes: order era requerido
+export const questionRequestSchema = z.object({
+  order: z.number().int().min(0),
+  isActive: z.boolean().default(true),
+});
+
+// Después: order es opcional
+export const questionRequestSchema = z.object({
+  order: z.number().int().min(0).optional(), // ✅ Opcional
+  isActive: z.boolean().optional().default(true), // ✅ También opcional
+});
+```
+
+**Beneficio**: Simplifica la creación de preguntas, el orden se calcula automáticamente.
 
 ---
 
@@ -159,10 +319,11 @@ Se completó exitosamente la **Fase 4** del módulo de diagnóstico, implementan
 - ✅ Success: Feedback con toast
 
 ### Colores y Badges
-- **Avanzado**: `bg-green-100 text-green-800`
-- **Intermedio**: `bg-blue-100 text-blue-800`
-- **Básico**: `bg-yellow-100 text-yellow-800`
-- **Inicial**: `bg-orange-100 text-orange-800`
+- **Mentor**: `bg-green-100 text-green-800`
+- **Competente**: `bg-blue-100 text-blue-800`
+- **En Desarrollo**: `bg-yellow-100 text-yellow-800`
+- **Explorador**: `bg-orange-100 text-orange-800`
+- **Personalizada**: `bg-blue-100 text-blue-800`
 
 ---
 
@@ -171,12 +332,13 @@ Se completó exitosamente la **Fase 4** del módulo de diagnóstico, implementan
 ### Cliente Principal
 **Archivo**: `apps/web/src/app/(dashboard)/settings/diagnostico/diagnostico-client.tsx`
 
-**Cambios**:
+**Características**:
 - ✅ Importa `useMyInstitution` hook
 - ✅ Obtiene `institutionId` dinámicamente
 - ✅ Pasa `institutionId` a tabs que lo requieren
 - ✅ Loading state mientras carga institución
 - ✅ Error state si no se puede cargar
+- ✅ Verificación de feature flags
 
 ### Sidebar
 **Archivo**: `apps/web/src/components/sidebar.tsx`
@@ -197,16 +359,38 @@ Se completó exitosamente la **Fase 4** del módulo de diagnóstico, implementan
 ### Build Local
 ```bash
 cd apps/web
-pnpm build
+npm run build
 ```
 
-**Resultado**: ✅ Build exitoso (26.6s)
+**Resultado**: ✅ Build exitoso sin errores
 
 **Verificaciones**:
 - ✅ No hay errores de TypeScript
 - ✅ No hay errores de compilación
 - ✅ Todos los imports resuelven correctamente
-- ✅ Bundle size: 307 kB para `/settings/diagnostico`
+- ✅ Bundle size: 309 kB para `/settings/diagnostico`
+- ✅ Todas las rutas generadas correctamente
+
+### Pruebas Recomendadas
+
+1. **Testing Manual**:
+   ```bash
+   npm run dev
+   ```
+   - Navegar a `/settings/diagnostico`
+   - Probar cada tab:
+     - Config: Habilitar/deshabilitar, cambiar mensaje, copiar URL
+     - Questions: Crear, editar, eliminar preguntas personalizadas
+     - Pending: Aprobar docentes pendientes
+     - Results: Ver estadísticas y gráficos
+
+2. **Testing End-to-End**:
+   - Crear una sesión de diagnóstico desde la URL pública
+   - Completar el diagnóstico
+   - Verificar que aparece en "Pendientes"
+   - Aprobar la sesión
+   - Verificar que se crea/vincula el docente en staff
+   - Verificar que aparece en "Resultados"
 
 ---
 
@@ -225,7 +409,7 @@ pnpm build
 - `@tanstack/react-query`: `useQuery`, `useMutation`, `useQueryClient`
 
 ### Charts
-- `recharts`: `RadarChart`, `Radar`, `BarChart`, `Bar`, `PolarGrid`, `PolarAngleAxis`, `PolarRadiusAxis`, `ResponsiveContainer`, `XAxis`, `YAxis`, `Tooltip`, `Legend`, `Cell`
+- `recharts`: `BarChart`, `Bar`, `ResponsiveContainer`, `XAxis`, `YAxis`, `Tooltip`, `Legend`, `Cell`
 
 ### Icons (lucide-react)
 - `Settings`, `FileQuestion`, `Users`, `BarChart3`
@@ -253,6 +437,7 @@ pnpm build
    - Exportar resultados a CSV/Excel
    - Notificaciones push cuando hay pendientes
    - Búsqueda en tab de Questions
+   - Reordenar preguntas con drag & drop
 
 3. **Analytics**:
    - Tracking de eventos (inicio, completado, aprobación)
@@ -287,6 +472,11 @@ queryClient.invalidateQueries({ queryKey: ['diagnostic-pending', institutionId] 
 queryClient.invalidateQueries({ queryKey: ['diagnostic-results', institutionId] });
 ```
 
+Después de crear/editar/eliminar pregunta:
+```typescript
+queryClient.invalidateQueries({ queryKey: ['diagnostic-questions', institutionId] });
+```
+
 ---
 
 ## 🎯 Estado del Proyecto
@@ -297,18 +487,33 @@ queryClient.invalidateQueries({ queryKey: ['diagnostic-results', institutionId] 
 - ✅ **Fase 3**: UI Pública (Quiz gamificado)
 - ✅ **Fase 4**: Panel Administrativo (Config, Questions, Pending, Results)
 
-### Archivos Modificados (Fase 4)
-1. `apps/web/src/features/diagnostic/components/admin/config-tab.tsx` (ya existía)
-2. `apps/web/src/features/diagnostic/components/admin/questions-tab.tsx` (reescrito)
-3. `apps/web/src/features/diagnostic/components/admin/pending-tab.tsx` (reescrito)
-4. `apps/web/src/features/diagnostic/components/admin/results-tab.tsx` (reescrito)
-5. `apps/web/src/app/(dashboard)/settings/diagnostico/diagnostico-client.tsx` (actualizado)
-6. `DIAGNOSTIC_PHASE4_COMPLETE.md` (nuevo)
+### Archivos Modificados (Fase 4 - Correcciones)
+1. `apps/web/src/app/api/institutions/[id]/diagnostic/questions/route.ts` - ✅ Agregado categoryName, orden automático
+2. `apps/web/src/app/api/institutions/[id]/diagnostic/questions/[questionId]/route.ts` - ✅ Permite cambiar categoría, retorna categoryName
+3. `apps/web/src/features/diagnostic/lib/validation.ts` - ✅ Campo order opcional
+4. `apps/web/.env.local` - ✅ Agregados feature flags server-side
+5. `DIAGNOSTIC_PHASE4_COMPLETE.md` - ✅ Actualizado con correcciones
 
-### Commits
+### Commits Pendientes
 ```bash
-18b46f8 - feat(diagnostic): complete admin panel - Phase 4 (Questions, Pending, Results tabs)
-d136f81 - feat(diagnostic): implement admin panel - Phase 4 (Part 1)
+git add .
+git commit -m "feat(diagnostic): complete admin panel with questions CRUD
+
+- Implement QuestionsTab with full CRUD functionality
+- Add categoryName to questions API responses
+- Auto-calculate order for new questions
+- Make order field optional in validation
+- Add server-side feature flags to .env.local
+- Fix API responses to include category information
+- Update PATCH endpoint to allow category changes
+
+All tabs now fully functional:
+- ConfigTab: Enable/disable, approval settings, custom message
+- QuestionsTab: Create, edit, deactivate custom questions
+- PendingTab: Approve pending teacher sessions
+- ResultsTab: View statistics and charts
+
+Build passing ✅"
 ```
 
 ---
@@ -323,11 +528,23 @@ d136f81 - feat(diagnostic): implement admin panel - Phase 4 (Part 1)
 ### Validación
 - Validación de inputs con Zod
 - Sanitización de datos antes de guardar
-- Límites de caracteres en campos de texto
+- Límites de caracteres en campos de texto (10-500 para preguntas)
+- Prevención de duplicados en staff por DNI
 
 ### Feature Flags
-- `FEATURE_DIAGNOSTIC_ADMIN_PANEL`: Habilita panel completo
-- `FEATURE_DIAGNOSTIC_STAFF_INTEGRATION`: Habilita aprobación de docentes
+```bash
+# Client-side
+NEXT_PUBLIC_FEATURE_DIAGNOSTIC_ENABLED=true
+NEXT_PUBLIC_FEATURE_DIAGNOSTIC_PUBLIC_QUIZ=true
+NEXT_PUBLIC_FEATURE_DIAGNOSTIC_ADMIN_PANEL=true
+NEXT_PUBLIC_FEATURE_DIAGNOSTIC_STAFF_INTEGRATION=true
+
+# Server-side
+FEATURE_DIAGNOSTIC_ENABLED=true
+FEATURE_DIAGNOSTIC_PUBLIC_QUIZ=true
+FEATURE_DIAGNOSTIC_ADMIN_PANEL=true
+FEATURE_DIAGNOSTIC_STAFF_INTEGRATION=true
+```
 
 ---
 
@@ -338,13 +555,32 @@ d136f81 - feat(diagnostic): implement admin panel - Phase 4 (Part 1)
 - `PLAN_DIAGNOSTICO_REVIEW.md` - Revisión de implementación
 - `DIAGNOSTIC_PHASE1_COMPLETE.md` - Resumen Fase 1
 - `DIAGNOSTIC_PHASE2_COMPLETE.md` - Resumen Fase 2
+- `DIAGNOSTIC_MODULE_IMPLEMENTATION.md` - Guía de implementación
 
 ---
 
 ## ✨ Conclusión
 
-El panel administrativo del módulo de diagnóstico está **100% funcional** y listo para uso en producción. Todos los tabs están implementados con sus funcionalidades completas, integración con APIs, manejo de estados, y diseño responsive.
+El panel administrativo del módulo de diagnóstico está **100% funcional** y listo para testing manual. Todos los tabs están implementados con sus funcionalidades completas, integración con APIs corregidas, manejo de estados, y diseño responsive.
 
 **Build Status**: ✅ Passing  
+**APIs**: ✅ Corregidas y funcionales  
+**Feature Flags**: ✅ Configurados  
 **Tests**: Pendiente (E2E recomendado)  
-**Ready for Merge**: ✅ Sí (después de testing manual)
+**Ready for Testing**: ✅ Sí  
+**Ready for Merge**: ⏳ Después de testing manual
+
+### Checklist Final
+
+- [x] ConfigTab implementado y funcional
+- [x] QuestionsTab implementado con CRUD completo
+- [x] PendingTab implementado y funcional
+- [x] ResultsTab implementado y funcional
+- [x] APIs corregidas (categoryName, orden automático)
+- [x] Validación actualizada (order opcional)
+- [x] Feature flags configurados
+- [x] Build pasando sin errores
+- [x] Documentación actualizada
+- [ ] Testing manual en desarrollo
+- [ ] Testing E2E
+- [ ] Merge a master

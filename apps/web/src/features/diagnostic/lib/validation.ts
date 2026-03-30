@@ -72,8 +72,8 @@ export const questionRequestSchema = z.object({
   id: z.string().optional(), // For updates
   categoryId: z.string().min(1, 'ID de categoría requerido'),
   text: z.string().min(10, 'Pregunta debe tener al menos 10 caracteres').max(500, 'Pregunta debe tener máximo 500 caracteres'),
-  order: z.number().int().min(0),
-  isActive: z.boolean().default(true),
+  order: z.number().int().min(0).optional(),
+  isActive: z.boolean().optional().default(true),
 });
 
 export type IdentifyRequest = z.infer<typeof identifyRequestSchema>;
