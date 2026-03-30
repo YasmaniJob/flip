@@ -62,6 +62,7 @@ export function ReservationDialog({
     const [reservationType, setReservationType] = useState<ReservationType>('learning');
     const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
     const [selectedStaffName, setSelectedStaffName] = useState<string | null>(null);
+    const [selectedStaffRole, setSelectedStaffRole] = useState<string | null>(null);
     const [gradeId, setGradeId] = useState<string | null>(null);
     const [sectionId, setSectionId] = useState<string | null>(null);
     const [curricularAreaId, setCurricularAreaId] = useState<string | null>(null);
@@ -93,13 +94,14 @@ export function ReservationDialog({
     const { data: myStaff } = useMyStaff();
     const { canManage, user } = useUserRole();
 
-    // Auto-set staff ID to current user by default
+    // Auto-set staff ID to current user by default ONLY if they are a regular teacher (!canManage)
     useEffect(() => {
-        if (open && myStaff?.id && !selectedStaffId) {
+        if (open && myStaff?.id && !selectedStaffId && !canManage) {
             setSelectedStaffId(myStaff.id);
             setSelectedStaffName(myStaff.name || '');
+            setSelectedStaffRole(user?.role || 'Docente');
         }
-    }, [open, myStaff, selectedStaffId]);
+    }, [open, myStaff, selectedStaffId, canManage, user?.role]);
 
     // UI States
     const [staffSearch, setStaffSearch] = useState('');
@@ -248,6 +250,7 @@ export function ReservationDialog({
         if (canManage) {
             setSelectedStaffId(null);
             setSelectedStaffName(null);
+            setSelectedStaffRole(null);
         }
         setGradeId(null);
         setSectionId(null);
@@ -365,19 +368,19 @@ export function ReservationDialog({
                                                     />
                                                 </div>
                                             ) : (
-                                                <div className="flex items-center gap-3 p-3 rounded-sm border border-border bg-card group relative">
+                                                <div className="flex items-center gap-3 p-3 rounded-sm border border-border bg-card overflow-hidden">
                                                     <div className="w-8 h-8 rounded-sm bg-primary/10 text-primary flex items-center justify-center text-xs font-black shrink-0">
                                                         {selectedStaffName?.[0]}
                                                     </div>
                                                     <div className="min-w-0 flex-1">
                                                         <p className="text-[11px] font-black uppercase truncate text-foreground">{selectedStaffName}</p>
-                                                        <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest truncate mt-0.5">Docente</p>
+                                                        <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest truncate mt-0.5">{selectedStaffRole || 'Docente'}</p>
                                                     </div>
                                                     <button 
-                                                        onClick={() => { setSelectedStaffId(null); setSelectedStaffName(null); }}
-                                                        className="absolute -top-2 -right-2 w-5 h-5 bg-background border border-border rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-white"
+                                                        onClick={() => { setSelectedStaffId(null); setSelectedStaffName(null); setSelectedStaffRole(null); }}
+                                                        className="w-6 h-6 border-transparent rounded-full flex items-center justify-center shrink-0 hover:bg-destructive hover:text-white transition-all text-muted-foreground bg-muted/50"
                                                     >
-                                                        <X size={10} />
+                                                        <X size={12} />
                                                     </button>
                                                 </div>
                                             )
@@ -445,7 +448,7 @@ export function ReservationDialog({
                                                 {staff?.map((s) => (
                                                     <button
                                                         key={s.id}
-                                                        onClick={() => { setSelectedStaffId(s.id); setSelectedStaffName(s.name); }}
+                                                        onClick={() => { setSelectedStaffId(s.id); setSelectedStaffName(s.name); setSelectedStaffRole(s.role || 'Docente'); }}
                                                         className="group flex items-center gap-3 p-3 rounded-sm border border-border bg-card hover:border-primary/40 hover:bg-primary/[0.02] transition-all text-left"
                                                     >
                                                         <div className="w-10 h-10 rounded-sm flex items-center justify-center text-[11px] font-black shrink-0 border border-border bg-muted group-hover:border-primary/20 transition-all">
@@ -470,7 +473,7 @@ export function ReservationDialog({
                                                             {recurrentStaff.map((s) => (
                                                                 <button
                                                                     key={s.id}
-                                                                    onClick={() => { setSelectedStaffId(s.id); setSelectedStaffName(s.name); }}
+                                                                    onClick={() => { setSelectedStaffId(s.id); setSelectedStaffName(s.name); setSelectedStaffRole(s.role || 'Docente'); }}
                                                                     className="group flex items-center gap-3 p-3 rounded-sm border border-border bg-card hover:border-primary/40 hover:bg-primary/[0.02] transition-all text-left"
                                                                 >
                                                                     <div className="w-10 h-10 rounded-sm flex items-center justify-center text-[11px] font-black shrink-0 border border-primary/20 bg-primary/5 text-primary group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">
