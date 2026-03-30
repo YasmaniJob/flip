@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/forgot-password",
   "/reset-password",
   "/verify-required",
+  "/ie", // Public institution pages including diagnostic
 ];
 
 export function middleware(request: NextRequest) {
