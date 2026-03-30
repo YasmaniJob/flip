@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useSession } from '@/lib/auth-client';
 import { Building2, Check, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -25,32 +26,22 @@ interface MyInstitutionsResponse {
 
 export function InstitutionSwitcher() {
     const { data: session } = useSession();
-    const [institutions, setInstitutions] = useState<Institution[]>([]);
-    const [activeInstitutionId, setActiveInstitutionId] = useState<string>('');
-    const [isLoading, setIsLoading] = useState(true);
     const [isSwitching, setIsSwitching] = useState(false);
     const [open, setOpen] = useState(false);
 
-    useEffect(() => {
-        if (session?.user) {
-            fetchInstitutions();
-        }
-    }, [session]);
-
-    const fetchInstitutions = async () => {
-        try {
+    const { data, isLoading } = useQuery<MyInstitutionsResponse>({
+        queryKey: ['my-institutions'],
+        queryFn: async () => {
             const res = await fetch('/api/users/my-institutions');
-            if (res.ok) {
-                const data: MyInstitutionsResponse = await res.json();
-                setInstitutions(data.institutions);
-                setActiveInstitutionId(data.activeInstitutionId);
-            }
-        } catch (error) {
-            console.error('Error fetching institutions:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+            if (!res.ok) throw new Error('Error al cargar instituciones');
+            return res.json();
+        },
+        enabled: !!session?.user,
+        staleTime: 5 * 60 * 1000 // 5 minutes cache
+    });
+
+    const institutions = data?.institutions || [];
+    const activeInstitutionId = data?.activeInstitutionId || '';
 
     const handleSwitchInstitution = async (institutionId: string) => {
         if (institutionId === activeInstitutionId || isSwitching) return;

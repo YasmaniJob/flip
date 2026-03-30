@@ -65,9 +65,6 @@ export function DiagnosticResultsTab() {
       <Card>
         <CardHeader>
           <CardTitle>Resultados y Estadísticas</CardTitle>
-          <CardDescription>
-            Visualiza los resultados del diagnóstico
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
@@ -154,9 +151,6 @@ export function DiagnosticResultsTab() {
         <Card>
           <CardHeader>
             <CardTitle>Promedio por Dimensión</CardTitle>
-            <CardDescription>
-              Puntaje promedio en cada categoría
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-80">
@@ -189,9 +183,6 @@ export function DiagnosticResultsTab() {
         <Card>
           <CardHeader>
             <CardTitle>Distribución por Nivel</CardTitle>
-            <CardDescription>
-              Cantidad de docentes en cada nivel
-            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-80">
@@ -222,9 +213,6 @@ export function DiagnosticResultsTab() {
       <Card>
         <CardHeader>
           <CardTitle>Desglose por Categoría</CardTitle>
-          <CardDescription>
-            Puntajes promedio detallados
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

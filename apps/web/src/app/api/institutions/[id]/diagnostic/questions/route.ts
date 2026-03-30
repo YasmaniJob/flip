@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { diagnosticQuestions, diagnosticCategories } from '@/lib/db/schema';
+import { diagnosticQuestions, diagnosticCategories, institutions } from '@/lib/db/schema';
 import { eq, and, or, isNull } from 'drizzle-orm';
 import { verifyAdminAccess } from '@/features/diagnostic/lib/auth-middleware';
 import { questionRequestSchema } from '@/features/diagnostic/lib/validation';
@@ -37,6 +37,14 @@ export async function GET(
       );
     }
     
+    // Get institution to read imported base questions from settings
+    const institution = await db.query.institutions.findFirst({
+      where: eq(institutions.id, institutionId)
+    });
+    
+    const settings = (institution?.settings as any) || {};
+    const importedBaseQuestionIds: string[] = settings.diagnostic?.importedBaseQuestions || [];
+    
     // Get all categories
     const categories = await db.query.diagnosticCategories.findMany({
       where: or(
@@ -46,20 +54,43 @@ export async function GET(
       orderBy: (categories, { asc }) => [asc(categories.order)],
     });
     
-    // Get all questions (standard + institution-specific)
-    const questions = await db.query.diagnosticQuestions.findMany({
-      where: or(
-        isNull(diagnosticQuestions.institutionId),
-        eq(diagnosticQuestions.institutionId, institutionId)
-      ),
-      with: {
-        category: true,
-      },
+    // Get all standard questions
+    const baseQuestions = await db.query.diagnosticQuestions.findMany({
+      where: isNull(diagnosticQuestions.institutionId),
+      with: { category: true },
+      orderBy: (questions, { asc }) => [asc(questions.order)],
+    });
+    
+    // Get all custom questions
+    const customQuestions = await db.query.diagnosticQuestions.findMany({
+      where: eq(diagnosticQuestions.institutionId, institutionId),
+      with: { category: true },
       orderBy: (questions, { asc }) => [asc(questions.order)],
     });
     
     // Create category map for quick lookup
     const categoryMap = new Map(categories.map(c => [c.id, c]));
+    
+    // Map function for questions
+    const mapQuestion = (q: any, isCustom: boolean) => ({
+      id: q.id,
+      code: q.code,
+      categoryId: q.categoryId,
+      categoryName: q.category?.name || categoryMap.get(q.categoryId)?.name || 'Sin categoría',
+      text: q.text,
+      order: q.order,
+      isActive: q.isActive,
+      isCustom,
+    });
+    
+    const catalogQuestions = baseQuestions.map(q => mapQuestion(q, false));
+    const activeCustom = customQuestions.map(q => mapQuestion(q, true));
+    
+    // Filter base questions that have been imported
+    const activeImported = catalogQuestions.filter(q => importedBaseQuestionIds.includes(q.id));
+    
+    // All active questions to show in Cuestionario tab
+    const activeQuestions = [...activeCustom, ...activeImported].sort((a, b) => a.order - b.order);
     
     return NextResponse.json({
       categories: categories.map(c => ({
@@ -71,16 +102,9 @@ export async function GET(
         isActive: c.isActive,
         isCustom: c.institutionId === institutionId,
       })),
-      questions: questions.map(q => ({
-        id: q.id,
-        code: q.code,
-        categoryId: q.categoryId,
-        categoryName: q.category?.name || categoryMap.get(q.categoryId)?.name || 'Sin categoría',
-        text: q.text,
-        order: q.order,
-        isActive: q.isActive,
-        isCustom: q.institutionId === institutionId,
-      })),
+      activeQuestions,
+      catalogQuestions,
+      importedBaseQuestionIds,
     });
     
   } catch (error) {

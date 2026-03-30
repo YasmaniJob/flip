@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { diagnosticQuestions, diagnosticCategories } from '@/lib/db/schema';
+import { diagnosticQuestions, diagnosticCategories, institutions } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { verifyAdminAccess } from '@/features/diagnostic/lib/auth-middleware';
 import { questionRequestSchema } from '@/features/diagnostic/lib/validation';
@@ -52,40 +52,12 @@ export async function PATCH(
       );
     }
     
-    // If it's a base question (institutionId is null), only allow toggling isActive
+    // Forbid edition of base questions completely via UI logic definition
     if (!existingQuestion.institutionId) {
-      // Only allow isActive toggle for base questions
-      if (body.isActive === undefined) {
-        return NextResponse.json(
-          { error: 'Base questions can only be activated/deactivated' },
-          { status: 400 }
-        );
-      }
-      
-      // Update only isActive
-      const [updated] = await db.update(diagnosticQuestions)
-        .set({ isActive: body.isActive })
-        .where(eq(diagnosticQuestions.id, questionId))
-        .returning();
-      
-      // Get category name for response
-      const category = await db.query.diagnosticCategories.findFirst({
-        where: eq(diagnosticCategories.id, updated.categoryId),
-      });
-      
-      return NextResponse.json({
-        success: true,
-        question: {
-          id: updated.id,
-          code: updated.code,
-          categoryId: updated.categoryId,
-          categoryName: category?.name || 'Sin categoría',
-          text: updated.text,
-          order: updated.order,
-          isActive: updated.isActive,
-          isCustom: false,
-        },
-      });
+      return NextResponse.json(
+        { error: 'Las preguntas Base Flip no pueden ser editadas. Para hacer cambios, crea una pregunta personalizada.' },
+        { status: 403 }
+      );
     }
     
     // For custom questions, verify ownership
@@ -173,12 +145,9 @@ export async function DELETE(
       );
     }
     
-    // Check if question exists and belongs to institution
+    // Check if question exists
     const existingQuestion = await db.query.diagnosticQuestions.findFirst({
-      where: and(
-        eq(diagnosticQuestions.id, questionId),
-        eq(diagnosticQuestions.institutionId, institutionId)
-      ),
+      where: eq(diagnosticQuestions.id, questionId)
     });
     
     if (!existingQuestion) {
@@ -187,15 +156,39 @@ export async function DELETE(
         { status: 404 }
       );
     }
+
+    // BASE QUESTION: REMOVE FROM SETTINGS CATALOG
+    if (!existingQuestion.institutionId) {
+      const institution = await db.query.institutions.findFirst({ where: eq(institutions.id, institutionId) });
+      const settings = (institution?.settings as any) || {};
+      const imported = settings.diagnostic?.importedBaseQuestions || [];
+      
+      const newSettings = {
+        ...settings,
+        diagnostic: {
+          ...(settings.diagnostic || {}),
+          importedBaseQuestions: imported.filter((id: string) => id !== questionId)
+        }
+      };
+
+      await db.update(institutions)
+        .set({ settings: newSettings })
+        .where(eq(institutions.id, institutionId));
+      
+      return NextResponse.json({ success: true, message: 'Pregunta base removida del cuestionario.' });
+    }
     
-    // Delete question (or mark as inactive)
-    await db.update(diagnosticQuestions)
-      .set({ isActive: false })
+    // CUSTOM QUESTION: HARD DELETE
+    if (existingQuestion.institutionId !== institutionId) {
+      return NextResponse.json({ error: 'Question not found or not deletable' }, { status: 403 });
+    }
+    
+    await db.delete(diagnosticQuestions)
       .where(eq(diagnosticQuestions.id, questionId));
     
     return NextResponse.json({
       success: true,
-      message: 'Question deactivated successfully',
+      message: 'Question deleted successfully',
     });
     
   } catch (error) {

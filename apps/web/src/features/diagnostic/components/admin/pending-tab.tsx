@@ -116,9 +116,6 @@ export function DiagnosticPendingTab() {
     <Card>
       <CardHeader>
         <CardTitle>Docentes Pendientes de Aprobación</CardTitle>
-        <CardDescription>
-          Revisa y aprueba docentes que completaron el diagnóstico ({sessions.length} pendientes)
-        </CardDescription>
       </CardHeader>
       <CardContent>
         {sessions.length === 0 ? (

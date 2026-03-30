@@ -8,7 +8,7 @@ import {
   useCallback,
 } from "react";
 import { useSession } from "@/lib/auth-client";
-import { useInstitution } from "@/hooks/use-institution";
+import { useMyInstitution } from "@/features/institutions/hooks/use-my-institution";
 
 interface BrandColorContextType {
   brandColor: string;
@@ -57,7 +57,7 @@ export function BrandColorProvider({
   children: React.ReactNode;
 }) {
   const { data: session } = useSession();
-  const { data: institution, isLoading: isLoadingInstitution } = useInstitution();
+  const { data: institution, isLoading: isLoadingInstitution } = useMyInstitution();
   const [brandColor, setBrandColorState] = useState<string>("");
   const [institutionName, setInstitutionName] = useState<string>();
   const [logoUrl, setLogoUrl] = useState<string | null>();
@@ -67,9 +67,9 @@ export function BrandColorProvider({
     if (session?.user) {
       const user = session.user as any;
       if (user.institutionId && institution) {
-        const color = institution?.settings?.brandColor;
+        const color = institution?.brandColor;
         const name = institution?.name;
-        const logo = institution?.settings?.logoUrl;
+        const logo = institution?.logo;
 
         setBrandColorState(color || "");
         setInstitutionName(name);

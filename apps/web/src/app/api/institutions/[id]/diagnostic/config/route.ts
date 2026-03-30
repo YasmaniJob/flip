@@ -43,7 +43,7 @@ export async function GET(
       diagnosticEnabled: institution.diagnosticEnabled ?? false,
       diagnosticRequiresApproval: institution.diagnosticRequiresApproval ?? true,
       diagnosticCustomMessage: institution.diagnosticCustomMessage,
-      publicUrl: `${process.env.NEXT_PUBLIC_APP_URL}/ie/${institution.slug}/diagnostic`,
+      publicUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://flip.org.pe'}/ie/${institution.slug}/diagnostic`,
     });
     
   } catch (error) {
