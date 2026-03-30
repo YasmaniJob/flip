@@ -70,11 +70,17 @@ export const updateConfigRequestSchema = z.object({
 // Admin: Create/Update question validation
 export const questionRequestSchema = z.object({
   id: z.string().optional(), // For updates
-  categoryId: z.string().min(1, 'ID de categoría requerido'),
-  text: z.string().min(10, 'Pregunta debe tener al menos 10 caracteres').max(500, 'Pregunta debe tener máximo 500 caracteres'),
+  categoryId: z.string().min(1, 'ID de categoría requerido').optional(),
+  text: z.string().min(10, 'Pregunta debe tener al menos 10 caracteres').max(500, 'Pregunta debe tener máximo 500 caracteres').optional(),
   order: z.number().int().min(0).optional(),
-  isActive: z.boolean().optional().default(true),
-});
+  isActive: z.boolean().optional(),
+}).refine(
+  (data) => {
+    // At least one field must be provided
+    return data.categoryId || data.text || data.order !== undefined || data.isActive !== undefined;
+  },
+  { message: 'Al menos un campo debe ser proporcionado' }
+);
 
 export type IdentifyRequest = z.infer<typeof identifyRequestSchema>;
 export type SaveResponseRequest = z.infer<typeof saveResponseRequestSchema>;

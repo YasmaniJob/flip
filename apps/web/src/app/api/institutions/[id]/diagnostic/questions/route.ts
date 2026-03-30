@@ -119,6 +119,15 @@ export async function POST(
     
     // Parse and validate request
     const body = await request.json();
+    
+    // For creating, categoryId and text are required
+    if (!body.categoryId || !body.text) {
+      return NextResponse.json(
+        { error: 'categoryId and text are required for creating a question' },
+        { status: 400 }
+      );
+    }
+    
     const validation = questionRequestSchema.safeParse(body);
     
     if (!validation.success) {
@@ -133,7 +142,7 @@ export async function POST(
     // Get the highest order number for this category to append at the end
     const existingQuestions = await db.query.diagnosticQuestions.findMany({
       where: and(
-        eq(diagnosticQuestions.categoryId, data.categoryId),
+        eq(diagnosticQuestions.categoryId, data.categoryId!),
         or(
           isNull(diagnosticQuestions.institutionId),
           eq(diagnosticQuestions.institutionId, institutionId)
@@ -152,9 +161,9 @@ export async function POST(
       .values({
         id: crypto.randomUUID(),
         code,
-        categoryId: data.categoryId,
+        categoryId: data.categoryId!,
         institutionId, // Mark as institution-specific
-        text: data.text,
+        text: data.text!,
         order: data.order ?? nextOrder,
         isActive: data.isActive ?? true,
       })
@@ -162,7 +171,7 @@ export async function POST(
     
     // Get category name for response
     const category = await db.query.diagnosticCategories.findFirst({
-      where: eq(diagnosticCategories.id, data.categoryId),
+      where: eq(diagnosticCategories.id, data.categoryId!),
     });
     
     return NextResponse.json({

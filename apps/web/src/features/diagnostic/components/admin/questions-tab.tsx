@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -23,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Loader2, Plus, Edit, Trash2, XCircle, HelpCircle } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, XCircle, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Question {
@@ -32,6 +33,7 @@ interface Question {
   categoryName: string;
   text: string;
   order: number;
+  isActive: boolean;
   isCustom: boolean;
 }
 
@@ -90,6 +92,33 @@ export function DiagnosticQuestionsTab({ institutionId }: QuestionsTabProps) {
       toast.success(editingQuestion ? 'Pregunta actualizada' : 'Pregunta creada');
       queryClient.invalidateQueries({ queryKey: ['diagnostic-questions', institutionId] });
       handleCloseDialog();
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  // Toggle active/inactive mutation (for base questions)
+  const toggleActiveMutation = useMutation({
+    mutationFn: async (data: { questionId: string; isActive: boolean }) => {
+      const res = await fetch(
+        `/api/institutions/${institutionId}/diagnostic/questions/${data.questionId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isActive: data.isActive }),
+        }
+      );
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Error al actualizar pregunta');
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      toast.success(variables.isActive ? 'Pregunta activada' : 'Pregunta desactivada');
+      queryClient.invalidateQueries({ queryKey: ['diagnostic-questions', institutionId] });
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -158,9 +187,16 @@ export function DiagnosticQuestionsTab({ institutionId }: QuestionsTabProps) {
   };
 
   const handleDelete = (questionId: string) => {
-    if (confirm('¿Estás seguro de eliminar esta pregunta?')) {
+    if (confirm('¿Estás seguro de eliminar esta pregunta personalizada?')) {
       deleteMutation.mutate(questionId);
     }
+  };
+
+  const handleToggleActive = (questionId: string, currentActive: boolean) => {
+    toggleActiveMutation.mutate({
+      questionId,
+      isActive: !currentActive,
+    });
   };
 
   if (questionsLoading) {
@@ -176,7 +212,8 @@ export function DiagnosticQuestionsTab({ institutionId }: QuestionsTabProps) {
   const questions = questionsData?.questions || [];
   const categories = questionsData?.categories || [];
   const customQuestions = questions.filter(q => q.isCustom);
-  const defaultQuestions = questions.filter(q => !q.isCustom);
+  const baseQuestions = questions.filter(q => !q.isCustom);
+  const activeCount = questions.filter(q => q.isActive).length;
 
   return (
     <>
@@ -186,7 +223,7 @@ export function DiagnosticQuestionsTab({ institutionId }: QuestionsTabProps) {
             <div>
               <CardTitle>Gestión de Preguntas</CardTitle>
               <CardDescription>
-                Administra las preguntas del diagnóstico ({questions.length} total, {customQuestions.length} personalizadas)
+                Administra las preguntas del diagnóstico ({activeCount} activas de {questions.length} total)
               </CardDescription>
             </div>
             <Button onClick={() => handleOpenDialog()}>
@@ -218,6 +255,17 @@ export function DiagnosticQuestionsTab({ institutionId }: QuestionsTabProps) {
                         <Badge className="bg-blue-100 text-blue-800 text-xs">
                           Personalizada
                         </Badge>
+                        {question.isActive ? (
+                          <Badge className="bg-green-100 text-green-800 text-xs">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Activa
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-gray-500">
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Inactiva
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
@@ -243,13 +291,16 @@ export function DiagnosticQuestionsTab({ institutionId }: QuestionsTabProps) {
             </div>
           )}
 
-          {/* Default Questions */}
+          {/* Base Questions (Flip) */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              Preguntas Base ({defaultQuestions.length})
+              Preguntas Base de Flip ({baseQuestions.length})
             </h3>
+            <p className="text-xs text-gray-600 mb-3">
+              Estas son las preguntas estándar propuestas por Flip. Puedes activar o desactivar las que desees usar en tu diagnóstico.
+            </p>
             <div className="space-y-2">
-              {defaultQuestions.map((question) => (
+              {baseQuestions.map((question) => (
                 <div
                   key={question.id}
                   className="flex items-start gap-3 p-3 border rounded-lg bg-gray-50"
@@ -257,9 +308,27 @@ export function DiagnosticQuestionsTab({ institutionId }: QuestionsTabProps) {
                   <HelpCircle className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-700">{question.text}</p>
-                    <Badge variant="outline" className="text-xs mt-1">
-                      {question.categoryName}
-                    </Badge>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        {question.categoryName}
+                      </Badge>
+                      <Badge className="bg-purple-100 text-purple-800 text-xs">
+                        Flip
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={`toggle-${question.id}`} className="text-xs text-gray-600">
+                        {question.isActive ? 'Activa' : 'Inactiva'}
+                      </Label>
+                      <Switch
+                        id={`toggle-${question.id}`}
+                        checked={question.isActive}
+                        onCheckedChange={() => handleToggleActive(question.id, question.isActive)}
+                        disabled={toggleActiveMutation.isPending}
+                      />
+                    </div>
                   </div>
                 </div>
               ))}

@@ -181,7 +181,7 @@ export function DiagnosticConfigTab() {
         <CardContent>
           <Textarea
             placeholder="Ej: Bienvenido al diagnóstico de habilidades digitales de nuestra institución..."
-            value={config.diagnosticCustomMessage}
+            value={config.diagnosticCustomMessage || ''}
             onChange={(e) =>
               setConfig({ ...config, diagnosticCustomMessage: e.target.value })
             }
@@ -189,7 +189,7 @@ export function DiagnosticConfigTab() {
             maxLength={500}
           />
           <p className="text-xs text-gray-500 mt-2">
-            {config.diagnosticCustomMessage.length}/500 caracteres
+            {(config.diagnosticCustomMessage || '').length}/500 caracteres
           </p>
         </CardContent>
       </Card>

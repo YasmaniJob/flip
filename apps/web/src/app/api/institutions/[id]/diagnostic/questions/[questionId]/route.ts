@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { diagnosticQuestions } from '@/lib/db/schema';
+import { diagnosticQuestions, diagnosticCategories } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { verifyAdminAccess } from '@/features/diagnostic/lib/auth-middleware';
 import { questionRequestSchema } from '@/features/diagnostic/lib/validation';
@@ -37,23 +37,66 @@ export async function PATCH(
       );
     }
     
-    // Check if question exists and belongs to institution
+    // Parse request body
+    const body = await request.json();
+    
+    // Check if question exists
     const existingQuestion = await db.query.diagnosticQuestions.findFirst({
-      where: and(
-        eq(diagnosticQuestions.id, questionId),
-        eq(diagnosticQuestions.institutionId, institutionId)
-      ),
+      where: eq(diagnosticQuestions.id, questionId),
     });
     
     if (!existingQuestion) {
+      return NextResponse.json(
+        { error: 'Question not found' },
+        { status: 404 }
+      );
+    }
+    
+    // If it's a base question (institutionId is null), only allow toggling isActive
+    if (!existingQuestion.institutionId) {
+      // Only allow isActive toggle for base questions
+      if (body.isActive === undefined) {
+        return NextResponse.json(
+          { error: 'Base questions can only be activated/deactivated' },
+          { status: 400 }
+        );
+      }
+      
+      // Update only isActive
+      const [updated] = await db.update(diagnosticQuestions)
+        .set({ isActive: body.isActive })
+        .where(eq(diagnosticQuestions.id, questionId))
+        .returning();
+      
+      // Get category name for response
+      const category = await db.query.diagnosticCategories.findFirst({
+        where: eq(diagnosticCategories.id, updated.categoryId),
+      });
+      
+      return NextResponse.json({
+        success: true,
+        question: {
+          id: updated.id,
+          code: updated.code,
+          categoryId: updated.categoryId,
+          categoryName: category?.name || 'Sin categoría',
+          text: updated.text,
+          order: updated.order,
+          isActive: updated.isActive,
+          isCustom: false,
+        },
+      });
+    }
+    
+    // For custom questions, verify ownership
+    if (existingQuestion.institutionId !== institutionId) {
       return NextResponse.json(
         { error: 'Question not found or not editable' },
         { status: 404 }
       );
     }
     
-    // Parse and validate request
-    const body = await request.json();
+    // Parse and validate request for custom questions
     const validation = questionRequestSchema.safeParse(body);
     
     if (!validation.success) {
@@ -65,14 +108,15 @@ export async function PATCH(
     
     const data = validation.data;
     
-    // Update question
+    // Update question (only update fields that are provided)
+    const updateData: any = {};
+    if (data.text !== undefined) updateData.text = data.text;
+    if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
+    if (data.order !== undefined) updateData.order = data.order;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    
     const [updated] = await db.update(diagnosticQuestions)
-      .set({
-        text: data.text,
-        categoryId: data.categoryId,
-        order: data.order,
-        isActive: data.isActive,
-      })
+      .set(updateData)
       .where(eq(diagnosticQuestions.id, questionId))
       .returning();
     
