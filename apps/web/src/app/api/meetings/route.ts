@@ -5,9 +5,9 @@ import { requireAuth, getInstitutionId } from '@/lib/auth/helpers';
 import { validateBody } from '@/lib/validations/helpers';
 import { createMeetingSchema } from '@/lib/validations/schemas/meetings';
 import { successResponse, paginatedResponse, errorResponse } from '@/lib/utils/response';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 
-// GET /api/meetings - List all meetings
+// GET /api/meetings - List meetings (only the authenticated user's own meetings)
 export async function GET(request: NextRequest) {
   try {
     const { user } = await requireAuth(request);
@@ -18,9 +18,12 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = (page - 1) * limit;
 
-    // Get meetings with relations
+    // Filter by BOTH institutionId AND createdByUserId for strict privacy
     const meetingsList = await db.query.meetings.findMany({
-      where: eq(meetings.institutionId, institutionId),
+      where: and(
+        eq(meetings.institutionId, institutionId),
+        eq(meetings.createdByUserId, user.id)
+      ),
       orderBy: [desc(meetings.date), desc(meetings.createdAt)],
       limit,
       offset,
@@ -38,25 +41,32 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Count total
+    // Count total (only this user's meetings)
     const totalResult = await db
       .select({ count: meetings.id })
       .from(meetings)
-      .where(eq(meetings.institutionId, institutionId));
+      .where(
+        and(
+          eq(meetings.institutionId, institutionId),
+          eq(meetings.createdByUserId, user.id)
+        )
+      );
 
     const total = totalResult.length;
+    const lastPage = Math.max(1, Math.ceil(total / limit));
 
     return paginatedResponse(meetingsList, {
       page,
       limit,
       total,
+      lastPage,
     });
   } catch (error) {
     return errorResponse(error);
   }
 }
 
-// POST /api/meetings - Create meeting
+// POST /api/meetings - Create meeting (saves createdByUserId)
 export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request);
@@ -65,11 +75,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = validateBody(createMeetingSchema, body);
 
-    // Create meeting
+    // Create meeting linked to the authenticated user
     const [meeting] = await db
       .insert(meetings)
       .values({
         institutionId,
+        createdByUserId: user.id,  // record the owner
         title: data.title,
         date: new Date(data.date),
         startTime: data.startTime,

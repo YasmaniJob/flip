@@ -405,6 +405,7 @@ export const reservationSlots = pgTable('reservation_slots', {
 export const meetings = pgTable('meetings', {
     id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
     institutionId: text('institution_id').references(() => institutions.id).notNull(),
+    createdByUserId: text('created_by_user_id').references(() => users.id), // Owner - only they can see/manage
     title: text('title').notNull(),
     date: timestamp('date').notNull(),
     startTime: text('start_time'),
@@ -419,6 +420,7 @@ export const meetings = pgTable('meetings', {
 }, (table) => ({
     institutionIdx: index('idx_meeting_institution').on(table.institutionId),
     dateIdx: index('idx_meeting_date').on(table.date),
+    createdByUserIdx: index('idx_meeting_created_by').on(table.createdByUserId),
 }));
 
 // ============================================
@@ -687,6 +689,10 @@ export const meetingsRelations = relations(meetings, ({ one, many }) => ({
     institution: one(institutions, {
         fields: [meetings.institutionId],
         references: [institutions.id],
+    }),
+    createdBy: one(users, {
+        fields: [meetings.createdByUserId],
+        references: [users.id],
     }),
     attendance: many(meetingAttendance),
     tasks: many(meetingTasks),

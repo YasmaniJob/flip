@@ -3,17 +3,17 @@ import { db } from '@/lib/db';
 import { meetings } from '@/lib/db/schema';
 import { requireAuth, getInstitutionId } from '@/lib/auth/helpers';
 import { successResponse, errorResponse } from '@/lib/utils/response';
-import { NotFoundError } from '@/lib/utils/errors';
+import { NotFoundError, ForbiddenError } from '@/lib/utils/errors';
 import { eq, and } from 'drizzle-orm';
 
-// GET /api/meetings/:id - Get meeting by ID
+// GET /api/meetings/:id - Get meeting by ID (only owner)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request);
-    const institutionId = getInstitutionId(user);
+    const institutionId = await getInstitutionId(user);
     const { id } = await params;
 
     const meeting = await db.query.meetings.findFirst({
@@ -24,20 +24,12 @@ export async function GET(
       with: {
         attendance: {
           with: {
-            staff: {
-              with: {
-                user: true,
-              },
-            },
+            staff: true,
           },
         },
         tasks: {
           with: {
-            assignedStaff: {
-              with: {
-                user: true,
-              },
-            },
+            assignedStaff: true,
           },
         },
       },
@@ -47,20 +39,25 @@ export async function GET(
       throw new NotFoundError('Reunión no encontrada');
     }
 
+    // Enforce ownership: only the creator can see this meeting
+    if (meeting.createdByUserId && meeting.createdByUserId !== user.id) {
+      throw new ForbiddenError('No tienes acceso a esta reunión');
+    }
+
     return successResponse(meeting);
   } catch (error) {
     return errorResponse(error);
   }
 }
 
-// DELETE /api/meetings/:id - Delete meeting
+// DELETE /api/meetings/:id - Delete meeting (only owner)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request);
-    const institutionId = getInstitutionId(user);
+    const institutionId = await getInstitutionId(user);
     const { id } = await params;
 
     // Verify meeting exists and belongs to institution
@@ -73,6 +70,11 @@ export async function DELETE(
 
     if (!meeting) {
       throw new NotFoundError('Reunión no encontrada');
+    }
+
+    // Enforce ownership: only the creator can delete
+    if (meeting.createdByUserId && meeting.createdByUserId !== user.id) {
+      throw new ForbiddenError('Solo el creador puede eliminar esta reunión');
     }
 
     // Delete meeting (cascade will handle attendance and tasks)

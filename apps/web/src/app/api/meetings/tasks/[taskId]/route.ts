@@ -6,7 +6,7 @@ import { requireAuth, getInstitutionId } from '@/lib/auth/helpers';
 import { validateBody } from '@/lib/validations/helpers';
 import { updateTaskSchema } from '@/lib/validations/schemas/meetings';
 import { successResponse, errorResponse } from '@/lib/utils/response';
-import { NotFoundError } from '@/lib/utils/errors';
+import { NotFoundError, ForbiddenError } from '@/lib/utils/errors';
 
 // PATCH /api/meetings/tasks/:taskId - Update task (acuerdo)
 export async function PATCH(
@@ -18,7 +18,7 @@ export async function PATCH(
         const institutionId = await getInstitutionId(user);
         const { taskId } = params;
 
-        // C1 FIX: Verify task exists AND belongs to the user's institution before updating
+        // Verify task exists AND belongs to the user's institution
         const task = await db.query.meetingTasks.findFirst({
             where: eq(meetingTasks.id, taskId),
             with: { meeting: true },
@@ -26,6 +26,11 @@ export async function PATCH(
 
         if (!task || task.meeting.institutionId !== institutionId) {
             throw new NotFoundError('Acuerdo no encontrado');
+        }
+
+        // Ownership check: only the meeting creator can modify tasks
+        if (task.meeting.createdByUserId && task.meeting.createdByUserId !== user.id) {
+            throw new ForbiddenError('No tienes acceso a este acuerdo');
         }
 
         const body = await request.json();
@@ -59,7 +64,7 @@ export async function DELETE(
         const institutionId = await getInstitutionId(user);
         const { taskId } = params;
 
-        // C1 FIX: Verify task exists AND belongs to the user's institution before deleting
+        // Verify task exists AND belongs to the user's institution
         const task = await db.query.meetingTasks.findFirst({
             where: eq(meetingTasks.id, taskId),
             with: { meeting: true },
@@ -67,6 +72,11 @@ export async function DELETE(
 
         if (!task || task.meeting.institutionId !== institutionId) {
             throw new NotFoundError('Acuerdo no encontrado');
+        }
+
+        // Ownership check: only the meeting creator can delete tasks
+        if (task.meeting.createdByUserId && task.meeting.createdByUserId !== user.id) {
+            throw new ForbiddenError('No tienes acceso a este acuerdo');
         }
 
         await db.delete(meetingTasks).where(eq(meetingTasks.id, taskId));
