@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { read, utils, writeFile } from "xlsx";
 import { CheckCircle2, AlertCircle, X, Download, FileSpreadsheet, UploadCloud, ChevronRight, Loader2 } from "lucide-react";
 import { CreateStaffInput } from "@flip/shared";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -28,17 +27,20 @@ const INSTRUCTIONS = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function exportTemplate() {
+async function exportTemplate() {
+    // Dynamic import de XLSX solo cuando se necesita
+    const XLSX = await import('xlsx');
+    
     const rows = [["Nombre", "DNI", "Email", "Telefono", "Rol"]];
     rows.push(["Director Ejemplo", "10000001", "director@escuela.edu.pe", "900000001", "admin"]);
     rows.push(["Promotor Innovación", "10000002", "pip@escuela.edu.pe", "900000002", "pip"]);
     for (let i = 3; i <= 5; i++) {
         rows.push([`Docente Ejemplo ${i}`, `${10000000 + i}`, `docente${i}@escuela.edu.pe`, `9${String(i).padStart(8, "0")}`, "docente"]);
     }
-    const ws = utils.aoa_to_sheet(rows);
-    const wb = utils.book_new();
-    utils.book_append_sheet(wb, ws, "Plantilla");
-    writeFile(wb, "plantilla_personal_flip.xlsx");
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
+    XLSX.writeFile(wb, "plantilla_personal_flip.xlsx");
 }
 
 function parseRole(raw: any): "docente" | "pip" | "admin" | "superadmin" {
@@ -72,9 +74,12 @@ export function ImportStaffDialog({ open, onOpenChange }: ImportStaffDialogProps
             setSuccessCount(null);
             setFileName(file.name);
             
+            // Dynamic import de XLSX solo cuando se necesita
+            const XLSX = await import('xlsx');
+            
             const data = await file.arrayBuffer();
-            const wb   = read(data);
-            const json = utils.sheet_to_json<any>(wb.Sheets[wb.SheetNames[0]]);
+            const wb   = XLSX.read(data);
+            const json = XLSX.utils.sheet_to_json<any>(wb.Sheets[wb.SheetNames[0]]);
             
             if (json.length === 0) { 
                 setError("El archivo está vacío"); 

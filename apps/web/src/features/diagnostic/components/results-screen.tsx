@@ -1,12 +1,86 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+import { lazy, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
-import { Trophy, ArrowRight } from 'lucide-react';
+import { Trophy, ArrowRight, Loader2 } from 'lucide-react';
 import { LEVEL_LABELS, LEVEL_ICONS } from '../types';
 import type { DiagnosticLevel } from '../types';
-import { DiagnosticPDFGenerator } from './diagnostic-pdf-generator';
+
+// Lazy load PDF generator (solo se carga al hacer clic en descargar)
+const DiagnosticPDFGenerator = lazy(() => 
+  import('./diagnostic-pdf-generator').then(mod => ({
+    default: mod.DiagnosticPDFGenerator
+  }))
+);
+
+// Dynamic import de Recharts (solo se carga en resultados)
+const RadarChartComponent = dynamic(
+  () => import('recharts').then(mod => {
+    const { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } = mod;
+    
+    return {
+      default: ({ data }: any) => (
+        <ResponsiveContainer width="100%" height="100%">
+          <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
+            <PolarGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+            <PolarAngleAxis 
+              dataKey="category" 
+              tick={(props: any) => {
+                const { x, y, payload } = props;
+                const textLines = payload.value.split(' ');
+                return (
+                  <g transform={`translate(${x},${y})`}>
+                    {textLines.map((line: string, i: number) => (
+                      <text
+                        key={i}
+                        x={0}
+                        y={i * 12}
+                        dy={0}
+                        textAnchor="middle"
+                        fill="#475569"
+                        style={{ 
+                          fontSize: '10px', 
+                          fontWeight: 600,
+                          fontFamily: 'inherit'
+                        }}
+                      >
+                        {line}
+                      </text>
+                    ))}
+                  </g>
+                );
+              }}
+            />
+            <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
+            <Radar
+              name="Resultados"
+              dataKey="score"
+              stroke="#2563eb"
+              strokeWidth={3}
+              fill="#3b82f6"
+              fillOpacity={0.15}
+            />
+          </RadarChart>
+        </ResponsiveContainer>
+      )
+    };
+  }),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="h-[320px] md:h-[450px] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    )
+  }
+);
+
+// Dynamic import de Framer Motion
+const motion = dynamic(
+  () => import('framer-motion').then(mod => mod.motion as any),
+  { ssr: false }
+);
 
 interface ResultsScreenProps {
   userName: string;
@@ -43,24 +117,27 @@ export function ResultsScreen({
     score,
     fullMark: 100,
   }));
+
+  // Componente motion.div con fallback
+  const MotionDiv = (motion as any)?.div || 'div';
   
   return (
     <div className="min-h-screen bg-slate-50 p-4 py-8 md:py-16">
-      <motion.div
+      <MotionDiv
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-4xl mx-auto space-y-6 md:space-y-10"
       >
         {/* Header Section */}
         <header className="text-center space-y-4">
-          <motion.div
+          <MotionDiv
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
             className="inline-flex items-center justify-center w-20 h-20 bg-amber-100 text-amber-600 rounded-full shadow-inner"
           >
             <Trophy className="w-10 h-10" />
-          </motion.div>
+          </MotionDiv>
           
           <div className="space-y-1">
             <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">
@@ -91,48 +168,7 @@ export function ResultsScreen({
             
             {/* Visualization Section */}
             <div className="relative h-[320px] md:h-[450px] -mx-4 md:mx-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                  <PolarGrid stroke="#e2e8f0" strokeDasharray="3 3" />
-                  <PolarAngleAxis 
-                    dataKey="category" 
-                    tick={(props) => {
-                      const { x, y, payload } = props;
-                      const textLines = payload.value.split(' ');
-                      return (
-                        <g transform={`translate(${x},${y})`}>
-                          {textLines.map((line: string, i: number) => (
-                            <text
-                              key={i}
-                              x={0}
-                              y={i * 12}
-                              dy={0}
-                              textAnchor="middle"
-                              fill="#475569"
-                              style={{ 
-                                fontSize: '10px', 
-                                fontWeight: 600,
-                                fontFamily: 'inherit'
-                              }}
-                            >
-                              {line}
-                            </text>
-                          ))}
-                        </g>
-                      );
-                    }}
-                  />
-                  <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
-                  <Radar
-                    name="Resultados"
-                    dataKey="score"
-                    stroke="#2563eb"
-                    strokeWidth={3}
-                    fill="#3b82f6"
-                    fillOpacity={0.15}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
+              <RadarChartComponent data={radarData} />
             </div>
             
             {/* Dimensions Grid */}
@@ -162,19 +198,26 @@ export function ResultsScreen({
         {/* Action Buttons */}
         <footer className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
           <div className="w-full sm:w-auto">
-            <DiagnosticPDFGenerator
-              userName={userName}
-              institutionName={institutionName}
-              institutionLogo={institutionLogo}
-              educationalLevel={educationalLevel}
-              province={province}
-              level={level}
-              overallScore={overallScore}
-              completedAt={new Date().toISOString()}
-              categoryScores={categoryScores}
-              categoryNames={categoryNames}
-              year={currentYear}
-            />
+            <Suspense fallback={
+              <Button size="lg" disabled className="w-full sm:w-auto h-[52px] rounded-xl">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Cargando...
+              </Button>
+            }>
+              <DiagnosticPDFGenerator
+                userName={userName}
+                institutionName={institutionName}
+                institutionLogo={institutionLogo}
+                educationalLevel={educationalLevel}
+                province={province}
+                level={level}
+                overallScore={overallScore}
+                completedAt={new Date().toISOString()}
+                categoryScores={categoryScores}
+                categoryNames={categoryNames}
+                year={currentYear}
+              />
+            </Suspense>
           </div>
           
           {onContinue && (
@@ -193,7 +236,7 @@ export function ResultsScreen({
         <p className="text-center text-slate-400 text-sm max-w-sm mx-auto leading-relaxed">
           Tus resultados han sido guardados. Recibirás recomendaciones personalizadas para tus habilidades digitales.
         </p>
-      </motion.div>
+      </MotionDiv>
     </div>
   );
 }

@@ -8,8 +8,16 @@ function makeQueryClient() {
     return new QueryClient({
         defaultOptions: {
             queries: {
-                staleTime: 60 * 1000, // 60 segundos - datos frescos por defecto
-                refetchOnWindowFocus: true,
+                // Optimización: datos frescos por más tiempo
+                staleTime: 5 * 60 * 1000, // 5 minutos - reduce re-fetching innecesario
+                gcTime: 10 * 60 * 1000, // 10 minutos - mantiene cache más tiempo
+                refetchOnWindowFocus: false, // Evita re-fetch al cambiar de pestaña
+                refetchOnMount: false, // Evita re-fetch al montar si hay cache
+                refetchOnReconnect: false, // Evita re-fetch al reconectar
+                retry: 1,
+                retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+            },
+            mutations: {
                 retry: 1,
             },
         },
