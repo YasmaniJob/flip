@@ -7,6 +7,7 @@ import { db } from '@/lib/db';
 import { grades } from '@/lib/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import { revalidateTag } from 'next/cache';
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,6 +56,8 @@ export async function POST(request: NextRequest) {
         sortOrder: data.sortOrder ?? 0,
       })
       .returning();
+
+    revalidateTag('config-loadout');
 
     return successResponse(grade, 201);
   } catch (error) {

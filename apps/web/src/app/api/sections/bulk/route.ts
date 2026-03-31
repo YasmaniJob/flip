@@ -6,6 +6,7 @@ import { successResponse, errorResponse } from '@/lib/utils/response';
 import { db } from '@/lib/db';
 import { sections } from '@/lib/db/schema';
 import { randomUUID } from 'crypto';
+import { revalidateTag } from 'next/cache';
 
 const bulkCreateSectionSchema = z.object({
   sections: z.array(z.object({
@@ -34,6 +35,8 @@ export async function POST(request: NextRequest) {
     }));
 
     const created = await db.insert(sections).values(values).returning();
+
+    revalidateTag('config-loadout');
 
     return successResponse(created, 201);
   } catch (error) {

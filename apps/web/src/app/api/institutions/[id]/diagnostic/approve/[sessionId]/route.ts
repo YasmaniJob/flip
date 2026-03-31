@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminAccess } from '@/features/diagnostic/lib/auth-middleware';
 import { approveAndCreateStaff } from '@/features/diagnostic/lib/staff-integration';
+import { revalidateTag } from 'next/cache';
 
 export async function POST(
   request: NextRequest,
@@ -27,6 +28,9 @@ export async function POST(
     
     // Approve and create/link staff
     const result = await approveAndCreateStaff(sessionId);
+
+    revalidateTag('staff');
+    revalidateTag('diagnostic-results');
     
     return NextResponse.json({
       success: result.success,

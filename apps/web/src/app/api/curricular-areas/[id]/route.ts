@@ -7,6 +7,7 @@ import { NotFoundError } from '@/lib/utils/errors';
 import { db } from '@/lib/db';
 import { curricularAreas } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { revalidateTag } from 'next/cache';
 
 export async function PUT(
   request: NextRequest,
@@ -28,6 +29,8 @@ export async function PUT(
     if (!updated) {
       throw new NotFoundError('Área curricular no encontrada');
     }
+
+    revalidateTag('config-loadout');
 
     return successResponse(updated);
   } catch (error) {
@@ -51,6 +54,8 @@ export async function DELETE(
     if (!deleted) {
       throw new NotFoundError('Área curricular no encontrada');
     }
+
+    revalidateTag('config-loadout');
 
     return successResponse({ success: true });
   } catch (error) {

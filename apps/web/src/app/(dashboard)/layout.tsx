@@ -4,6 +4,7 @@ import { useSession } from "@/lib/auth-client";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useMyInstitution } from "@/features/institutions/hooks/use-my-institution";
+import { useConfigLoadout } from "@/features/settings/hooks/use-config-loadout";
 import { Sidebar } from "@/components/sidebar";
 import { QueryProvider } from "@/providers/query-provider";
 import { Sparkles, ArrowRight, X } from "lucide-react";
@@ -21,7 +22,10 @@ export default function DashboardLayout({
     const pathname = usePathname();
     const { data: session, isPending } = useSession();
 
-    const { data: institution } = useMyInstitution();
+    // Fire data fetching safely when valid session exists
+    const { data: institution } = useMyInstitution({ enabled: !!session && !isPending });
+    useConfigLoadout({ enabled: !!session && !isPending }); // Safe parallel prefetch
+
     const [isBannerDismissed, setIsBannerDismissed] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const [hideBottomNav, setHideBottomNav] = useState(false);

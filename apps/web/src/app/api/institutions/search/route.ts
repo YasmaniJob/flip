@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     const conditions = [];
 
-    // Multi-word search: each word must match name OR code
+    // Multi-word search
     if (query.q && query.q.trim()) {
       const q = query.q.trim();
       const terms = q.split(/\s+/).filter((t) => t.length > 0);
@@ -31,44 +31,20 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Filter by nivel
-    if (query.nivel && query.nivel.trim()) {
-      conditions.push(like(educationInstitutionsMinedu.nivel, query.nivel.trim()));
-    }
-
-    // Filter by departamento
-    if (query.departamento && query.departamento.trim()) {
-      conditions.push(
-        like(educationInstitutionsMinedu.departamento, query.departamento.trim())
-      );
-    }
-
-    // Filter by provincia
-    if (query.provincia && query.provincia.trim()) {
-      conditions.push(
-        like(educationInstitutionsMinedu.provincia, query.provincia.trim())
-      );
-    }
-
-    // Filter by distrito
-    if (query.distrito && query.distrito.trim()) {
-      conditions.push(
-        like(educationInstitutionsMinedu.distrito, query.distrito.trim())
-      );
-    }
+    // Filters
+    if (query.nivel?.trim()) conditions.push(like(educationInstitutionsMinedu.nivel, query.nivel.trim()));
+    if (query.departamento?.trim()) conditions.push(like(educationInstitutionsMinedu.departamento, query.departamento.trim()));
+    if (query.provincia?.trim()) conditions.push(like(educationInstitutionsMinedu.provincia, query.provincia.trim()));
+    if (query.distrito?.trim()) conditions.push(like(educationInstitutionsMinedu.distrito, query.distrito.trim()));
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    // Get total count
-    const [countResult] = await turso
-      .select({ count: sql<number>`count(*)` })
-      .from(educationInstitutionsMinedu)
-      .where(whereClause);
-
-    const total = Number(countResult?.count || 0);
-
-    // Get items
-    const items = await turso
+    /**
+     * 🧠 Single-Query Execution with Window Function
+     * 'count(*) OVER()' gets the total matching rows before limit/offset.
+     * This avoids one extra database hit to Turso per search keystroke.
+     */
+    const itemsWithCount = await turso
       .select({
         codigoModular: educationInstitutionsMinedu.codigoModular,
         nombre: educationInstitutionsMinedu.nombre,
@@ -78,6 +54,11 @@ export async function GET(request: NextRequest) {
         provincia: educationInstitutionsMinedu.provincia,
         distrito: educationInstitutionsMinedu.distrito,
         direccion: educationInstitutionsMinedu.direccion,
+        /**
+         * We cast as any because Drizzle might not have full typing for OVER() in SQLite
+         * but libsql/turso supports it perfectly.
+         */
+        totalRecords: sql<number>`count(*) OVER()`.as('total_records'),
       })
       .from(educationInstitutionsMinedu)
       .where(whereClause)
@@ -85,8 +66,14 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .offset(offset);
 
+    const total = itemsWithCount.length > 0 ? Number((itemsWithCount[0] as any).total_records) : 0;
+    
+    // Cleanup the totalRecords field from items if strictly needed, or just map it.
+    const items = itemsWithCount.map(({ totalRecords, ...item }) => item);
+
     return successResponse({ items, total });
   } catch (error) {
+    console.error('[IE Search] Error:', error);
     return errorResponse(error);
   }
 }

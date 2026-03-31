@@ -7,6 +7,7 @@ import { NotFoundError, ValidationError } from '@/lib/utils/errors';
 import { db } from '@/lib/db';
 import { grades, sections } from '@/lib/db/schema';
 import { eq, and, count } from 'drizzle-orm';
+import { revalidateTag } from 'next/cache';
 
 export async function PUT(
   request: NextRequest,
@@ -28,6 +29,8 @@ export async function PUT(
     if (!updated) {
       throw new NotFoundError('Grado no encontrado');
     }
+
+    revalidateTag('config-loadout');
 
     return successResponse(updated);
   } catch (error) {
@@ -64,6 +67,8 @@ export async function DELETE(
     if (!deleted) {
       throw new NotFoundError('Grado no encontrado');
     }
+
+    revalidateTag('config-loadout');
 
     return successResponse({ success: true });
   } catch (error) {

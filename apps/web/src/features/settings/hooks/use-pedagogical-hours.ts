@@ -1,8 +1,9 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from '@/lib/api-client';
 import { handleApiError, showSuccess } from '@/lib/error-handler';
+import { useConfigLoadout } from './use-config-loadout';
 
 export interface PedagogicalHour {
     id: string;
@@ -15,13 +16,11 @@ export interface PedagogicalHour {
 }
 
 export function usePedagogicalHours() {
-    const api = useApiClient();
-    return useQuery<PedagogicalHour[]>({
-        queryKey: ['pedagogical-hours'],
-        queryFn: () => api.get<PedagogicalHour[]>('/pedagogical-hours'),
-        staleTime: 30 * 60 * 1000, // 30 minutes - pedagogical hours rarely change
-        gcTime: 60 * 60 * 1000, // 1 hour in cache
-    });
+    const config = useConfigLoadout();
+    return {
+        ...config,
+        data: config.data?.pedagogicalHours || [],
+    };
 }
 
 export function useCreatePedagogicalHour() {
@@ -33,6 +32,7 @@ export function useCreatePedagogicalHour() {
             api.post<PedagogicalHour>('/pedagogical-hours', data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['pedagogical-hours'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Hora pedagógica creada correctamente');
         },
         onError: (error) => {
@@ -50,6 +50,7 @@ export function useUpdatePedagogicalHour() {
             api.put<PedagogicalHour>(`/pedagogical-hours/${id}`, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['pedagogical-hours'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Hora pedagógica actualizada correctamente');
         },
         onError: (error) => {
@@ -66,6 +67,7 @@ export function useDeletePedagogicalHour() {
         mutationFn: (id: string) => api.delete(`/pedagogical-hours/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['pedagogical-hours'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Hora pedagógica eliminada correctamente');
         },
         onError: (error) => {

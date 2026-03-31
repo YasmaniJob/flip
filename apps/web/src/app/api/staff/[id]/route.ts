@@ -7,6 +7,7 @@ import { NotFoundError, ForbiddenError } from '@/lib/utils/errors';
 import { db } from '@/lib/db';
 import { staff, users, sessions } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { revalidateTag } from 'next/cache';
 
 // PATCH /api/staff/:id - Update staff member
 export async function PATCH(
@@ -48,6 +49,8 @@ export async function PATCH(
       })
       .where(eq(staff.id, id))
       .returning();
+
+    revalidateTag('staff');
 
     // Si el staff tiene email, sincronizar rol en tabla users
     if (data.role && updatedStaff.email) {
@@ -102,6 +105,8 @@ export async function DELETE(
       .delete(staff)
       .where(and(eq(staff.id, id), eq(staff.institutionId, institutionId)))
       .returning();
+
+    revalidateTag('staff');
 
     if (!deleted) {
       throw new NotFoundError('Personal no encontrado');

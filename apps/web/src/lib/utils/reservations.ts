@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { reservationSlots, staff } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or } from 'drizzle-orm';
 import { ValidationError, ForbiddenError } from './errors';
 
 /**
@@ -94,20 +94,45 @@ export async function validateSlotsNoConflicts(
   slots: Array<{ classroomId: string; date: Date; pedagogicalHourId: string }>,
   excludeReservationId?: string
 ): Promise<void> {
-  for (const slot of slots) {
-    const conflict = await hasSlotConflict(
-      slot.classroomId,
-      slot.date,
-      slot.pedagogicalHourId,
-      excludeReservationId
-    );
+  if (slots.length === 0) return;
 
-    if (conflict) {
-      const dateStr = slot.date.toISOString().split('T')[0];
-      throw new ValidationError(
-        `El horario ya está reservado: ${dateStr} - Hora pedagógica ${slot.pedagogicalHourId}`
-      );
-    }
+  // Build a complex OR query for all slots at once
+  const slotConditions = slots.map(slot => {
+    const normalizedDate = new Date(Date.UTC(
+      slot.date.getUTCFullYear(),
+      slot.date.getUTCMonth(),
+      slot.date.getUTCDate(),
+      0, 0, 0, 0
+    ));
+    
+    return and(
+      eq(reservationSlots.classroomId, slot.classroomId),
+      eq(reservationSlots.date, normalizedDate),
+      eq(reservationSlots.pedagogicalHourId, slot.pedagogicalHourId)
+    );
+  });
+
+  const existingSlots = await db.query.reservationSlots.findMany({
+    where: or(...slotConditions),
+    with: {
+      reservation: {
+        columns: { id: true, status: true }
+      },
+    },
+  });
+
+  // Check for active conflicts
+  const conflicts = existingSlots.filter(
+    (slot) =>
+      slot.reservation.status === 'active' &&
+      (!excludeReservationId || slot.reservationId !== excludeReservationId)
+  );
+
+  if (conflicts.length > 0) {
+    const dateStr = new Date(conflicts[0].date).toISOString().split('T')[0];
+    throw new ValidationError(
+      `Conflicto en reserva: El ${dateStr} ya tiene una reserva activa.`
+    );
   }
 }
 

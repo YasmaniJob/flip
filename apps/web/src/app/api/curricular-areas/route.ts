@@ -7,6 +7,7 @@ import { db } from '@/lib/db';
 import { curricularAreas } from '@/lib/db/schema';
 import { eq, and, asc, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import { revalidateTag } from 'next/cache';
 
 export async function GET(request: NextRequest) {
   try {
@@ -66,6 +67,8 @@ export async function POST(request: NextRequest) {
         active: true,
       })
       .returning();
+
+    revalidateTag('config-loadout');
 
     return successResponse(area, 201);
   } catch (error) {

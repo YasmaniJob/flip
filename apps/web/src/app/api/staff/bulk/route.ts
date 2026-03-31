@@ -8,6 +8,7 @@ import { db } from '@/lib/db';
 import { staff } from '@/lib/db/schema';
 import { randomUUID } from 'crypto';
 import { sql } from 'drizzle-orm';
+import { revalidateTag } from 'next/cache';
 
 // POST /api/staff/bulk - Bulk create staff members
 export async function POST(request: NextRequest) {
@@ -57,6 +58,8 @@ export async function POST(request: NextRequest) {
         },
       })
       .returning();
+
+    revalidateTag('staff');
 
     return successResponse(created, 201);
   } catch (error) {

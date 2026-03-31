@@ -9,20 +9,10 @@ import { staff, users, reservationAttendance } from '@/lib/db/schema';
 import { eq, and, ilike, or, count, notInArray } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { rateLimit } from '@/lib/rate-limit';
+import { unstable_cache, revalidateTag } from 'next/cache';
 
-// GET /api/staff - List staff with optional filters and admin inclusion
-export async function GET(request: NextRequest) {
-  try {
-    const ip = request.headers.get('x-forwarded-for') || 'anonymous';
-    if (!rateLimit(`staff-search-${ip}`, 20, 60 * 1000)) {
-       throw new TooManyRequestsError();
-    }
-    await requireAuth(request);
-    const institutionId = await getInstitutionId(request);
-
-    const searchParams = new URL(request.url).searchParams;
-    const query = validateQuery(staffQuerySchema, searchParams);
-
+const getCachedStaff = unstable_cache(
+  async (institutionId: string, query: any) => {
     const { 
         page = 1, 
         limit = 10, 
@@ -109,7 +99,7 @@ export async function GET(request: NextRequest) {
     let mixedData: any[] = staffData;
     let total = totalStaffResult[0].value;
 
-    // Include admins if requested - optimized to only run on first page
+    // Include admins
     if (include_admins === 'true' && page === 1) {
       const adminConditions: any[] = [
         eq(users.institutionId, institutionId),
@@ -146,7 +136,6 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      // Map users to staff-like structure
       const mappedAdmins = admins.map((u) => ({
         id: u.id,
         institutionId: u.institutionId,
@@ -160,7 +149,6 @@ export async function GET(request: NextRequest) {
         createdAt: u.createdAt,
       }));
 
-      // Use Set for O(1) lookups
       const staffEmailSet = new Set(
         staffData.map((s) => s.email?.toLowerCase()).filter(Boolean)
       );
@@ -169,19 +157,13 @@ export async function GET(request: NextRequest) {
         staffData.map((s) => s.dni).filter(Boolean)
       );
       
-      // Filter out admins that already exist in staff OR are already in attendance
       const uniqueAdmins = mappedAdmins.filter((admin) => {
         const email = admin.email?.toLowerCase();
         const dni = admin.dni;
-        
-        // Exclude if already in staff list (resolved from staff table)
         const inStaffList = (email && staffEmailSet.has(email)) || (dni && staffDniSet.has(dni));
         if (inStaffList) return false;
-        
-        // Exclude if already in attendance for this specific reservation (by email/dni)
         const inAttendance = (email && excludedEmails.has(email)) || (dni && excludedDnis.has(dni));
         if (inAttendance) return false;
-        
         return true;
       });
 
@@ -191,7 +173,7 @@ export async function GET(request: NextRequest) {
 
     const totalPages = Math.ceil(total / limit);
 
-    return successResponse({
+    return {
       data: mixedData,
       meta: {
         total,
@@ -201,7 +183,28 @@ export async function GET(request: NextRequest) {
         hasNextPage: page < totalPages,
         hasPreviousPage: page > 1,
       },
-    });
+    };
+  },
+  ['staff-list-cache'],
+  { revalidate: 300, tags: ['staff'] } 
+);
+
+// GET /api/staff - List staff with optional filters and admin inclusion
+export async function GET(request: NextRequest) {
+  try {
+    const ip = request.headers.get('x-forwarded-for') || 'anonymous';
+    if (!rateLimit(`staff-search-${ip}`, 20, 60 * 1000)) {
+       throw new TooManyRequestsError();
+    }
+    await requireAuth(request);
+    const institutionId = await getInstitutionId(request);
+
+    const searchParams = new URL(request.url).searchParams;
+    const query = validateQuery(staffQuerySchema, searchParams);
+
+    const result = await getCachedStaff(institutionId, query);
+
+    return successResponse(result);
   } catch (error) {
     return errorResponse(error);
   }
@@ -257,6 +260,8 @@ export async function POST(request: NextRequest) {
         status: 'active',
       })
       .returning();
+
+    revalidateTag('staff');
 
     return successResponse(newStaff, 201);
   } catch (error) {

@@ -1,8 +1,9 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from '@/lib/api-client';
 import { handleApiError, showSuccess } from '@/lib/error-handler';
+import { useConfigLoadout } from './use-config-loadout';
 
 export interface Grade {
     id: string;
@@ -12,16 +13,18 @@ export interface Grade {
 }
 
 export function useGrades(level?: 'primaria' | 'secundaria') {
-    const api = useApiClient();
-    return useQuery<Grade[]>({
-        queryKey: ['grades', level],
-        queryFn: () => {
-            const url = level ? `/grades?level=${level}` : '/grades';
-            return api.get<Grade[]>(url);
-        },
-        staleTime: 5 * 60 * 1000,  // 5 min — grades rarely change
-        gcTime: 10 * 60 * 1000,    // 10 min in memory
-    });
+    const config = useConfigLoadout();
+
+    // Transform data from config-loadout
+    const grades = config.data?.grades || [];
+    const filtered = level 
+        ? grades.filter(g => g.level === level)
+        : grades;
+
+    return {
+        ...config,
+        data: filtered,
+    };
 }
 
 export function useCreateGrade() {
@@ -32,6 +35,7 @@ export function useCreateGrade() {
         mutationFn: (data: Omit<Grade, 'id'>) => api.post<Grade>('/grades', data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['grades'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Grado creado correctamente');
         },
         onError: (error) => {
@@ -49,6 +53,7 @@ export function useUpdateGrade() {
             api.put<Grade>(`/grades/${id}`, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['grades'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Grado actualizado correctamente');
         },
         onError: (error) => {
@@ -65,6 +70,7 @@ export function useDeleteGrade() {
         mutationFn: (id: string) => api.delete<{ success: boolean; message: string }>(`/grades/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['grades'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Grado eliminado correctamente');
         },
         onError: (error) => {

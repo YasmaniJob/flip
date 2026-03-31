@@ -17,7 +17,7 @@ export function useReservationsByDateRange(startDate: string, endDate: string, c
     return useQuery({
         queryKey: reservationKeys.byDateRange(startDate, endDate, classroomId, shift),
         queryFn: () => ReservationsApi.getByDateRange(startDate, endDate, classroomId, shift),
-        staleTime: 0,
+        staleTime: 60 * 1000, // 1 minute fresh time to avoid waterfall spam
         enabled: !!startDate && !!endDate && !!classroomId,
         placeholderData: (previousData) => previousData,
         retry: 2,
@@ -28,7 +28,7 @@ export function useMyTodayReservations() {
     return useQuery({
         queryKey: reservationKeys.myToday(),
         queryFn: ReservationsApi.getMyToday,
-        staleTime: 2 * 60 * 1000,
+        staleTime: 5 * 60 * 1000, // 5 minutes fresh time
         retry: 2,
     });
 }

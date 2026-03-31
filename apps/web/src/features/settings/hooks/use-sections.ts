@@ -1,8 +1,9 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from '@/lib/api-client';
 import { handleApiError, showSuccess } from '@/lib/error-handler';
+import { useConfigLoadout } from './use-config-loadout';
 
 export interface Section {
     id: string;
@@ -12,17 +13,18 @@ export interface Section {
 }
 
 export function useSections(gradeId?: string, options: { enabled?: boolean } = {}) {
-    const api = useApiClient();
-    return useQuery<Section[]>({
-        queryKey: ['sections', gradeId],
-        enabled: options.enabled ?? true,
-        queryFn: () => {
-            const url = gradeId ? `/sections?gradeId=${gradeId}` : '/sections';
-            return api.get<Section[]>(url);
-        },
-        staleTime: 5 * 60 * 1000,  // 5 min — sections rarely change
-        gcTime: 10 * 60 * 1000,    // 10 min in memory
-    });
+    const config = useConfigLoadout({ enabled: options.enabled });
+    
+    // Transform data from config-loadout
+    const sections = config.data?.sections || [];
+    const filtered = gradeId 
+        ? sections.filter(s => s.gradeId === gradeId)
+        : sections;
+
+    return {
+        ...config,
+        data: filtered,
+    };
 }
 
 export function useCreateSection() {
@@ -33,6 +35,7 @@ export function useCreateSection() {
         mutationFn: (data: Omit<Section, 'id'>) => api.post<Section>('/sections', data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sections'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Sección creada correctamente');
         },
         onError: (error) => {
@@ -49,6 +52,7 @@ export function useBulkCreateSections() {
         mutationFn: (data: { sections: Omit<Section, 'id'>[] }) => api.post<Section[]>('/sections/bulk', data),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['sections'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess(`${data.length} secciones creadas correctamente`);
         },
         onError: (error) => {
@@ -66,6 +70,7 @@ export function useUpdateSection() {
             api.put<Section>(`/sections/${id}`, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sections'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Sección actualizada correctamente');
         },
         onError: (error) => {
@@ -82,6 +87,7 @@ export function useDeleteSection() {
         mutationFn: (id: string) => api.delete<{ success: boolean; message: string }>(`/sections/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sections'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Sección eliminada correctamente');
         },
         onError: (error) => {

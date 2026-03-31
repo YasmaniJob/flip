@@ -10,14 +10,12 @@ import {
     useReservationsByDateRange, 
     useCancelSlot
 } from "@/features/reservations/hooks/use-reservations";
-import { useClassrooms } from "@/features/classrooms/hooks/use-classrooms";
-import { usePedagogicalHours } from "@/features/settings/hooks/use-pedagogical-hours";
 import { ReservationSlot } from "@/features/reservations/api/reservations.api";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ActionConfirm } from '@/components/molecules/action-confirm';
 import { AnimatePresence } from "framer-motion";
 import { useUserRole } from "@/hooks/use-user-role";
-import { useAcademicDefaults } from "../../../hooks/use-academic-defaults";
+import { useConfigLoadout } from "@/features/settings/hooks/use-config-loadout";
 import { ReservationCard } from "@/features/reservations/components/reservation-card";
 import { SelectionActionBar } from "@/features/reservations/components/selection-action-bar";
 
@@ -47,7 +45,11 @@ export function ReservacionesClient() {
     const router = useRouter();
     const { canManage, canAction, isSuperAdmin } = useUserRole();
     const canReserve = canAction('reservations');
-    const { data: defaults, isLoading: isLoadingDefaults } = useAcademicDefaults();
+    
+    // Config Loadout (combines defaults, classrooms, pedagogic hours to eliminate waterfall)
+    const { data: config, isLoading: isLoadingConfig, error: errorConfig } = useConfigLoadout();
+    const defaults = config?.defaults;
+    const isLoadingDefaults = isLoadingConfig;
     
     // UI State
     const [currentWeekStart, setCurrentWeekStart] = useState(() => {
@@ -71,8 +73,9 @@ export function ReservacionesClient() {
     const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
     const [rescheduleOpen, setRescheduleOpen] = useState(false);
 
-    // Data Fetching
-    const { data: classrooms, isLoading: isLoadingClassrooms } = useClassrooms();
+    // Data mapped from config
+    const classrooms = config?.classrooms || [];
+    const isLoadingClassrooms = isLoadingConfig;
     
     // Set defaults only once when data loads
     useEffect(() => {
@@ -108,7 +111,9 @@ export function ReservacionesClient() {
         selectedShift
     );
 
-    const { data: rawPedagogicalHours = [], isLoading: isLoadingHours, error: errorHours } = usePedagogicalHours();
+    const rawPedagogicalHours = config?.pedagogicalHours || [];
+    const isLoadingHours = isLoadingConfig;
+    const errorHours = errorConfig;
 
     const pedagogicalHours = useMemo(() => {
         if (!rawPedagogicalHours) return [];

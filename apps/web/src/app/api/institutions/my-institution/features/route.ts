@@ -5,6 +5,7 @@ import { requireAuth } from '@/lib/auth/helpers';
 import { successResponse, errorResponse } from '@/lib/utils/response';
 import { UnauthorizedError, NotFoundError } from '@/lib/utils/errors';
 import { eq } from 'drizzle-orm';
+import { revalidateTag } from 'next/cache';
 
 // POST /api/institutions/my-institution/features - Update institution feature flags
 export async function POST(request: NextRequest) {
@@ -47,6 +48,8 @@ export async function POST(request: NextRequest) {
       .update(institutions)
       .set({ settings: newSettings })
       .where(eq(institutions.id, user.institutionId));
+
+    revalidateTag('config-loadout');
 
     return successResponse({ success: true, features: newSettings.features });
   } catch (error) {

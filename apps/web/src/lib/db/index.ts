@@ -8,7 +8,8 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 10,
+  max: 2, // Safe for Neon Free 10-connection limit across 3-4 concurrent lambdas
+  idleTimeoutMillis: 10000, 
 });
 
 export const db = drizzle(pool, { schema });

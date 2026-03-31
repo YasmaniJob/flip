@@ -14,6 +14,7 @@ import { successResponse, paginatedResponse, errorResponse } from '@/lib/utils/r
 import { NotFoundError, ValidationError } from '@/lib/utils/errors';
 import { validateSlotsNoConflicts, normalizeDate } from '@/lib/utils/reservations';
 import { eq, desc, and, or, asc, gte, lte, sql } from 'drizzle-orm';
+import { revalidateTag } from 'next/cache';
 import { randomUUID } from 'crypto';
 
 // GET /api/classroom-reservations - List reservations with filters
@@ -248,6 +249,8 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+    
+    revalidateTag('staff');
 
     return successResponse(reservationWithRelations, 'Reserva creada exitosamente', 201);
   } catch (error) {

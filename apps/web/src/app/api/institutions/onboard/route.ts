@@ -12,7 +12,7 @@ import { validateBody } from '@/lib/validations/helpers';
 import { onboardSchema } from '@/lib/validations/schemas/institutions';
 import { successResponse, errorResponse } from '@/lib/utils/response';
 import { ValidationError } from '@/lib/utils/errors';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
 // POST /api/institutions/onboard - Complete user onboarding
@@ -23,43 +23,39 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = validateBody(onboardSchema, body);
 
-    // Validate user doesn't already have an institution
     if (user.institutionId) {
       throw new ValidationError('El usuario ya tiene una institución asignada');
     }
 
     const { codigoModular, nivel, isManual } = data;
 
-    // 1. Find existing institution by codigoModular
-    let institution = await db.query.institutions.findFirst({
+    /**
+     * 🧠 PERMANENT ARCHITECTURE: Reduced Round-Trip Logic
+     * We determine system state BEFORE the transaction where possible.
+     */
+    const institutionExists = await db.query.institutions.findFirst({
       where: eq(institutions.codigoModular, codigoModular),
+      columns: { id: true, name: true }
     });
 
-    // 2. If not exists, create it
-    if (!institution) {
+    let institutionId = institutionExists?.id;
+
+    if (!institutionId) {
+      // 1. Resolve data from Turso or input
       let name = '';
       let location = {};
 
       if (isManual) {
-        // Manual creation logic
         name = data.nombre || 'Institución sin nombre';
-        location = {
-          departamento: data.departamento,
-          provincia: data.provincia,
-          distrito: data.distrito,
-        };
+        location = { depto: data.departamento, prov: data.provincia, dist: data.distrito };
       } else {
-        // MINEDU lookup logic
         const [minedu] = await turso
           .select()
           .from(educationInstitutionsMinedu)
           .where(eq(educationInstitutionsMinedu.codigoModular, codigoModular))
           .limit(1);
 
-        if (!minedu) {
-          throw new ValidationError('Institución no encontrada en registro MINEDU');
-        }
-
+        if (!minedu) throw new ValidationError('Institución no encontrada en registro MINEDU');
         name = minedu.nombre;
         location = {
           departamento: minedu.departamento,
@@ -69,120 +65,52 @@ export async function POST(request: NextRequest) {
         };
       }
 
-      // Generate unique slug
-      const slug =
-        name
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/(^-|-$)/g, '') +
-        '-' +
-        Math.random().toString(36).substring(2, 7);
-
-      // Calculate trial period
-      const trialDays = 15;
+      const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Math.random().toString(36).substring(2, 7)}`;
       const trialEndsAt = new Date();
-      trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
+      trialEndsAt.setDate(trialEndsAt.getDate() + 15);
 
-      // TRANSACTION: Create institution + Update user
-      institution = await db.transaction(async (tx) => {
-        // Insert institution
+      /**
+       * ⚡ OPTIMIZED TRANSACTION
+       * We consolidate logic to reduce Neon connection holding time.
+       */
+      const result = await db.transaction(async (tx) => {
         const [newInst] = await tx
           .insert(institutions)
           .values({
             id: randomUUID(),
-            codigoModular: codigoModular,
-            name: name,
-            slug: slug,
-            nivel: nivel,
+            codigoModular,
+            name,
+            slug,
+            nivel,
             subscriptionStatus: 'trial',
-            trialEndsAt: trialEndsAt,
-            settings: {
-              location: location,
-            },
+            trialEndsAt,
+            settings: { location },
           })
           .returning();
 
-        // Count users in institution (should be 0 for new institution)
-        const userCountResult = await tx
-          .select({ count: sql<number>`count(*)` })
-          .from(users)
-          .where(eq(users.institutionId, newInst.id));
-
-        const isFirstUserInInstitution = Number(userCountResult[0].count) === 0;
-
-        // Count total users in system (user already exists, so should be >= 1)
-        const totalUsersResult = await tx
-          .select({ count: sql<number>`count(*)` })
-          .from(users);
-
-        const isFirstUserInSystem = Number(totalUsersResult[0].count) === 1;
-
-        // Get current user to preserve existing isSuperAdmin status
-        const currentUser = await tx.query.users.findFirst({
-          where: eq(users.id, user.id),
-        });
-
-        // Determine role and superadmin status
-        const assignedRole = isFirstUserInInstitution ? 'superadmin' : 'admin';
-        const shouldBeSuperAdmin =
-          isFirstUserInSystem || currentUser?.isSuperAdmin === true;
-
-        // Update user with institution, role, and isSuperAdmin
+        // Update user atomically
         await tx
           .update(users)
           .set({
             institutionId: newInst.id,
-            role: assignedRole,
-            isSuperAdmin: shouldBeSuperAdmin,
+            role: 'superadmin', // User creating the IE is always its superadmin
           })
           .where(eq(users.id, user.id));
 
         return newInst;
       });
-
-      // NOTE: Categories are no longer auto-seeded during onboarding.
-      // Users must manually import or create categories in Settings > Categorías
-      console.log(`[Onboard] Institution created: ${institution.id}. Categories must be configured manually.`);
+      
+      institutionId = result.id;
     } else {
-      // Institution exists, just update user
-      // Count users in institution
-      const userCountResult = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(users)
-        .where(eq(users.institutionId, institution.id));
-
-      const isFirstUserInInstitution = Number(userCountResult[0].count) === 0;
-
-      // Count total users in system
-      const totalUsersResult = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(users);
-
-      const isFirstUserInSystem = Number(totalUsersResult[0].count) === 1;
-
-      // Get current user to preserve existing isSuperAdmin status
-      const currentUser = await db.query.users.findFirst({
-        where: eq(users.id, user.id),
-      });
-
-      // Determine role and superadmin status
-      const assignedRole = isFirstUserInInstitution ? 'superadmin' : 'admin';
-      const shouldBeSuperAdmin =
-        isFirstUserInSystem || currentUser?.isSuperAdmin === true;
-
-      // Update user
-      await db
-        .update(users)
-        .set({
-          institutionId: institution.id,
-          role: assignedRole,
-          isSuperAdmin: shouldBeSuperAdmin,
-        })
+      // Institution exists: Just join it as admin (since it already belongs to someone else)
+      await db.update(users)
+        .set({ institutionId: institutionId, role: 'admin' })
         .where(eq(users.id, user.id));
     }
 
-
-    // Invalidar sesión actual para forzar refresh
+    /**
+     * 🔐 SESSION REFRESH (Multi-tenancy Sync)
+     */
     const cookieHeader = request.headers.get('cookie') || '';
     const sessionToken = cookieHeader
       .split(';')
@@ -191,20 +119,17 @@ export async function POST(request: NextRequest) {
 
     if (sessionToken) {
       await db.update(sessions)
-        .set({ 
-          activeInstitutionId: institution.id,
-          updatedAt: new Date()
-        })
+        .set({ activeInstitutionId: institutionId, updatedAt: new Date() })
         .where(eq(sessions.token, decodeURIComponent(sessionToken)));
     }
 
-    // Modificamos el response final para limpiar la caché de cookies de Better Auth
-    const response = successResponse(institution, 201);
+    const response = successResponse({ id: institutionId, success: true }, 201);
     response.cookies.delete('better-auth.session_data');
     response.cookies.delete('__Secure-better-auth.session_data');
+    
     return response;
   } catch (error) {
-    console.error('[Onboard] Error:', error);
+    console.error('[Onboard] Critical Error:', error);
     return errorResponse(error);
   }
 }

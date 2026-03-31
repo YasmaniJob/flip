@@ -43,7 +43,7 @@ export async function GET(
     
     const { slug } = params;
     
-    const config = await getCachedDiagnosticConfig(slug) as any;
+    const config = await getCachedDiagnosticConfig(slug);
     
     if (!config) {
       return NextResponse.json({ error: 'Institution not found' }, { status: 404 });

@@ -1,6 +1,18 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization - only create Resend client when actually needed
+let resendInstance: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resendInstance) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error("RESEND_API_KEY is not configured. Please add it to your environment variables.");
+    }
+    resendInstance = new Resend(apiKey);
+  }
+  return resendInstance;
+}
 
 const FROM_EMAIL = process.env.EMAIL_FROM || "onboarding@resend.dev";
 const IS_DEV = process.env.NODE_ENV === "development";
@@ -31,7 +43,7 @@ export async function sendEmail({
       return { success: true };
     }
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResendClient().emails.send({
       from: FROM_EMAIL,
       to,
       subject,

@@ -4,7 +4,6 @@ import { successResponse, errorResponse } from '@/lib/utils/response';
 import { db } from '@/lib/db';
 import { staff } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { NotFoundError } from '@/lib/utils/errors';
 
 // GET /api/staff/me - Get the staff record for the current user in this institution
 export async function GET(request: NextRequest) {
@@ -21,7 +20,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!staffRecord) {
-      throw new NotFoundError('No se encontró su registro de personal en esta institución');
+      return successResponse(null);
     }
 
     return successResponse(staffRecord);

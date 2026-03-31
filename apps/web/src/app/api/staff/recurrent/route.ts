@@ -6,18 +6,10 @@ import { recurrentStaffQuerySchema } from '@/lib/validations/schemas/staff';
 import { db } from '@/lib/db';
 import { staff, loans } from '@/lib/db/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
+import { unstable_cache } from 'next/cache';
 
-// GET /api/staff/recurrent - Get most recurrent staff (by loan count)
-export async function GET(request: NextRequest) {
-  try {
-    await requireAuth(request);
-    const institutionId = await getInstitutionId(request);
-
-    const { searchParams } = new URL(request.url);
-    const query = validateQuery(recurrentStaffQuerySchema, searchParams);
-
-    const { limit } = query;
-
+const getCachedRecurrentStaff = unstable_cache(
+  async (institutionId: string, limit: number) => {
     const recurrentStaff = await db
       .select({
         staff: staff,
@@ -30,7 +22,24 @@ export async function GET(request: NextRequest) {
       .orderBy(desc(sql`count(${loans.id})`))
       .limit(limit);
 
-    const results = recurrentStaff.map((r) => r.staff);
+    return recurrentStaff.map((r) => r.staff);
+  },
+  ['recurrent-staff-cache'],
+  { revalidate: 600, tags: ['staff'] } // 10 minutes cache
+);
+
+// GET /api/staff/recurrent - Get most recurrent staff (by loan count)
+export async function GET(request: NextRequest) {
+  try {
+    await requireAuth(request);
+    const institutionId = await getInstitutionId(request);
+
+    const { searchParams } = new URL(request.url);
+    const query = validateQuery(recurrentStaffQuerySchema, searchParams);
+
+    const { limit } = query;
+
+    const results = await getCachedRecurrentStaff(institutionId, limit || 6);
 
     return successResponse(results);
   } catch (error) {

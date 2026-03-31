@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 interface DiagnosticLandingProps {
   customMessage?: string;
@@ -47,11 +48,15 @@ export function DiagnosticLanding({ customMessage, institutionName, institutionL
             transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
             className="flex flex-col items-center gap-4"
           >
-            <img
-              src={institutionLogo}
-              alt={institutionName}
-              className="h-24 w-auto object-contain"
-            />
+            <div className="relative h-24 w-48">
+              <Image
+                src={institutionLogo}
+                alt={institutionName}
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
             <p className="text-lg font-semibold text-gray-700">{institutionName}</p>
           </motion.div>
         ) : (

@@ -1,8 +1,9 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from '@/lib/api-client';
 import { handleApiError, showSuccess } from '@/lib/error-handler';
+import { useConfigLoadout } from './use-config-loadout';
 
 export interface CurricularArea {
     id: string;
@@ -13,22 +14,24 @@ export interface CurricularArea {
 }
 
 export function useCurricularAreas(options?: { level?: 'primaria' | 'secundaria'; activeOnly?: boolean }) {
+    const config = useConfigLoadout();
     const { level, activeOnly } = options ?? {};
-    const api = useApiClient();
 
-    return useQuery<CurricularArea[]>({
-        queryKey: ['curricular-areas', level, activeOnly],
-        queryFn: () => {
-            const params = new URLSearchParams();
-            if (level) params.set('level', level);
-            if (activeOnly) params.set('active', 'true');
+    // Transform data from config-loadout
+    let areas = config.data?.curricularAreas || [];
+    
+    if (level) {
+        areas = areas.filter(a => a.levels?.includes(level));
+    }
+    
+    if (activeOnly) {
+        areas = areas.filter(a => a.active);
+    }
 
-            const url = `/curricular-areas${params.toString() ? `?${params}` : ''}`;
-            return api.get<CurricularArea[]>(url);
-        },
-        staleTime: 5 * 60 * 1000,  // 5 min — curricular areas rarely change
-        gcTime: 10 * 60 * 1000,    // 10 min in memory
-    });
+    return {
+        ...config,
+        data: areas,
+    };
 }
 
 export function useCreateCurricularArea() {
@@ -40,6 +43,7 @@ export function useCreateCurricularArea() {
             api.post<CurricularArea>('/curricular-areas', data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['curricular-areas'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Área curricular creada correctamente');
         },
         onError: (error) => {
@@ -57,6 +61,7 @@ export function useUpdateCurricularArea() {
             api.put<CurricularArea>(`/curricular-areas/${id}`, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['curricular-areas'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Área curricular actualizada correctamente');
         },
         onError: (error) => {
@@ -73,6 +78,7 @@ export function useDeleteCurricularArea() {
         mutationFn: (id: string) => api.delete<{ success: boolean; message: string }>(`/curricular-areas/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['curricular-areas'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Área curricular eliminada correctamente');
         },
         onError: (error) => {

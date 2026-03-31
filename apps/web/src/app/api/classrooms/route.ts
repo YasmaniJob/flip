@@ -7,6 +7,7 @@ import { db } from '@/lib/db';
 import { classrooms } from '@/lib/db/schema';
 import { eq, asc } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
+import { revalidateTag } from 'next/cache';
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,6 +61,8 @@ export async function POST(request: NextRequest) {
         active: true,
       })
       .returning();
+
+    revalidateTag('config-loadout');
 
     return successResponse(classroom, 201);
   } catch (error) {

@@ -60,45 +60,22 @@ export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
 
     // Carousel state
     // Queries with caching for better performance
-    const { data: departamentos = [] } = useQuery({
-        queryKey: ['departamentos'],
+    // 🗺️ SMART UBIGEO ARCHITECTURE: Fetch the entire tree ONCE.
+    // Geography is static (20KB - 40KB gzipped). Instant selection after first load.
+    const { data: peruTree = {}, isLoading: isLoadingGeography } = useQuery({
+        queryKey: ['peru-ubigeo-tree'],
         queryFn: async () => {
-            const res = await fetch('/api/institutions/departamentos');
-            if (!res.ok) throw new Error('Failed to fetch departments');
+            const res = await fetch('/api/institutions/geography/tree');
+            if (!res.ok) throw new Error('Failed to fetch geography');
             const json = await res.json();
             return json.data || json;
         },
-        staleTime: 10 * 60 * 1000, // 10 minutes - departamentos don't change
-        gcTime: 30 * 60 * 1000, // 30 minutes in cache
+        staleTime: 60 * 60 * 1000, // 1 hour
     });
 
-    const { data: provincias = [] } = useQuery({
-        queryKey: ['provincias', selectedDep],
-        queryFn: async () => {
-            if (!selectedDep) return [];
-            const res = await fetch(`/api/institutions/provincias?departamento=${encodeURIComponent(selectedDep)}`);
-            if (!res.ok) throw new Error('Failed to fetch provinces');
-            const json = await res.json();
-            return json.data || json;
-        },
-        enabled: !!selectedDep,
-        staleTime: 10 * 60 * 1000, // 10 minutes
-        gcTime: 30 * 60 * 1000, // 30 minutes in cache
-    });
-
-    const { data: distritos = [] } = useQuery({
-        queryKey: ['distritos', selectedDep, selectedProv],
-        queryFn: async () => {
-            if (!selectedDep || !selectedProv) return [];
-            const res = await fetch(`/api/institutions/distritos?departamento=${encodeURIComponent(selectedDep)}&provincia=${encodeURIComponent(selectedProv)}`);
-            if (!res.ok) throw new Error('Failed to fetch districts');
-            const json = await res.json();
-            return json.data || json;
-        },
-        enabled: !!selectedDep && !!selectedProv,
-        staleTime: 10 * 60 * 1000, // 10 minutes
-        gcTime: 30 * 60 * 1000, // 30 minutes in cache
-    });
+    const departamentos = Object.keys(peruTree).sort();
+    const provincias = selectedDep ? Object.keys((peruTree as any)[selectedDep] || {}).sort() : [];
+    const distritos = (selectedDep && selectedProv) ? ((peruTree as any)[selectedDep][selectedProv] || []).sort() : [];
 
     // Handle lazy loading with useInfiniteQuery and caching
     const {
@@ -361,9 +338,13 @@ export function StepInstitucion({ data, updateData }: StepInstitucionProps) {
                         >
                             <div className="flex items-center gap-3">
                                 <Filter size={20} />
-                                <span>{selectedDep ? `Región: ${selectedDep}` : 'Selecciona tu región'}</span>
+                                <span>{isLoadingGeography ? 'Cargando regiones...' : (selectedDep ? `Región: ${selectedDep}` : 'Selecciona tu región')}</span>
                             </div>
-                            <ChevronDown size={20} className={`transition-transform duration-200 ${showDeptGrid ? 'rotate-180' : ''}`} />
+                            {isLoadingGeography ? (
+                                <div className="h-5 w-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                            ) : (
+                                <ChevronDown size={20} className={`transition-transform duration-200 ${showDeptGrid ? 'rotate-180' : ''}`} />
+                            )}
                         </button>
 
                         {showDeptGrid && (

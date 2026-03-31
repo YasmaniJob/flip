@@ -1,6 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from '@/lib/api-client';
 import { handleApiError, showSuccess } from '@/lib/error-handler';
+import { useConfigLoadout } from '@/features/settings/hooks/use-config-loadout';
 
 export interface Classroom {
     id: string;
@@ -19,14 +20,11 @@ export const classroomKeys = {
 };
 
 export function useClassrooms() {
-    const apiClient = useApiClient();
-
-    return useQuery({
-        queryKey: classroomKeys.list(),
-        queryFn: () => apiClient.get<Classroom[]>('/classrooms'),
-        staleTime: 30 * 60 * 1000, // 30 minutes - classrooms rarely change
-        gcTime: 60 * 60 * 1000, // 1 hour in cache
-    });
+    const config = useConfigLoadout();
+    return {
+        ...config,
+        data: config.data?.classrooms || [],
+    };
 }
 
 export function useCreateClassroom() {
@@ -38,6 +36,7 @@ export function useCreateClassroom() {
             apiClient.post<Classroom>('/classrooms', data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: classroomKeys.list() });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Aula creada correctamente');
         },
         onError: (error) => {
@@ -55,6 +54,7 @@ export function useUpdateClassroom() {
             apiClient.put<Classroom>(`/classrooms/${id}`, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: classroomKeys.list() });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Aula actualizada correctamente');
         },
         onError: (error) => {
@@ -71,6 +71,7 @@ export function useDeleteClassroom() {
         mutationFn: (id: string) => apiClient.delete(`/classrooms/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: classroomKeys.list() });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
             showSuccess('Aula eliminada correctamente');
         },
         onError: (error) => {
