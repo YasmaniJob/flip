@@ -133,6 +133,18 @@ Una vez que el deployment termine:
 
 Asegúrate de que también tengas estas variables configuradas en Vercel:
 
+### URLs de la Aplicación
+```bash
+NEXT_PUBLIC_APP_URL=https://tudominio.vercel.app
+BETTER_AUTH_URL=https://tudominio.vercel.app
+```
+
+**IMPORTANTE**: En desarrollo local, usa:
+```bash
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+BETTER_AUTH_URL=http://localhost:3000
+```
+
 ### Base de Datos
 ```bash
 DATABASE_URL=postgresql://...

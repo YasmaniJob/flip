@@ -142,6 +142,15 @@ export async function POST(request: NextRequest) {
       // - Determinístico: mismo resultado para la misma cuenta
       // - Nunca expuesto al usuario; solo usado internamente
       const secret = process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET || '';
+      
+      if (!secret) {
+        console.error('[Lazy Register] CRITICAL: No BETTER_AUTH_SECRET or AUTH_SECRET found');
+        return NextResponse.json(
+          { error: 'Error de configuración del servidor' },
+          { status: 500 }
+        );
+      }
+      
       const internalPassword = createHmac('sha256', secret)
         .update(`lazy:${email.toLowerCase()}:${dni}`)
         .digest('hex');
@@ -184,6 +193,7 @@ export async function POST(request: NextRequest) {
         console.log('[Lazy Register] User fields updated');
       } catch (signUpError) {
         console.error('[Lazy Register] Better Auth signUp failed:', signUpError);
+        console.error('[Lazy Register] SignUp error details:', JSON.stringify(signUpError, null, 2));
         return NextResponse.json(
           { error: 'Error al crear la cuenta. Intente nuevamente.' },
           { status: 500 }
@@ -198,6 +208,15 @@ export async function POST(request: NextRequest) {
       // Con nextCookies, Better Auth maneja las cookies de Next.js nativamente
       // El password se deriva del mismo HMAC determinístico para garantizar consistencia
       const secret = process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET || '';
+      
+      if (!secret) {
+        console.error('[Lazy Register] CRITICAL: No BETTER_AUTH_SECRET or AUTH_SECRET found for signIn');
+        return NextResponse.json(
+          { error: 'Error de configuración del servidor' },
+          { status: 500 }
+        );
+      }
+      
       const internalPassword = createHmac('sha256', secret)
         .update(`lazy:${email.toLowerCase()}:${dni}`)
         .digest('hex');
@@ -236,12 +255,17 @@ export async function POST(request: NextRequest) {
       });
     } catch (signInError) {
       console.error('[Lazy Register] Session creation failed:', signInError);
+      console.error('[Lazy Register] SignIn error details:', JSON.stringify(signInError, null, 2));
       return NextResponse.json(
         { error: 'Error al iniciar sesión. Intente nuevamente.' },
         { status: 500 }
       );
     }
   } catch (error) {
+    console.error('[Lazy Register] Unexpected error:', error);
+    if (error instanceof Error) {
+      console.error('[Lazy Register] Error stack:', error.stack);
+    }
     return errorResponse(error);
   }
 }
