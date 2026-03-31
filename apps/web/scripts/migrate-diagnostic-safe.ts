@@ -54,6 +54,7 @@ async function safeMigrate() {
         "id" text PRIMARY KEY NOT NULL,
         "token" text NOT NULL,
         "institution_id" text NOT NULL,
+        "user_id" text,
         "staff_id" text,
         "name" text NOT NULL,
         "dni" text,
@@ -73,6 +74,9 @@ async function safeMigrate() {
         CONSTRAINT "diagnostic_sessions_token_unique" UNIQUE("token")
       )
     `;
+    
+    console.log('📦 Updating diagnostic_sessions table with missing user_id column...');
+    await sql`ALTER TABLE "diagnostic_sessions" ADD COLUMN IF NOT EXISTS "user_id" text`;
     
     console.log('📦 Creating diagnostic_responses table...');
     await sql`
@@ -182,6 +186,19 @@ async function safeMigrate() {
       END $$;
     `;
     
+    await sql`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint WHERE conname = 'diagnostic_sessions_user_id_users_id_fk'
+        ) THEN
+          ALTER TABLE "diagnostic_sessions" 
+          ADD CONSTRAINT "diagnostic_sessions_user_id_users_id_fk" 
+          FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+        END IF;
+      END $$;
+    `;
+    
     console.log('📦 Creating indexes...');
     await sql`CREATE INDEX IF NOT EXISTS "idx_diagnostic_category_code" ON "diagnostic_categories" USING btree ("code")`;
     await sql`CREATE INDEX IF NOT EXISTS "idx_diagnostic_category_institution" ON "diagnostic_categories" USING btree ("institution_id")`;
@@ -199,6 +216,7 @@ async function safeMigrate() {
     await sql`CREATE INDEX IF NOT EXISTS "idx_diagnostic_session_status" ON "diagnostic_sessions" USING btree ("status")`;
     await sql`CREATE INDEX IF NOT EXISTS "idx_diagnostic_session_dni" ON "diagnostic_sessions" USING btree ("dni")`;
     await sql`CREATE INDEX IF NOT EXISTS "idx_diagnostic_session_email" ON "diagnostic_sessions" USING btree ("email")`;
+    await sql`CREATE INDEX IF NOT EXISTS "idx_diagnostic_session_user" ON "diagnostic_sessions" USING btree ("user_id")`;
     
     console.log('✅ Migration executed successfully');
     console.log('');
