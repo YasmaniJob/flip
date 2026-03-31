@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useStaff } from "../hooks/use-staff";
+import { useSession } from "@/lib/auth-client";
 
 // ─── Constants & Types ────────────────────────────────────────────────────────
 
@@ -43,9 +44,15 @@ async function exportTemplate() {
     XLSX.writeFile(wb, "plantilla_personal_flip.xlsx");
 }
 
-function parseRole(raw: any): "docente" | "pip" | "admin" | "superadmin" {
+function parseRole(raw: any, availableRoles: string[]): "docente" | "pip" | "admin" | "superadmin" {
     const r = String(raw || "").toLowerCase().trim();
-    if (["admin", "superadmin", "pip"].includes(r)) return r as any;
+    
+    // Si el rol está en los roles disponibles, usarlo
+    if (availableRoles.includes(r)) {
+        return r as any;
+    }
+    
+    // Si no está disponible, usar docente por defecto
     return "docente";
 }
 
@@ -53,11 +60,29 @@ function parseRole(raw: any): "docente" | "pip" | "admin" | "superadmin" {
 
 export function ImportStaffDialog({ open, onOpenChange }: ImportStaffDialogProps) {
     const { bulkCreateStaff } = useStaff();
+    const { data: session } = useSession();
     const [submitting,   setSubmitting]   = useState(false);
     const [previewData,  setPreviewData]  = useState<CreateStaffInput[]>([]);
     const [error,        setError]        = useState<string | null>(null);
     const [successCount, setSuccessCount] = useState<number | null>(null);
     const [fileName,     setFileName]     = useState<string | null>(null);
+
+    // Determinar roles disponibles según el usuario actual
+    const isSuperAdmin = (session?.user as any)?.isSuperAdmin || (session?.user as any)?.role === 'superadmin';
+    
+    // SuperAdmin: todos los roles
+    // Admin: solo docente y pip
+    const availableRoles = isSuperAdmin 
+        ? [
+            { value: 'docente', label: 'DOCENTE' },
+            { value: 'pip', label: 'PIP' },
+            { value: 'admin', label: 'ADMIN' },
+            { value: 'superadmin', label: 'SUPERADMIN' },
+          ]
+        : [
+            { value: 'docente', label: 'DOCENTE' },
+            { value: 'pip', label: 'PIP' },
+          ];
 
     useEffect(() => {
         if (!open) {
@@ -86,13 +111,16 @@ export function ImportStaffDialog({ open, onOpenChange }: ImportStaffDialogProps
                 return; 
             }
 
+            // Obtener lista de valores de roles disponibles
+            const allowedRoleValues = availableRoles.map(r => r.value);
+
             const mapped: CreateStaffInput[] = json
                 .map((row: any) => ({
                     name:  row.Nombre || row.nombre || row.NAME || row.Name || "",
                     dni:   row.DNI   ? String(row.DNI) : undefined,
                     email: row.Email || row.email || row.EMAIL || undefined,
                     phone: row.Telefono || row.telefono || row.Phone || undefined,
-                    role:  parseRole(row.Rol || row.rol || row.ROLE || row.Role),
+                    role:  parseRole(row.Rol || row.rol || row.ROLE || row.Role, allowedRoleValues),
                 }))
                 .filter((item: any) => item.name);
 
@@ -276,9 +304,11 @@ export function ImportStaffDialog({ open, onOpenChange }: ImportStaffDialogProps
                                                                 }}
                                                                 className="bg-transparent border-none p-0 h-auto outline-none cursor-pointer hover:bg-muted/50 rounded focus:ring-0"
                                                             >
-                                                                <option value="docente">DOCENTE</option>
-                                                                <option value="admin">ADMIN</option>
-                                                                <option value="superadmin">SUPERADMIN</option>
+                                                                {availableRoles.map(role => (
+                                                                    <option key={role.value} value={role.value}>
+                                                                        {role.label}
+                                                                    </option>
+                                                                ))}
                                                             </select>
                                                         </td>
                                                     </tr>
