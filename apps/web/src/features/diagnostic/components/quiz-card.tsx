@@ -40,18 +40,7 @@ export function QuizCard({
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header with progress */}
       <div className="bg-white border-b border-gray-200 px-4 py-4 space-y-3">
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onPrevious}
-            disabled={!canGoPrevious}
-            className="text-gray-600 disabled:opacity-50"
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Anterior
-          </Button>
-          
+        <div className="flex items-center justify-center max-w-4xl mx-auto">
           <div className="text-center">
             <span className="text-sm font-medium text-gray-600">
               Pregunta {questionNumber} de {totalQuestions}
@@ -62,17 +51,6 @@ export function QuizCard({
               </p>
             )}
           </div>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onNext}
-            disabled={!canGoNext || currentScore === undefined}
-            className="text-gray-600 disabled:opacity-50"
-          >
-            Siguiente
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
         </div>
         
         <div className="max-w-4xl mx-auto">
@@ -80,8 +58,20 @@ export function QuizCard({
         </div>
       </div>
       
-      {/* Question Card */}
-      <div className="flex-1 flex items-center justify-center p-4">
+      {/* Question Card with Navigation Arrows */}
+      <div className="flex-1 flex items-center justify-center p-4 gap-4">
+        {/* Previous Arrow */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onPrevious}
+          disabled={!canGoPrevious}
+          className="h-12 w-12 rounded-full disabled:opacity-30 hover:bg-white hover:shadow-lg transition-all"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </Button>
+        
+        {/* Question Card */}
         <AnimatePresence mode="wait">
           <motion.div
             key={question.id}
@@ -141,6 +131,17 @@ export function QuizCard({
             </div>
           </motion.div>
         </AnimatePresence>
+        
+        {/* Next Arrow */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onNext}
+          disabled={!canGoNext || currentScore === undefined}
+          className="h-12 w-12 rounded-full disabled:opacity-30 hover:bg-white hover:shadow-lg transition-all"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </Button>
       </div>
     </div>
   );
