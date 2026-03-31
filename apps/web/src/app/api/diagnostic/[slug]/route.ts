@@ -113,6 +113,8 @@ export async function GET(
       enabled: true,
       requiresApproval: institution.diagnosticRequiresApproval,
       customMessage: institution.diagnosticCustomMessage,
+      institutionName: institution.name,
+      institutionLogo: institution.settings?.logo || null,
       categories: categories.map(c => ({
         id: c.id,
         code: c.code,

@@ -135,21 +135,9 @@ export default function DiagnosticPage() {
       console.error('Error saving response:', error);
       toast.error('Error al guardar respuesta');
     }
-    
-    // Auto-advance to next question
-    if (currentQuestionIndex < config.questions.length - 1) {
-      setTimeout(() => {
-        nextQuestion();
-      }, 300);
-    } else {
-      // Last question - complete the quiz
-      setTimeout(() => {
-        completeQuiz();
-      }, 500);
-    }
   };
   
-  const completeQuiz = async () => {
+  const handleComplete = async () => {
     if (!token) return;
     
     setIsLoading(true);
@@ -202,11 +190,16 @@ export default function DiagnosticPage() {
   const currentQuestion = config.questions[currentQuestionIndex];
   const currentCategoryName = currentQuestion ? categoryNames[currentQuestion.categoryId] : undefined;
   
+  // Check if all questions are answered
+  const allQuestionsAnswered = config.questions.every(q => responses[q.id] !== undefined);
+  
   return (
     <>
       {step === 'landing' && (
         <DiagnosticLanding
           customMessage={config.customMessage}
+          institutionName={config.institutionName}
+          institutionLogo={config.institutionLogo}
           onStart={handleStart}
         />
       )}
@@ -225,11 +218,16 @@ export default function DiagnosticPage() {
           totalQuestions={config.questions.length}
           currentScore={responses[currentQuestion.id]}
           categoryName={currentCategoryName}
+          categoryId={currentQuestion.categoryId}
           onAnswer={handleAnswer}
           onPrevious={previousQuestion}
           onNext={nextQuestion}
+          onComplete={handleComplete}
           canGoPrevious={currentQuestionIndex > 0}
           canGoNext={currentQuestionIndex < config.questions.length - 1}
+          isLastQuestion={currentQuestionIndex === config.questions.length - 1}
+          allQuestionsAnswered={allQuestionsAnswered}
+          isCompleting={isLoading}
         />
       )}
       

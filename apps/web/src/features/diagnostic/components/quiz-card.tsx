@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { DiagnosticQuestion, DiagnosticScore } from '../types';
 import { SCORE_LABELS, SCORE_ICONS } from '../types';
+import { getCategoryColors, type CategoryColorScheme } from '../lib/category-colors';
 
 interface QuizCardProps {
   question: DiagnosticQuestion;
@@ -13,11 +14,16 @@ interface QuizCardProps {
   totalQuestions: number;
   currentScore?: DiagnosticScore;
   categoryName?: string;
+  categoryId: string;
   onAnswer: (score: DiagnosticScore) => void;
   onPrevious?: () => void;
   onNext?: () => void;
+  onComplete?: () => void;
   canGoPrevious: boolean;
   canGoNext: boolean;
+  isLastQuestion: boolean;
+  allQuestionsAnswered: boolean;
+  isCompleting?: boolean;
 }
 
 const scoreOptions: DiagnosticScore[] = [0, 1, 2, 3];
@@ -28,16 +34,22 @@ export function QuizCard({
   totalQuestions,
   currentScore,
   categoryName,
+  categoryId,
   onAnswer,
   onPrevious,
   onNext,
+  onComplete,
   canGoPrevious,
   canGoNext,
+  isLastQuestion,
+  allQuestionsAnswered,
+  isCompleting = false,
 }: QuizCardProps) {
   const progress = (questionNumber / totalQuestions) * 100;
+  const colors = getCategoryColors(categoryId);
   
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className={`min-h-screen flex flex-col bg-gradient-to-br ${colors.background} transition-colors duration-500`}>
       {/* Header with progress */}
       <div className="bg-white border-b border-gray-200 px-4 py-4 space-y-3">
         <div className="flex items-center justify-center max-w-4xl mx-auto">
@@ -66,9 +78,9 @@ export function QuizCard({
           size="icon"
           onClick={onPrevious}
           disabled={!canGoPrevious}
-          className="h-12 w-12 rounded-full disabled:opacity-30 hover:bg-white hover:shadow-lg transition-all"
+          className={`h-16 w-16 rounded-full disabled:opacity-30 transition-all ${colors.button} ${colors.buttonHover}`}
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-8 h-8" />
         </Button>
         
         {/* Question Card */}
@@ -81,11 +93,11 @@ export function QuizCard({
             transition={{ duration: 0.3 }}
             className="max-w-2xl w-full"
           >
-            <div className="bg-white rounded-2xl shadow-xl p-8 space-y-8">
+            <div className={`bg-white rounded-2xl shadow-xl p-8 space-y-8 ${colors.border}`}>
               {/* Category Badge */}
               {categoryName && (
                 <div className="flex justify-center">
-                  <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                  <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${colors.badge}`}>
                     {categoryName}
                   </span>
                 </div>
@@ -128,6 +140,32 @@ export function QuizCard({
                   </motion.button>
                 ))}
               </div>
+              
+              {/* Complete Button - Show on last question */}
+              {isLastQuestion && (
+                <div className="pt-4">
+                  <Button
+                    onClick={onComplete}
+                    disabled={!allQuestionsAnswered || isCompleting}
+                    className="w-full py-6 text-lg font-semibold"
+                    size="lg"
+                  >
+                    {isCompleting ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        Finalizando...
+                      </>
+                    ) : (
+                      'Finalizar Diagnóstico'
+                    )}
+                  </Button>
+                  {!allQuestionsAnswered && (
+                    <p className="text-sm text-amber-600 text-center mt-2">
+                      Debes responder todas las preguntas para finalizar
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </motion.div>
         </AnimatePresence>
@@ -138,9 +176,9 @@ export function QuizCard({
           size="icon"
           onClick={onNext}
           disabled={!canGoNext || currentScore === undefined}
-          className="h-12 w-12 rounded-full disabled:opacity-30 hover:bg-white hover:shadow-lg transition-all"
+          className={`h-16 w-16 rounded-full disabled:opacity-30 transition-all ${colors.button} ${colors.buttonHover}`}
         >
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-8 h-8" />
         </Button>
       </div>
     </div>

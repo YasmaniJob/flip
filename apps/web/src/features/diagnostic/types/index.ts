@@ -88,6 +88,8 @@ export interface DiagnosticConfig {
   enabled: boolean;
   requiresApproval: boolean;
   customMessage?: string;
+  institutionName: string;
+  institutionLogo?: string | null;
   categories: DiagnosticCategory[];
   questions: DiagnosticQuestion[];
 }

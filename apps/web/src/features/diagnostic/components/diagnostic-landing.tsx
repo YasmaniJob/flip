@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button';
 
 interface DiagnosticLandingProps {
   customMessage?: string;
+  institutionName: string;
+  institutionLogo?: string | null;
   onStart: () => void;
 }
 
-export function DiagnosticLanding({ customMessage, onStart }: DiagnosticLandingProps) {
+export function DiagnosticLanding({ customMessage, institutionName, institutionLogo, onStart }: DiagnosticLandingProps) {
   const [displayedText, setDisplayedText] = useState('');
   const fullText = 'Diagnóstico de Habilidades Digitales 2025';
   
@@ -36,17 +38,34 @@ export function DiagnosticLanding({ customMessage, onStart }: DiagnosticLandingP
         transition={{ duration: 0.6 }}
         className="max-w-2xl w-full text-center space-y-8"
       >
-        {/* Icon */}
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-          className="flex justify-center"
-        >
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-            <Sparkles className="w-10 h-10 text-white" />
-          </div>
-        </motion.div>
+        {/* Institution Logo */}
+        {institutionLogo ? (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+            className="flex flex-col items-center gap-4"
+          >
+            <img
+              src={institutionLogo}
+              alt={institutionName}
+              className="h-24 w-auto object-contain"
+            />
+            <p className="text-lg font-semibold text-gray-700">{institutionName}</p>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+            className="flex flex-col items-center gap-4"
+          >
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <Sparkles className="w-10 h-10 text-white" />
+            </div>
+            <p className="text-lg font-semibold text-gray-700">{institutionName}</p>
+          </motion.div>
+        )}
         
         {/* Title with typewriter effect */}
         <div className="space-y-4">
