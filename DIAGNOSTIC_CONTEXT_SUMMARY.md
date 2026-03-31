@@ -120,6 +120,33 @@
 
 ---
 
+## TASK 8: Fix Workflow de Aprobación y Estadísticas
+- **STATUS**: ✅ done
+- **USER QUERIES**: 8 ("Dijiste que en modo aprobación, los resultados del usuario no ingresan a las estadisticas, pero si esta entrando y tampoco se puede rechazar")
+- **DETAILS**:
+  - **Problemas identificados**:
+    1. Sesiones con status 'completed' (pendientes) se incluían en estadísticas
+    2. Botón "Rechazar" no funcionaba (status 'rejected' no existía en schema)
+    3. Todas las sesiones quedaban como 'completed' sin importar configuración
+    4. Docentes existentes no se auto-aprobaban al completar diagnóstico
+  - **Solución implementada**:
+    1. Agregado status 'rejected' al schema de diagnosticSessions
+    2. Implementada lógica inteligente en endpoint /complete:
+       - Si staff existe → auto-aprobar y vincular
+       - Si no existe Y diagnosticRequiresApproval=false → crear staff y auto-aprobar
+       - Si no existe Y diagnosticRequiresApproval=true → dejar como 'completed' (pendiente)
+    3. Modificado endpoint de resultados para solo incluir sesiones con status='approved'
+    4. Creado script de migración para corregir sesiones existentes
+    5. Ejecutado script: 1 sesión corregida (aprobada y vinculada)
+  - **Commit**: `cb2ad70` - feat(diagnostic): implement SaaS features including history tracking, analytics gaps, and frictionless staff bridging
+- **FILEPATHS**:
+  - `apps/web/src/lib/db/schema.ts`
+  - `apps/web/src/app/api/diagnostic/[slug]/complete/route.ts`
+  - `apps/web/src/app/api/institutions/[id]/diagnostic/results/route.ts`
+  - `apps/web/scripts/fix-diagnostic-sessions-status.ts`
+
+---
+
 ## USER CORRECTIONS AND INSTRUCTIONS
 
 - Probar en local ANTES de hacer commits para evitar errores de build
@@ -134,7 +161,7 @@
 ## METADATA
 
 - **Rama actual**: `master`
-- **Último commit**: `bf2c7db` - fix(diagnostic): prevent 401 errors on public routes and improve PWA caching
+- **Último commit**: `cb2ad70` - feat(diagnostic): implement SaaS features including history tracking, analytics gaps, and frictionless staff bridging
 - **Build status**: ✅ Passing
 - **Base de datos**: Neon PostgreSQL (producción)
 
@@ -145,8 +172,10 @@
 1. ✅ Probar en producción que el diagnóstico se complete correctamente en el primer intento
 2. ✅ Verificar que no haya más errores 401 en consola
 3. ✅ Confirmar que el PWA no interfiere con requests autenticados
-4. Monitorear comportamiento en producción
-5. Considerar agregar notificación en dashboard para docentes con diagnóstico pendiente (FASE 5 del plan)
+4. ✅ Verificar que las estadísticas solo incluyan sesiones aprobadas
+5. ✅ Confirmar que el botón "Rechazar" funciona correctamente
+6. Probar diferentes configuraciones de diagnosticRequiresApproval
+7. Considerar agregar notificación en dashboard para docentes con diagnóstico pendiente (FASE 5 del plan)
 
 ---
 
