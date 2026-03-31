@@ -11,10 +11,11 @@ export interface Section {
     studentCount?: number;
 }
 
-export function useSections(gradeId?: string) {
+export function useSections(gradeId?: string, options: { enabled?: boolean } = {}) {
     const api = useApiClient();
     return useQuery<Section[]>({
         queryKey: ['sections', gradeId],
+        enabled: options.enabled ?? true,
         queryFn: () => {
             const url = gradeId ? `/sections?gradeId=${gradeId}` : '/sections';
             return api.get<Section[]>(url);

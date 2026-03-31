@@ -20,7 +20,7 @@ export const SCORE_ICONS = {
 } as const;
 
 // Session status
-export type SessionStatus = 'in_progress' | 'completed' | 'approved';
+export type SessionStatus = 'in_progress' | 'completed' | 'approved' | 'rejected';
 
 // Level determination
 export type DiagnosticLevel = 'explorador' | 'en_desarrollo' | 'competente' | 'mentor';

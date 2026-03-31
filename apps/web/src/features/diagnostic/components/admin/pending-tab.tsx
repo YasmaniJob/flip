@@ -29,6 +29,7 @@ export function DiagnosticPendingTab() {
   const { data: institution } = useMyInstitution();
   const queryClient = useQueryClient();
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
 
   // Fetch pending sessions
   const { data, isLoading, error } = useQuery({
@@ -72,9 +73,39 @@ export function DiagnosticPendingTab() {
     },
   });
 
+  // Reject mutation
+  const rejectMutation = useMutation({
+    mutationFn: async (sessionId: string) => {
+      if (!institution) throw new Error('No institution');
+      const res = await fetch(
+        `/api/institutions/${institution.id}/diagnostic/reject/${sessionId}`,
+        { method: 'POST' }
+      );
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Error al rechazar docente');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('Docente rechazado exitosamente');
+      queryClient.invalidateQueries({ queryKey: ['diagnostic-pending', institution?.id] });
+      setRejectingId(null);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+      setRejectingId(null);
+    },
+  });
+
   const handleApprove = (sessionId: string) => {
     setApprovingId(sessionId);
     approveMutation.mutate(sessionId);
+  };
+
+  const handleReject = (sessionId: string) => {
+    setRejectingId(sessionId);
+    rejectMutation.mutate(sessionId);
   };
 
   const getLevelColor = (level: DiagnosticLevel) => {
@@ -177,24 +208,43 @@ export function DiagnosticPendingTab() {
                     </div>
                   </div>
 
-                  {/* Action */}
-                  <Button
-                    onClick={() => handleApprove(session.id)}
-                    disabled={approvingId === session.id}
-                    className="flex-shrink-0"
-                  >
-                    {approvingId === session.id ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Aprobando...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Aprobar
-                      </>
-                    )}
-                  </Button>
+                  {/* Actions */}
+                  <div className="flex gap-2 flex-shrink-0">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleReject(session.id)}
+                      disabled={rejectingId === session.id || approvingId === session.id}
+                      className="border-red-200 text-red-600 hover:bg-red-50"
+                    >
+                      {rejectingId === session.id ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Rechazando...
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-4 w-4 mr-2" />
+                          Rechazar
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      onClick={() => handleApprove(session.id)}
+                      disabled={approvingId === session.id || rejectingId === session.id}
+                    >
+                      {approvingId === session.id ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Aprobando...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Aprobar
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}

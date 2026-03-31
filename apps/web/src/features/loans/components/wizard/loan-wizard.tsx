@@ -61,7 +61,7 @@ export function LoanWizard({ open, onOpenChange, initialResources }: LoanWizardP
 
     // Fetch tags names from context state IDs
     const { data: grades } = useGrades();
-    const { data: sections } = useSections(state.gradeId || undefined);
+    const { data: sections } = useSections(state.gradeId || undefined, { enabled: !!state.gradeId });
     const { data: curricularAreas } = useCurricularAreas({ activeOnly: true });
 
     const gradeName = state.gradeId 

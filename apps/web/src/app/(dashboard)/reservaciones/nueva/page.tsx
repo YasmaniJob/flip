@@ -41,7 +41,7 @@ export default function NuevaReservaPage() {
   const { staff } = useStaff({ search: debouncedSearch, limit: 20, includeAdmins: true });
   const { data: recurrentStaff } = useRecurrentStaff(8);
   const { data: grades } = useGrades();
-  const { data: sections } = useSections(gradeId || undefined);
+  const { data: sections } = useSections(gradeId || undefined, { enabled: !!gradeId });
   const { data: curricularAreas } = useCurricularAreas({ activeOnly: true });
   
   const createMutation = useCreateReservation();

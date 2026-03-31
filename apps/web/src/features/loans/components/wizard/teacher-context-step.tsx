@@ -24,7 +24,7 @@ export function TeacherContextStep({
     const [openArea, setOpenArea] = useState(false);
     const [areaSearch, setAreaSearch] = useState("");
     const { data: grades } = useGrades();
-    const { data: sections } = useSections(gradeId || undefined);
+    const { data: sections } = useSections(gradeId || undefined, { enabled: !!gradeId });
     const { data: curricularAreas } = useCurricularAreas({ activeOnly: true });
     const filteredAreas = curricularAreas?.filter(a => a.name.toLowerCase().includes(areaSearch.toLowerCase()));
 

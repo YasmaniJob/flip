@@ -58,7 +58,7 @@ export function StaffSelectionStep({
     const { data: recurrentStaff, isLoading: isLoadingRecurrent } = useRecurrentStaff(6);
 
     const { data: grades } = useGrades();
-    const { data: sections } = useSections(gradeId || undefined);
+    const { data: sections } = useSections(gradeId || undefined, { enabled: !!gradeId });
     const { data: curricularAreas } = useCurricularAreas({ activeOnly: true });
 
     const filteredAreas = curricularAreas?.filter(area =>
@@ -319,7 +319,7 @@ export function StaffSelectionStep({
                                                 {sectionId && <Check className="h-3.5 w-3.5 text-primary" />}
                                             </div>
                                             <div className="flex flex-wrap gap-1.5">
-                                                {sections?.map((section) => (
+                                                {gradeId && sections?.map((section) => (
                                                     <button
                                                         key={section.id}
                                                         onClick={() => onSectionChange(section.id)}
