@@ -8,6 +8,7 @@ import { IdentificationForm } from '@/features/diagnostic/components/identificat
 import { QuizCard } from '@/features/diagnostic/components/quiz-card';
 import { ResultsScreen } from '@/features/diagnostic/components/results-screen';
 import { useDiagnosticQuiz } from '@/features/diagnostic/hooks/use-diagnostic-quiz';
+import { useSession } from '@/lib/auth-client';
 import type { DiagnosticScore } from '@/features/diagnostic/types';
 
 interface DiagnosticClientProps {
@@ -19,6 +20,7 @@ type Step = 'landing' | 'identify' | 'quiz' | 'results';
 
 export function DiagnosticClient({ initialConfig, slug }: DiagnosticClientProps) {
   const router = useRouter();
+  const { data: session } = useSession();
   
   const [step, setStep] = useState<Step>('landing');
   const [isLoading, setIsLoading] = useState(false);
@@ -54,17 +56,32 @@ export function DiagnosticClient({ initialConfig, slug }: DiagnosticClientProps)
   }, [token, config]);
   
   const handleStart = () => {
+    // 🚀 Fast Track: If user is logged in, skip identification form
+    if (session?.user && !token) {
+      handleIdentify({
+        dni: (session.user as any).dni || '',
+        name: session.user.name,
+        email: session.user.email
+      });
+      return;
+    }
     setStep('identify');
   };
   
-  const handleIdentify = async (data: { dni: string; name: string; email: string }) => {
+  const handleIdentify = async (data: { dni: string; name: string; email: string, userId?: string }) => {
     setIsLoading(true);
+    
+    // Inject userId from session if available
+    const payload = {
+      ...data,
+      userId: session?.user?.id
+    };
     
     try {
       const res = await fetch(`/api/diagnostic/${slug}/identify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       
       if (!res.ok) {

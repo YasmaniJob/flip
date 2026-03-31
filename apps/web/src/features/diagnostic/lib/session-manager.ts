@@ -11,8 +11,9 @@ const SESSION_EXPIRY_DAYS = 7;
 
 export interface CreateSessionData {
   institutionId: string;
+  userId?: string;
   name: string;
-  dni: string;
+  dni?: string;
   email: string;
   ipAddress?: string;
   userAgent?: string;
@@ -34,6 +35,7 @@ export async function createOrResumeSession(data: CreateSessionData) {
     where: and(
       eq(diagnosticSessions.institutionId, data.institutionId),
       or(
+        data.userId ? eq(diagnosticSessions.userId, data.userId) : undefined,
         data.dni ? eq(diagnosticSessions.dni, data.dni) : undefined,
         data.email ? eq(diagnosticSessions.email, data.email) : undefined
       ),
@@ -62,6 +64,7 @@ export async function createOrResumeSession(data: CreateSessionData) {
       id: randomUUID(),
       token,
       institutionId: data.institutionId,
+      userId: data.userId,
       name: data.name,
       dni: data.dni,
       email: data.email,

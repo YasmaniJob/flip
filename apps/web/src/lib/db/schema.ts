@@ -781,6 +781,7 @@ export const diagnosticSessions = pgTable('diagnostic_sessions', {
     id: text('id').primaryKey(),
     token: text('token').unique().notNull(), // UUID for public access
     institutionId: text('institution_id').references(() => institutions.id).notNull(),
+    userId: text('user_id').references(() => users.id), // Reference to the registered user
     staffId: text('staff_id').references(() => staff.id), // NULL until approved
     name: text('name').notNull(),
     dni: text('dni'),
@@ -800,6 +801,7 @@ export const diagnosticSessions = pgTable('diagnostic_sessions', {
 }, (table) => ({
     tokenIdx: uniqueIndex('idx_diagnostic_session_token').on(table.token),
     institutionIdx: index('idx_diagnostic_session_institution').on(table.institutionId),
+    userIdx: index('idx_diagnostic_session_user').on(table.userId),
     staffIdx: index('idx_diagnostic_session_staff').on(table.staffId),
     statusIdx: index('idx_diagnostic_session_status').on(table.status),
     dniIdx: index('idx_diagnostic_session_dni').on(table.dni),
@@ -844,6 +846,10 @@ export const diagnosticSessionsRelations = relations(diagnosticSessions, ({ one,
     institution: one(institutions, {
         fields: [diagnosticSessions.institutionId],
         references: [institutions.id],
+    }),
+    user: one(users, {
+        fields: [diagnosticSessions.userId],
+        references: [users.id],
     }),
     staff: one(staff, {
         fields: [diagnosticSessions.staffId],

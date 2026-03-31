@@ -70,10 +70,10 @@ export async function POST(
       );
     }
     
-    const { dni, name, email } = validation.data;
+    const { dni, name, email, userId } = validation.data;
     
     // Check if this person is already a staff member
-    const existingStaff = await findExistingStaff(institution.id, dni, email);
+    const existingStaff = await findExistingStaff(institution.id, dni ?? undefined, email);
     
     // Get total questions count (we'll need this for the session)
     const questions = await db.query.diagnosticQuestions.findMany({
@@ -84,8 +84,9 @@ export async function POST(
     const userAgent = request.headers.get('user-agent') || undefined;
     const { session, token, isResuming } = await createOrResumeSession({
       institutionId: institution.id,
+      userId: userId ?? undefined,
       name,
-      dni,
+      dni: dni ?? undefined,
       email,
       ipAddress: ip,
       userAgent,

@@ -38,9 +38,10 @@ export const emailSchema = z.string()
 
 // Identify request validation
 export const identifyRequestSchema = z.object({
-  dni: dniSchema,
+  dni: dniSchema.optional().or(z.literal('')).or(z.null()),
   name: nameSchema,
   email: emailSchema,
+  userId: z.string().optional().nullable(),
 });
 
 // Save response validation
