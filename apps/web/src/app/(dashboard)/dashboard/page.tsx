@@ -20,6 +20,7 @@ import { MobileMetricsGrid } from "@/features/dashboard/components/mobile-metric
 import { MobileOverdueAlert } from "@/features/dashboard/components/mobile-overdue-alert";
 import { MobileQuickActions } from "@/features/dashboard/components/mobile-quick-actions";
 import { MobileRecentActivity } from "@/features/dashboard/components/mobile-recent-activity";
+import { DashboardDiagnosticNotification } from "@/features/diagnostic/components/dashboard-notification";
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -165,6 +166,11 @@ export default function DashboardPage() {
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Diagnostic Notification */}
+                    <div className="mb-8 mt-2">
+                        <DashboardDiagnosticNotification />
                     </div>
 
                     {/* 1. Specialized Impact Cockpit (AIP/CRT Context) */}

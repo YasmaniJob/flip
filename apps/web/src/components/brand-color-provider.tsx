@@ -57,14 +57,20 @@ export function BrandColorProvider({
   children: React.ReactNode;
 }) {
   const { data: session } = useSession();
-  const { data: institution, isLoading: isLoadingInstitution } = useMyInstitution();
+  const hasSession = !!session?.user;
+  
+  // Only fetch institution data if user is logged in
+  const { data: institution, isLoading: isLoadingInstitution } = useMyInstitution({
+    enabled: hasSession,
+  });
+  
   const [brandColor, setBrandColorState] = useState<string>("");
   const [institutionName, setInstitutionName] = useState<string>();
   const [logoUrl, setLogoUrl] = useState<string | null>();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (session?.user) {
+    if (hasSession) {
       const user = session.user as any;
       if (user.institutionId && institution) {
         const color = institution?.brandColor;
@@ -85,6 +91,7 @@ export function BrandColorProvider({
         setIsLoading(false);
       }
     } else {
+      // No session - use stored brand or default
       const stored = getStoredBrand();
       if (stored) {
         setBrandColorState(stored.brandColor || "");
@@ -93,7 +100,7 @@ export function BrandColorProvider({
       }
       setIsLoading(false);
     }
-  }, [session?.user, institution, isLoadingInstitution]);
+  }, [hasSession, session?.user, institution, isLoadingInstitution]);
 
   useEffect(() => {
     if (brandColor) {

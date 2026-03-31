@@ -28,7 +28,7 @@ export const institutionKeys = {
     myInstitution: ['my-institution'] as const,
 };
 
-export function useMyInstitution() {
+export function useMyInstitution(options?: { enabled?: boolean }) {
     const api = useApiClient();
 
     return useQuery<Institution>({
@@ -36,5 +36,6 @@ export function useMyInstitution() {
         queryFn: () => api.get<Institution>('/institutions/my-institution'),
         staleTime: 10 * 60 * 1000, // 10 minutes cache
         retry: 1,
+        enabled: options?.enabled !== false, // Default to true, but allow disabling
     });
 }

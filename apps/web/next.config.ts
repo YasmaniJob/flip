@@ -86,12 +86,45 @@ export default withPWA({
     register: true,
     runtimeCaching: [
         {
+            // Cache static assets
+            urlPattern: /^https?.*\.(png|jpg|jpeg|svg|gif|webp|ico|woff|woff2|ttf|eot)$/i,
+            handler: "CacheFirst",
+            options: {
+                cacheName: "static-assets",
+                expiration: {
+                    maxEntries: 100,
+                    maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+                },
+            },
+        },
+        {
+            // Network first for API calls (don't cache authenticated endpoints)
+            urlPattern: /^https?.*\/api\/diagnostic\/.*/i,
+            handler: "NetworkFirst",
+            options: {
+                cacheName: "diagnostic-api",
+                networkTimeoutSeconds: 10,
+                expiration: {
+                    maxEntries: 50,
+                    maxAgeSeconds: 5 * 60, // 5 minutes
+                },
+            },
+        },
+        {
+            // Don't cache authenticated API endpoints - always go to network
+            urlPattern: /^https?.*\/api\/(institutions\/my-institution|users|staff|loans|reservations|meetings).*/i,
+            handler: "NetworkOnly",
+        },
+        {
+            // Cache other pages with network first strategy
             urlPattern: /^https?.*/,
             handler: "NetworkFirst",
             options: {
-                cacheName: "offlineCache",
+                cacheName: "pages-cache",
+                networkTimeoutSeconds: 10,
                 expiration: {
-                    maxEntries: 200,
+                    maxEntries: 50,
+                    maxAgeSeconds: 24 * 60 * 60, // 24 hours
                 },
             },
         },

@@ -2,8 +2,10 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useMyInstitution } from '@/features/institutions/hooks/use-my-institution';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, XCircle, Users, TrendingUp, BarChart3 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, XCircle, Users, TrendingUp, BarChart3, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { LEVEL_LABELS, LEVEL_ICONS } from '../../types';
 import type { DiagnosticLevel } from '../../types';
@@ -60,27 +62,46 @@ export function DiagnosticResultsTab() {
     );
   }
 
+  // Navigation Header (Visible for all admins)
+  const navigationHeader = (
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-primary/5 p-6 rounded-xl border border-primary/10 mb-8">
+      <div>
+        <h3 className="text-lg font-black tracking-tighter text-foreground uppercase">Evaluación Institucional</h3>
+        <p className="text-xs font-medium text-muted-foreground text-balance">Monitorea el progreso y nivel digital de toda tu plana docente.</p>
+      </div>
+      <Button asChild variant="outline" className="font-black uppercase tracking-widest text-[10px] gap-2 border-primary/20 hover:bg-primary/10 text-primary bg-white">
+        <Link href="/diagnostico/resultados">
+          Ver mis resultados personales
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
+      </Button>
+    </div>
+  );
+
   if (!data || data.totalSessions === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Resultados y Estadísticas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12">
-            <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No hay resultados disponibles aún</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Los resultados aparecerán cuando los docentes completen el diagnóstico
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        {navigationHeader}
+        <Card>
+          <CardHeader>
+            <CardTitle>Resultados y Estadísticas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-12">
+              <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">No hay resultados disponibles aún</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Los resultados aparecerán cuando los docentes completen el diagnóstico
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   // Prepare data for charts
-  const radarData = Object.entries(data.categoryAverages).map(([id, cat]) => ({
+  const radarData = Object.entries(data.categoryAverages).map(([_, cat]) => ({
     category: cat.name,
     average: cat.average,
   }));
@@ -93,6 +114,8 @@ export function DiagnosticResultsTab() {
 
   return (
     <div className="space-y-6">
+      {navigationHeader}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
