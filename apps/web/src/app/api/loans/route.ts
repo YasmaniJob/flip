@@ -126,13 +126,8 @@ export async function GET(request: NextRequest) {
         resources: loan.loanResources.map((lr) => ({
           id: lr.resource.id,
           name: lr.resource.name,
-          brand: lr.resource.brand,
-          model: lr.resource.model,
-          status: lr.resource.status,
           internalId: lr.resource.internalId,
-          category: lr.resource.category
-            ? { name: lr.resource.category.name, color: lr.resource.category.color }
-            : undefined,
+          status: lr.resource.status,
         })),
         damageReports: loan.damageReports,
         suggestionReports: loan.suggestionReports,

@@ -34,7 +34,7 @@ export interface CreateLoanData {
 export const LoansApi = {
     getAll: async (params?: { page?: number, limit?: number }): Promise<Loan[]> => {
         const url = new URL('/api/loans', window.location.origin);
-        const limit = params?.limit || 1000;
+        const limit = params?.limit || 200; // Reduced from 1000 for better performance
         url.searchParams.append('limit', limit.toString());
         if (params?.page) url.searchParams.append('page', params.page.toString());
 

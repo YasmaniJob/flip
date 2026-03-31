@@ -9,6 +9,7 @@ import { LoanCard } from '@/features/loans/components/loan-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserRole } from '@/hooks/use-user-role';
 import { PageHeader } from '@/components/layout/page-header';
+import { useConfigLoadout } from '@/features/settings/hooks/use-config-loadout';
 
 const LoanWizard = dynamic(
     () => import('@/features/loans/components/wizard/loan-wizard').then(m => m.LoanWizard),
@@ -40,6 +41,9 @@ export function LoansClient() {
             setIsWizardOpen(true);
         }
     }, [searchParams]);
+
+    // Pre-fetch config loadout so it's ready when the modal opens
+    useConfigLoadout();
 
     const { data: loansData, isLoading, error } = useLoans();
     const loans = loansData as Loan[] | undefined;

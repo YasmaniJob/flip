@@ -14,7 +14,7 @@ export function useLoans(limit?: number) {
     return useQuery<Loan[]>({
         queryKey: [...loanKeys.all, limit],
         queryFn: () => LoansApi.getAll({ limit }),
-        staleTime: 30 * 1000,                 // 30 segundos - datos frescos por 30s
+        staleTime: 60 * 1000,                 // 1 min - reduce refetches for history
         refetchInterval: 30 * 1000,           // poll every 30s (reducido de 3s)
         refetchIntervalInBackground: false,   // no polling cuando tab está inactivo
         refetchOnWindowFocus: true,
