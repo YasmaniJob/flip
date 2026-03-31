@@ -200,6 +200,7 @@ export default function DiagnosticPage() {
           customMessage={config.customMessage}
           institutionName={config.institutionName}
           institutionLogo={config.institutionLogo}
+          totalQuestions={config.totalQuestions}
           onStart={handleStart}
         />
       )}

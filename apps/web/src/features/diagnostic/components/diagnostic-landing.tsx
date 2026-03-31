@@ -9,10 +9,11 @@ interface DiagnosticLandingProps {
   customMessage?: string;
   institutionName: string;
   institutionLogo?: string | null;
+  totalQuestions: number;
   onStart: () => void;
 }
 
-export function DiagnosticLanding({ customMessage, institutionName, institutionLogo, onStart }: DiagnosticLandingProps) {
+export function DiagnosticLanding({ customMessage, institutionName, institutionLogo, totalQuestions, onStart }: DiagnosticLandingProps) {
   const [displayedText, setDisplayedText] = useState('');
   const fullText = 'Diagnóstico de Habilidades Digitales 2025';
   
@@ -97,7 +98,7 @@ export function DiagnosticLanding({ customMessage, institutionName, institutionL
           </div>
           <div className="flex items-center justify-center gap-2">
             <span className="text-2xl">📊</span>
-            <span>23 preguntas</span>
+            <span>{totalQuestions} preguntas</span>
           </div>
           <div className="flex items-center justify-center gap-2">
             <span className="text-2xl">🎯</span>

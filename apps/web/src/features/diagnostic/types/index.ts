@@ -92,6 +92,7 @@ export interface DiagnosticConfig {
   institutionLogo?: string | null;
   categories: DiagnosticCategory[];
   questions: DiagnosticQuestion[];
+  totalQuestions: number;
 }
 
 export interface DiagnosticCategory {
