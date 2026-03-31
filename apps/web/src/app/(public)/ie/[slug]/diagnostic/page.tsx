@@ -4,11 +4,12 @@ import { DiagnosticClient } from './DiagnosticClient';
 import { notFound } from 'next/navigation';
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const config = await getCachedDiagnosticConfig(params.slug) as any;
+  const { slug } = await params;
+  const config = await getCachedDiagnosticConfig(slug) as any;
   
   if (!config || config.disabled) {
     return {
@@ -28,7 +29,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function DiagnosticPage({ params }: Props) {
-  const config = await getCachedDiagnosticConfig(params.slug) as any;
+  const { slug } = await params;
+  const config = await getCachedDiagnosticConfig(slug) as any;
 
   if (!config) {
     notFound();
@@ -47,5 +49,5 @@ export default async function DiagnosticPage({ params }: Props) {
     );
   }
 
-  return <DiagnosticClient initialConfig={config} slug={params.slug} />;
+  return <DiagnosticClient initialConfig={config} slug={slug} />;
 }

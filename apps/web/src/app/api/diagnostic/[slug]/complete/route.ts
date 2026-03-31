@@ -7,25 +7,29 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { institutions, diagnosticSessions, diagnosticResponses, diagnosticQuestions, staff } from '@/lib/db/schema';
+import { institutions, diagnosticSessions, diagnosticResponses, staff } from '@/lib/db/schema';
 import { eq, and, or } from 'drizzle-orm';
 import { rateLimit } from '@/features/diagnostic/lib/rate-limit';
 import { completeSessionRequestSchema } from '@/features/diagnostic/lib/validation';
 import { validateSession } from '@/features/diagnostic/lib/session-manager';
 import { calculateCategoryScores, calculateOverallScore, determineLevel } from '@/features/diagnostic/lib/scoring';
+import { randomUUID } from 'crypto';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params;
   try {
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
-    const rateLimitResult = rateLimit(ip, 10, 3600000);
+    const isDev = process.env.NODE_ENV === 'development';
+    const limit = isDev ? 100 : 25;
+    const rateLimitResult = rateLimit(ip, limit, 3600000);
     
-    if (!rateLimitResult.success) {
+    if (!rateLimitResult.success && !isDev) {
       return NextResponse.json(
-        { error: 'Too many requests. Please try again later.' },
+        { error: 'Demasiados intentos. Por favor, intenta de nuevo en una hora.' },
         { status: 429 }
       );
     }
@@ -39,7 +43,7 @@ export async function POST(
       );
     }
     
-    const { slug } = params;
+    // const { slug } = params; // Already destructured above
     
     // Validate institution
     const institution = await db.query.institutions.findFirst({
@@ -118,15 +122,18 @@ export async function POST(
     let staffId: string | undefined = undefined;
     
     // Check if this person is already a staff member
-    const existingStaff = await db.query.staff.findFirst({
-      where: and(
-        eq(staff.institutionId, institution.id),
-        or(
-          session.dni ? eq(staff.dni, session.dni) : undefined,
-          session.email ? eq(staff.email, session.email) : undefined
-        )
-      ),
-    });
+    const staffConditions = [];
+    if (session.dni) staffConditions.push(eq(staff.dni, session.dni));
+    if (session.email) staffConditions.push(eq(staff.email, session.email));
+
+    const existingStaff = (staffConditions.length > 0) 
+      ? await db.query.staff.findFirst({
+          where: and(
+            eq(staff.institutionId, institution.id),
+            staffConditions.length > 1 ? or(...staffConditions) : staffConditions[0]
+          ),
+        })
+      : null;
     
     if (existingStaff) {
       // Staff already exists → auto-approve
@@ -134,20 +141,26 @@ export async function POST(
       staffId = existingStaff.id;
     } else if (!institution.diagnosticRequiresApproval) {
       // No approval required → create staff and auto-approve
-      const [newStaff] = await db.insert(staff)
-        .values({
-          id: crypto.randomUUID(),
-          institutionId: institution.id,
-          name: session.name,
-          dni: session.dni,
-          email: session.email,
-          role: 'docente',
-          status: 'active',
-        })
-        .returning();
-      
-      finalStatus = 'approved';
-      staffId = newStaff.id;
+      try {
+        const [newStaff] = await db.insert(staff)
+          .values({
+            id: randomUUID(),
+            institutionId: institution.id,
+            name: session.name,
+            dni: session.dni,
+            email: session.email,
+            role: 'docente',
+            status: 'active',
+          })
+          .returning();
+        
+        finalStatus = 'approved';
+        staffId = newStaff.id;
+      } catch (insertError) {
+        console.error('[DIAGNOSTIC_COMPLETE] Error creating staff:', insertError);
+        // If insertion fails (e.g. concurrency), we continue as 'completed'
+        finalStatus = 'completed';
+      }
     }
     // else: requires approval and staff doesn't exist → leave as 'completed' (pending)
     
@@ -173,9 +186,12 @@ export async function POST(
     });
     
   } catch (error) {
-    console.error('Error completing session:', error);
+    console.error('[DIAGNOSTIC_COMPLETE] Uncaught error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Error interno del servidor',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

@@ -15,16 +15,19 @@ import { createOrResumeSession, findExistingStaff } from '@/features/diagnostic/
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params;
   try {
-    // Rate limiting (stricter for POST)
+    // Rate limiting (more relaxed for development/testing)
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
-    const rateLimitResult = rateLimit(ip, 10, 3600000); // 10 requests per hour
+    const isDev = process.env.NODE_ENV === 'development';
+    const limit = isDev ? 100 : 25;
+    const rateLimitResult = rateLimit(ip, limit, 3600000);
     
-    if (!rateLimitResult.success) {
+    if (!rateLimitResult.success && !isDev) {
       return NextResponse.json(
-        { error: 'Too many requests. Please try again later.' },
+        { error: 'Demasiados intentos. Por favor, intenta de nuevo en una hora.' },
         {
           status: 429,
           headers: {
@@ -45,7 +48,7 @@ export async function POST(
       );
     }
     
-    const { slug } = params;
+    // const { slug } = params; // Already destructured above
     
     // Find institution
     const institution = await db.query.institutions.findFirst({
@@ -103,9 +106,12 @@ export async function POST(
     });
     
   } catch (error) {
-    console.error('Error identifying user:', error);
+    console.error('[DIAGNOSTIC_IDENTIFY] Uncaught error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Error interno del servidor',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

@@ -54,7 +54,9 @@ export const getCachedDiagnosticConfig = unstable_cache(
       customMessage: institution.diagnosticCustomMessage,
       institutionId: institution.id,
       institutionName: institution.name,
-      institutionLogo: (institution.settings as any)?.logoUrl || null,
+      institutionLogo: (institution.settings as any)?.logoUrl || (institution.settings as any)?.logo || null,
+      educationalLevel: institution.nivel || (institution.settings as any)?.location?.nivel || 'Secundaria',
+      province: (institution.settings as any)?.location?.provincia || (institution.settings as any)?.location?.prov || null,
       categories: categories.map(c => ({
         id: c.id,
         code: c.code,

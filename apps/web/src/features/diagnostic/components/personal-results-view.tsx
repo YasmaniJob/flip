@@ -4,13 +4,13 @@ import { useMyDiagnosticStatus } from '../hooks/use-my-diagnostic';
 import { useMyInstitution } from '@/features/institutions/hooks/use-my-institution';
 import { useSession } from '@/lib/auth-client';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, AlertCircle, FileText, Download, Briefcase, Award } from 'lucide-react';
+import { Loader2, AlertCircle, FileText, Briefcase, Award } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { LEVEL_LABELS, LEVEL_ICONS } from '../types';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { DigitalDiploma } from './digital-diploma';
+import { DiagnosticPDFGenerator } from './diagnostic-pdf-generator';
 
 export function PersonalDiagnosticResultsView() {
   const { data: status, isLoading, error } = useMyDiagnosticStatus();
@@ -71,17 +71,6 @@ export function PersonalDiagnosticResultsView() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
-      {/* Printable Diploma (hidden by default) */}
-      <DigitalDiploma 
-        userName={session?.user?.name || 'Docente Flip'}
-        institutionName={institution?.name || 'Flip Institution'}
-        level={status.level!}
-        overallScore={status.overallScore!}
-        completedAt={status.completedAt || new Date().toISOString()}
-        categoryScores={status.categoryScores!}
-        categoryNames={status.categoryNames!}
-      />
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Column: Summary & Level */}
@@ -120,19 +109,20 @@ export function PersonalDiagnosticResultsView() {
                     </div>
 
                     <div className="p-6">
-                        <Button 
-                            className="w-full font-black uppercase tracking-widest text-[10px] gap-2 py-7 border-2 group relative overflow-hidden" 
-                            variant="outline"
-                            onClick={() => window.print()}
-                        >
-                            <span className="relative z-10 flex items-center gap-2">
-                                <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
-                                Descargar Diploma Digital
-                            </span>
-                            <div className="absolute inset-0 bg-primary/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                        </Button>
+                        <DiagnosticPDFGenerator
+                          userName={session?.user?.name || 'Docente Flip'}
+                          institutionName={institution?.name || 'Flip Institution'}
+                          institutionLogo={institution?.logo}
+                          educationalLevel={institution?.nivel || (institution as any)?.settings?.location?.nivel || (institution as any)?.settings?.location?.nivel_educativo || 'Secundaria'}
+                          province={(institution as any)?.settings?.location?.provincia || (institution as any)?.settings?.location?.prov || (institution as any)?.provincia}
+                          level={status.level!}
+                          overallScore={status.overallScore!}
+                          completedAt={status.completedAt || new Date().toISOString()}
+                          categoryScores={status.categoryScores!}
+                          categoryNames={status.categoryNames!}
+                        />
                         <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-tight mt-3 text-center opacity-60">
-                            Certificado válido para el periodo 2024
+                            Informe certificado válido para el periodo 2024
                         </p>
                     </div>
                 </CardContent>

@@ -12,11 +12,13 @@ import { eq, and } from 'drizzle-orm';
 import { rateLimit } from '@/features/diagnostic/lib/rate-limit';
 import { saveResponseRequestSchema } from '@/features/diagnostic/lib/validation';
 import { validateSession } from '@/features/diagnostic/lib/session-manager';
+import { randomUUID } from 'crypto';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await params;
   try {
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
@@ -38,7 +40,7 @@ export async function POST(
       );
     }
     
-    const { slug } = params;
+    // const { slug } = params; // Constant destructured above
     
     // Validate institution
     const institution = await db.query.institutions.findFirst({
@@ -89,7 +91,7 @@ export async function POST(
     // Upsert response (update if exists, insert if not)
     await db.insert(diagnosticResponses)
       .values({
-        id: crypto.randomUUID(),
+        id: randomUUID(),
         sessionId: session.id,
         questionId,
         score,

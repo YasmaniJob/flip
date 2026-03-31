@@ -24,6 +24,7 @@ export function DiagnosticClient({ initialConfig, slug }: DiagnosticClientProps)
   
   const [step, setStep] = useState<Step>('landing');
   const [isLoading, setIsLoading] = useState(false);
+  const [userName, setUserName] = useState<string>('');
   
   const {
     config,
@@ -53,7 +54,7 @@ export function DiagnosticClient({ initialConfig, slug }: DiagnosticClientProps)
     if (token && config && step === 'landing') {
       setStep('quiz');
     }
-  }, [token, config]);
+  }, [token, config, step]);
   
   const handleStart = () => {
     // 🚀 Fast Track: If user is logged in, skip identification form
@@ -70,6 +71,7 @@ export function DiagnosticClient({ initialConfig, slug }: DiagnosticClientProps)
   
   const handleIdentify = async (data: { dni: string; name: string; email: string, userId?: string }) => {
     setIsLoading(true);
+    setUserName(data.name);
     
     // Inject userId from session if available
     const payload = {
@@ -132,28 +134,37 @@ export function DiagnosticClient({ initialConfig, slug }: DiagnosticClientProps)
   };
   
   const handleComplete = async () => {
-    if (!token) return;
+    if (!token) {
+      toast.error('Sesión no encontrada. Por favor, reinicia el diagnóstico.');
+      return;
+    }
+
+    if (!slug) {
+      toast.error('Configuración de institución no disponible.');
+      return;
+    }
     
     setIsLoading(true);
     
     try {
-      const res = await fetch(`/api/diagnostic/${slug}/complete`, {
+      const res = await fetch(`/api/diagnostic/${encodeURIComponent(slug)}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
       });
       
+      const result = await res.json().catch(() => ({}));
+      
       if (!res.ok) {
-        throw new Error('Error completing quiz');
+        throw new Error(result.error || `Error del servidor (${res.status})`);
       }
       
-      const result = await res.json();
       setResults(result.overallScore, result.level, result.categoryScores);
       setStep('results');
-      toast.success('¡Diagnóstico completado!');
-    } catch (error) {
+      toast.success('¡Diagnóstico completado con éxito!');
+    } catch (error: any) {
       console.error('Error completing quiz:', error);
-      toast.error('Error al completar el diagnóstico');
+      toast.error(error.message || 'Error al procesar el diagnóstico. Por favor, inténtalo de nuevo.');
     } finally {
       setIsLoading(false);
     }
@@ -216,6 +227,11 @@ export function DiagnosticClient({ initialConfig, slug }: DiagnosticClientProps)
       
       {step === 'results' && overallScore !== null && level && categoryScores && (
         <ResultsScreen
+          userName={userName || (session?.user?.name) || 'Evaluado'}
+          institutionName={config.institutionName}
+          institutionLogo={config.institutionLogo}
+          educationalLevel={(config as any).educationalLevel}
+          province={(config as any).province}
           overallScore={overallScore}
           level={level}
           categoryScores={categoryScores}
