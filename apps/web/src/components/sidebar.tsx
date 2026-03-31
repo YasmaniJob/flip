@@ -87,6 +87,12 @@ const menuItems: MenuItem[] = [
     roles: ["all"],
   },
   {
+    icon: FileQuestion,
+    label: "Diagnóstico",
+    href: "/diagnostico/resultados",
+    roles: ["all"],
+  },
+  {
     icon: Settings,
     label: "Configuración",
     href: "/settings",

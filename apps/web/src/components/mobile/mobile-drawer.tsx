@@ -13,6 +13,7 @@ import {
   X,
   Users,
   ChevronRight,
+  FileQuestion,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/auth-client";
@@ -46,6 +47,7 @@ export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
     { href: "/reservaciones", icon: Calendar, label: "Reservas" },
     { href: "/reuniones", icon: Users, label: "Reuniones" },
     { href: "/personal", icon: UsersIcon, label: "Personal" },
+    { href: "/diagnostico/resultados", icon: FileQuestion, label: "Diagnóstico" },
     { href: "/settings", icon: Settings, label: "Configuración" },
   ];
 
