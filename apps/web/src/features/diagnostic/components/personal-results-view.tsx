@@ -40,7 +40,7 @@ export function PersonalDiagnosticResultsView() {
     );
   }
 
-  if (!status.completed) {
+  if (!status.completed && status.history && status.history.length === 0) {
       return (
         <Card className="shadow-none border-dashed border-2">
             <CardContent className="py-20 text-center space-y-6">
@@ -152,6 +152,41 @@ export function PersonalDiagnosticResultsView() {
                     </p>
                 </CardContent>
             </Card>
+
+            {/* Historical Evolution (SaaS Feature) */}
+            {status.history && status.history.length > 1 && (
+                <Card className="shadow-none border-border/60">
+                    <div className="p-6 border-b border-border/40">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Evolución Histórica</h4>
+                        <h3 className="text-lg font-black tracking-tight text-foreground">Tu Pasaporte Digital</h3>
+                    </div>
+                    <CardContent className="p-0">
+                        <div className="divide-y divide-border/40">
+                            {status.history.map((record, idx) => (
+                                <div key={record.id} className="p-4 flex flex-col gap-2 hover:bg-muted/20 transition-colors">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-bold text-muted-foreground">
+                                                {format(new Date(record.completedAt), 'MMM yyyy', { locale: es })}
+                                            </span>
+                                            {idx === 0 && (
+                                                <span className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-[9px] font-black uppercase tracking-widest">
+                                                    Actual
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span className="text-sm font-black text-foreground">{record.overallScore}%</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground uppercase tracking-widest">
+                                        <span className="text-base leading-none">{LEVEL_ICONS[record.level]}</span>
+                                        {LEVEL_LABELS[record.level]}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
         </div>
 
         {/* Right Column: Radar Chart and Breakdown */}

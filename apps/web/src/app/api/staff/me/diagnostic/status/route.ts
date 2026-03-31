@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
     // We match by email or DNI since the session might not be linked to staffId yet
     // OR if it is linked, we use that.
     
-    const session = await db.query.diagnosticSessions.findFirst({
+    // Find all completed or in-progress sessions for this user (history)
+    const sessions = await db.query.diagnosticSessions.findMany({
       where: and(
         eq(diagnosticSessions.institutionId, institutionId),
         user.dni 
@@ -41,13 +42,16 @@ export async function GET(request: NextRequest) {
       orderBy: [desc(diagnosticSessions.createdAt)]
     });
 
-    if (!session) {
+    if (!sessions || sessions.length === 0) {
       return successResponse({
         enabled: true,
         completed: false,
-        status: 'not_started'
+        status: 'not_started',
+        history: []
       });
     }
+
+    const latestSession = sessions[0];
 
     // Get categories to have names for labels
     const categoriesList = await db.query.diagnosticCategories.findMany({
@@ -64,16 +68,25 @@ export async function GET(request: NextRequest) {
       categoryNames[c.id] = c.name;
     });
 
+    const historyRecord = sessions.map(s => ({
+      id: s.id,
+      overallScore: s.overallScore,
+      level: s.level,
+      completedAt: s.completedAt,
+      status: s.status
+    }));
+
     return successResponse({
       enabled: true,
-      completed: session.status === 'completed' || session.status === 'approved',
-      status: session.status,
-      overallScore: session.overallScore,
-      level: session.level,
-      categoryScores: session.categoryScores,
+      completed: latestSession.status === 'completed' || latestSession.status === 'approved',
+      status: latestSession.status,
+      overallScore: latestSession.overallScore,
+      level: latestSession.level,
+      categoryScores: latestSession.categoryScores,
       categoryNames,
-      completedAt: session.completedAt,
-      sessionId: session.id
+      history: historyRecord,
+      completedAt: latestSession.completedAt,
+      sessionId: latestSession.id
     });
   } catch (error) {
     return errorResponse(error);

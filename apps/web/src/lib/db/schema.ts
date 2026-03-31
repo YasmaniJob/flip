@@ -787,7 +787,7 @@ export const diagnosticSessions = pgTable('diagnostic_sessions', {
     email: text('email'),
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
-    status: text('status').default('in_progress'), // 'in_progress' | 'completed' | 'approved'
+    status: text('status').default('in_progress'), // 'in_progress' | 'completed' | 'approved' | 'rejected'
     progress: integer('progress').default(0), // Number of questions answered
     totalQuestions: integer('total_questions').default(0),
     overallScore: integer('overall_score'), // 0-100

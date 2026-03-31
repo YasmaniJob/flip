@@ -10,6 +10,13 @@ export interface DiagnosticStatusResponse {
   level?: DiagnosticLevel;
   categoryScores?: Record<string, number>;
   categoryNames?: Record<string, string>;
+  history?: Array<{
+    id: string;
+    overallScore: number;
+    level: DiagnosticLevel;
+    completedAt: string;
+    status: string;
+  }>;
   completedAt?: string;
   sessionId?: string;
   message?: string;

@@ -14,15 +14,6 @@ export async function POST(
   { params }: { params: { id: string; sessionId: string } }
 ) {
   try {
-    // Check feature flag
-    const staffIntegrationEnabled = process.env.FEATURE_DIAGNOSTIC_STAFF_INTEGRATION === 'true';
-    if (!staffIntegrationEnabled) {
-      return NextResponse.json(
-        { error: 'Diagnostic staff integration is not enabled' },
-        { status: 503 }
-      );
-    }
-    
     const { id: institutionId, sessionId } = params;
     
     // Verify admin access

@@ -36,10 +36,11 @@ export async function GET(
       );
     }
     
-    // Get all completed sessions
+    // Get all approved sessions (exclude pending and rejected)
     const completedSessions = await db.query.diagnosticSessions.findMany({
       where: and(
         eq(diagnosticSessions.institutionId, institutionId),
+        eq(diagnosticSessions.status, 'approved'),
         isNotNull(diagnosticSessions.overallScore)
       ),
     });

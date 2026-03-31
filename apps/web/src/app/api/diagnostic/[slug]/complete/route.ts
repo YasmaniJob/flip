@@ -7,8 +7,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { institutions, diagnosticSessions, diagnosticResponses, diagnosticQuestions } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { institutions, diagnosticSessions, diagnosticResponses, diagnosticQuestions, staff } from '@/lib/db/schema';
+import { eq, and, or } from 'drizzle-orm';
 import { rateLimit } from '@/features/diagnostic/lib/rate-limit';
 import { completeSessionRequestSchema } from '@/features/diagnostic/lib/validation';
 import { validateSession } from '@/features/diagnostic/lib/session-manager';
@@ -113,10 +113,49 @@ export async function POST(
     const overallScore = calculateOverallScore(categoryScores);
     const level = determineLevel(overallScore);
     
+    // Determine final status based on institution settings and staff existence
+    let finalStatus: 'completed' | 'approved' = 'completed';
+    let staffId: string | undefined = undefined;
+    
+    // Check if this person is already a staff member
+    const existingStaff = await db.query.staff.findFirst({
+      where: and(
+        eq(staff.institutionId, institution.id),
+        or(
+          session.dni ? eq(staff.dni, session.dni) : undefined,
+          session.email ? eq(staff.email, session.email) : undefined
+        )
+      ),
+    });
+    
+    if (existingStaff) {
+      // Staff already exists → auto-approve
+      finalStatus = 'approved';
+      staffId = existingStaff.id;
+    } else if (!institution.diagnosticRequiresApproval) {
+      // No approval required → create staff and auto-approve
+      const [newStaff] = await db.insert(staff)
+        .values({
+          id: crypto.randomUUID(),
+          institutionId: institution.id,
+          name: session.name,
+          dni: session.dni,
+          email: session.email,
+          role: 'docente',
+          status: 'active',
+        })
+        .returning();
+      
+      finalStatus = 'approved';
+      staffId = newStaff.id;
+    }
+    // else: requires approval and staff doesn't exist → leave as 'completed' (pending)
+    
     // Update session
     await db.update(diagnosticSessions)
       .set({
-        status: 'completed',
+        status: finalStatus,
+        staffId,
         overallScore,
         level,
         categoryScores,
@@ -130,6 +169,7 @@ export async function POST(
       overallScore,
       level,
       categoryScores,
+      requiresApproval: finalStatus === 'completed',
     });
     
   } catch (error) {

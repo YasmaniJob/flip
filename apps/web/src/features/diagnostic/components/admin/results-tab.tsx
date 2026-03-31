@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useMyInstitution } from '@/features/institutions/hooks/use-my-institution';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, XCircle, Users, TrendingUp, BarChart3, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -247,11 +247,50 @@ export function DiagnosticResultsTab() {
                 <span className="text-sm font-medium text-gray-700">
                   {cat.name}
                 </span>
-                <span className="text-lg font-bold text-blue-600">
+                <span className={`text-lg font-bold ${cat.average < 60 ? 'text-orange-600' : 'text-blue-600'}`}>
                   {cat.average}%
                 </span>
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Analytics Hub Context (SaaS Feature) */}
+      <Card className="border-orange-500/20 bg-orange-500/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-orange-800">
+            <XCircle className="h-5 w-5" />
+            Análisis de Brechas Críticas
+          </CardTitle>
+          <CardDescription className="text-orange-900/70 text-xs font-medium">
+            Dimensiones que requieren atención prioritaria a nivel institucional (Promedio &lt; 60%)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {Object.entries(data.categoryAverages)
+              .filter(([_, cat]) => cat.average < 60)
+              .map(([id, cat]) => (
+                <div key={id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white/50 rounded-md border border-orange-500/20">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-orange-500" />
+                      <span className="text-sm font-bold text-orange-900">{cat.name}</span>
+                    </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                      <span className="text-sm font-black text-orange-700">{cat.average}%</span>
+                      <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-800 hover:bg-orange-500/10 text-[10px] uppercase tracking-wider font-bold h-7">
+                        Recomendar Capacitación
+                      </Button>
+                    </div>
+                </div>
+              ))}
+            {Object.values(data.categoryAverages).every(cat => cat.average >= 60) && (
+              <div className="text-sm text-emerald-700 font-medium py-2 rounded-md bg-emerald-500/10 px-4 flex items-center gap-2 border border-emerald-500/20">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                No se han detectado brechas críticas institucionales en esta evaluación.
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
