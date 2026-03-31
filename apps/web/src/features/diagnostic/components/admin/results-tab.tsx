@@ -3,7 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMyInstitution } from '@/features/institutions/hooks/use-my-institution';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, XCircle, Users, TrendingUp, BarChart3, ArrowRight } from 'lucide-react';
+import { useMyDiagnosticStatus } from '../../hooks/use-my-diagnostic';
+import { Loader2, XCircle, Users, TrendingUp, BarChart3, ArrowRight, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
@@ -27,6 +28,7 @@ interface ResultsData {
 
 export function DiagnosticResultsTab() {
   const { data: institution } = useMyInstitution();
+  const { data: myStatus } = useMyDiagnosticStatus();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['diagnostic-results', institution?.id],
@@ -69,10 +71,10 @@ export function DiagnosticResultsTab() {
         <h3 className="text-lg font-black tracking-tighter text-foreground uppercase">Evaluación Institucional</h3>
         <p className="text-xs font-medium text-muted-foreground text-balance">Monitorea el progreso y nivel digital de toda tu plana docente.</p>
       </div>
-      <Button asChild variant="outline" className="font-black uppercase tracking-widest text-[10px] gap-2 border-primary/20 hover:bg-primary/10 text-primary bg-white">
-        <Link href="/diagnostico/resultados">
-          Ver mis resultados personales
-          <ArrowRight className="h-3.5 w-3.5" />
+      <Button asChild variant={myStatus?.completed ? "outline" : "default"} className={myStatus?.completed ? "font-black uppercase tracking-widest text-[10px] gap-2 border-primary/20 hover:bg-primary/10 text-primary bg-white" : "font-black uppercase tracking-widest text-[10px] gap-2 shadow-none"}>
+        <Link href={myStatus?.completed ? "/diagnostico/resultados" : `/ie/${(institution as any)?.slug}/diagnostic`}>
+          {myStatus?.completed ? 'Ver mis resultados personales' : 'Realizar mi diagnóstico'}
+          {myStatus?.completed ? <ArrowRight className="h-3.5 w-3.5" /> : <PlayCircle className="h-3.5 w-3.5" />}
         </Link>
       </Button>
     </div>
