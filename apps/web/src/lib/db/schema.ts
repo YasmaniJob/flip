@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, boolean, jsonb, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, timestamp, boolean, jsonb, index, uniqueIndex, unique } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Updated: 2026-03-22 00:50 - Added missing relations
@@ -783,6 +783,7 @@ export const diagnosticSessions = pgTable('diagnostic_sessions', {
     institutionId: text('institution_id').references(() => institutions.id).notNull(),
     userId: text('user_id').references(() => users.id), // Reference to the registered user
     staffId: text('staff_id').references(() => staff.id), // NULL until approved
+    year: integer('year').notNull(), // Year of the diagnostic session (2025+)
     name: text('name').notNull(),
     dni: text('dni'),
     email: text('email'),
@@ -806,6 +807,13 @@ export const diagnosticSessions = pgTable('diagnostic_sessions', {
     statusIdx: index('idx_diagnostic_session_status').on(table.status),
     dniIdx: index('idx_diagnostic_session_dni').on(table.dni),
     emailIdx: index('idx_diagnostic_session_email').on(table.email),
+    // Annual periodization indexes
+    yearIdx: index('idx_diagnostic_session_year').on(table.year),
+    institutionYearIdx: index('idx_diagnostic_session_institution_year').on(table.institutionId, table.year),
+    staffYearIdx: index('idx_diagnostic_session_staff_year').on(table.staffId, table.year),
+    // Uniqueness constraints: one diagnostic per teacher per year
+    uniqueInstitutionStaffYear: unique('unique_institution_staff_year').on(table.institutionId, table.staffId, table.year),
+    uniqueInstitutionUserYear: unique('unique_institution_user_year').on(table.institutionId, table.userId, table.year),
 }));
 
 // Diagnostic Responses (Individual answers)

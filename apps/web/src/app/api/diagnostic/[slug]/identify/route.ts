@@ -12,6 +12,8 @@ import { eq } from 'drizzle-orm';
 import { rateLimit } from '@/features/diagnostic/lib/rate-limit';
 import { identifyRequestSchema } from '@/features/diagnostic/lib/validation';
 import { createOrResumeSession, findExistingStaff } from '@/features/diagnostic/lib/session-manager';
+import { getCurrentYear } from '@/features/diagnostic/services/year-service';
+import { checkExistingSession } from '@/features/diagnostic/services/validation-service';
 
 export async function POST(
   request: NextRequest,
@@ -75,8 +77,40 @@ export async function POST(
     
     const { dni, name, email, userId } = validation.data;
     
+    // Get current year for annual periodization
+    const currentYear = getCurrentYear();
+    
     // Check if this person is already a staff member
     const existingStaff = await findExistingStaff(institution.id, dni ?? undefined, email);
+    
+    // Check if teacher already completed diagnostic this year
+    if (existingStaff) {
+      const existingSession = await checkExistingSession(
+        institution.id,
+        existingStaff.id,
+        null,
+        currentYear
+      );
+      
+      if (existingSession) {
+        // Teacher already completed diagnostic this year
+        return NextResponse.json({
+          canComplete: false,
+          year: currentYear,
+          existingSession: {
+            id: existingSession.id,
+            completedAt: existingSession.completedAt,
+            year: existingSession.year,
+            overallScore: existingSession.overallScore,
+            level: existingSession.level,
+          },
+          staff: {
+            id: existingStaff.id,
+            name: existingStaff.name,
+          },
+        });
+      }
+    }
     
     // Get total questions count (we'll need this for the session)
     const questions = await db.query.diagnosticQuestions.findMany({
@@ -97,6 +131,8 @@ export async function POST(
     });
     
     return NextResponse.json({
+      canComplete: true,
+      year: currentYear,
       token,
       sessionId: session.id,
       isResuming,

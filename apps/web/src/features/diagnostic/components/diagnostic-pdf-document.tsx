@@ -276,6 +276,7 @@ interface DiagnosticPDFDocumentProps {
   completedAt: string;
   categoryScores: Record<string, number>;
   categoryNames: Record<string, string>;
+  year?: number;
 }
 
 export function DiagnosticPDFDocument({
@@ -289,7 +290,9 @@ export function DiagnosticPDFDocument({
   completedAt,
   categoryScores,
   categoryNames,
+  year,
 }: DiagnosticPDFDocumentProps) {
+  const currentYear = year || new Date().getFullYear();
   const formattedDate = new Date(completedAt).toLocaleDateString('es-ES', {
     day: 'numeric',
     month: 'long',
@@ -327,7 +330,7 @@ export function DiagnosticPDFDocument({
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.reportTitle}>INFORME</Text>
-            <Text style={styles.reportSubtitle}>Diagnóstico Digital</Text>
+            <Text style={styles.reportSubtitle}>Diagnóstico Digital {currentYear}</Text>
           </View>
         </View>
 
@@ -339,7 +342,7 @@ export function DiagnosticPDFDocument({
           </View>
           <View style={styles.infoCard}>
             <Text style={styles.infoLabel}>Fecha de Evaluación</Text>
-            <Text style={styles.infoValueSmall}>{formattedDate}</Text>
+            <Text style={styles.infoValueSmall}>{formattedDate} - Año {currentYear}</Text>
           </View>
           <View style={styles.infoCard}>
             <Text style={styles.infoLabel}>Código de Informe</Text>

@@ -18,10 +18,12 @@ interface DiagnosticPDFGeneratorProps {
   completedAt: string;
   categoryScores: Record<string, number>;
   categoryNames: Record<string, string>;
+  year?: number;
 }
 
 export function DiagnosticPDFGenerator(props: DiagnosticPDFGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const currentYear = props.year || new Date().getFullYear();
 
   const handleDownloadPDF = async () => {
     setIsGenerating(true);
@@ -32,11 +34,11 @@ export function DiagnosticPDFGenerator(props: DiagnosticPDFGeneratorProps) {
         <DiagnosticPDFDocument {...props} institutionLogo={null} />
       ).toBlob();
       
-      // Crear URL y descargar
+      // Crear URL y descargar con año en el nombre
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `informe-diagnostico-${props.userName.toLowerCase().replace(/\s+/g, '-')}.pdf`;
+      link.download = `diagnostico-${props.userName.toLowerCase().replace(/\s+/g, '-')}-${currentYear}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

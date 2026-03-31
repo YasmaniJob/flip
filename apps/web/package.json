@@ -14,6 +14,7 @@
         "db:analyze": "dotenv -e .env.local -- tsx scripts/analyze-db-tables.ts",
         "release:changelog": "dotenv -e .env.local -- tsx scripts/release-changelog.ts",
         "diagnostic:migrate": "dotenv -e .env.local -- tsx scripts/migrate-diagnostic-safe.ts",
+        "diagnostic:migrate:year": "dotenv -e .env.local -- tsx scripts/migrate-diagnostic-year.ts",
         "diagnostic:seed": "dotenv -e .env.local -- tsx scripts/seed-diagnostic-questions.ts",
         "diagnostic:rollback": "dotenv -e .env.local -- tsx scripts/rollback-diagnostic.ts"
     },

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, CreditCard, ArrowRight, Loader2 } from 'lucide-react';
+import { User, Mail, CreditCard, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,9 +10,10 @@ import { Label } from '@/components/ui/label';
 interface IdentificationFormProps {
   onSubmit: (data: { dni: string; name: string; email: string }) => Promise<void>;
   isLoading: boolean;
+  year?: number;
 }
 
-export function IdentificationForm({ onSubmit, isLoading }: IdentificationFormProps) {
+export function IdentificationForm({ onSubmit, isLoading, year }: IdentificationFormProps) {
   const [formData, setFormData] = useState({
     dni: '',
     name: '',
@@ -20,6 +21,10 @@ export function IdentificationForm({ onSubmit, isLoading }: IdentificationFormPr
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false);
+  const [existingSessionData, setExistingSessionData] = useState<any>(null);
+  
+  const currentYear = year || new Date().getFullYear();
   
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -54,7 +59,15 @@ export function IdentificationForm({ onSubmit, isLoading }: IdentificationFormPr
     
     if (!validateForm()) return;
     
-    await onSubmit(formData);
+    try {
+      await onSubmit(formData);
+    } catch (error: any) {
+      // Check if the error indicates already completed
+      if (error?.canComplete === false) {
+        setAlreadyCompleted(true);
+        setExistingSessionData(error.existingSession);
+      }
+    }
   };
   
   return (
@@ -67,12 +80,30 @@ export function IdentificationForm({ onSubmit, isLoading }: IdentificationFormPr
       >
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold text-gray-900">
-            Identifícate para continuar
+            Diagnóstico de Habilidades Digitales {currentYear}
           </h2>
           <p className="text-sm text-gray-600">
             Necesitamos algunos datos para guardar tu progreso y resultados
           </p>
         </div>
+        
+        {alreadyCompleted && existingSessionData && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blue-900">
+                  Ya completaste el diagnóstico de {currentYear}
+                </p>
+                {existingSessionData.completedAt && (
+                  <p className="text-xs text-blue-700 mt-1">
+                    Completado el {new Date(existingSessionData.completedAt).toLocaleDateString('es-ES')}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* DNI */}
@@ -94,7 +125,7 @@ export function IdentificationForm({ onSubmit, isLoading }: IdentificationFormPr
                   if (errors.dni) setErrors({ ...errors, dni: '' });
                 }}
                 className={`pl-10 ${errors.dni ? 'border-red-500' : ''}`}
-                disabled={isLoading}
+                disabled={isLoading || alreadyCompleted}
               />
             </div>
             {errors.dni && (
@@ -119,7 +150,7 @@ export function IdentificationForm({ onSubmit, isLoading }: IdentificationFormPr
                   if (errors.name) setErrors({ ...errors, name: '' });
                 }}
                 className={`pl-10 ${errors.name ? 'border-red-500' : ''}`}
-                disabled={isLoading}
+                disabled={isLoading || alreadyCompleted}
               />
             </div>
             {errors.name && (
@@ -144,7 +175,7 @@ export function IdentificationForm({ onSubmit, isLoading }: IdentificationFormPr
                   if (errors.email) setErrors({ ...errors, email: '' });
                 }}
                 className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
-                disabled={isLoading}
+                disabled={isLoading || alreadyCompleted}
               />
             </div>
             {errors.email && (
@@ -156,12 +187,17 @@ export function IdentificationForm({ onSubmit, isLoading }: IdentificationFormPr
           <Button
             type="submit"
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-            disabled={isLoading}
+            disabled={isLoading || alreadyCompleted}
           >
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 w-4 h-4 animate-spin" />
                 Verificando...
+              </>
+            ) : alreadyCompleted ? (
+              <>
+                <CheckCircle className="mr-2 w-4 h-4" />
+                Ya completado
               </>
             ) : (
               <>
@@ -170,6 +206,20 @@ export function IdentificationForm({ onSubmit, isLoading }: IdentificationFormPr
               </>
             )}
           </Button>
+          
+          {alreadyCompleted && existingSessionData?.id && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                // Navigate to results if available
+                window.location.href = `/diagnostic/results/${existingSessionData.id}`;
+              }}
+            >
+              Ver mis resultados
+            </Button>
+          )}
         </form>
         
         <p className="text-xs text-center text-gray-500">

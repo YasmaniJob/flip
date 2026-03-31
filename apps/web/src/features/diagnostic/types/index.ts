@@ -117,7 +117,9 @@ export interface DiagnosticSession {
   id: string;
   token: string;
   institutionId: string;
+  userId?: string;
   staffId?: string;
+  year: number; // Year of the diagnostic session (2025+)
   name: string;
   dni?: string;
   email?: string;

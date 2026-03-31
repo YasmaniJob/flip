@@ -18,6 +18,7 @@ interface ResultsScreenProps {
   level: DiagnosticLevel;
   categoryScores: Record<string, number>;
   categoryNames: Record<string, string>;
+  year?: number;
   onContinue?: () => void;
 }
 
@@ -31,8 +32,11 @@ export function ResultsScreen({
   level,
   categoryScores,
   categoryNames,
+  year,
   onContinue,
 }: ResultsScreenProps) {
+  const currentYear = year || new Date().getFullYear();
+  
   // Prepare data for radar chart
   const radarData = Object.entries(categoryScores).map(([categoryId, score]) => ({
     category: categoryNames[categoryId] || 'Unknown',
@@ -63,7 +67,7 @@ export function ResultsScreen({
               ¡Diagnóstico Completado!
             </h1>
             <p className="text-slate-500 font-medium text-lg">
-              Aquí están tus resultados, <span className="text-blue-600">{userName}</span>
+              Aquí están tus resultados de {currentYear}, <span className="text-blue-600">{userName}</span>
             </p>
           </div>
         </header>
@@ -169,6 +173,7 @@ export function ResultsScreen({
               completedAt={new Date().toISOString()}
               categoryScores={categoryScores}
               categoryNames={categoryNames}
+              year={currentYear}
             />
           </div>
           

@@ -14,6 +14,8 @@ import { completeSessionRequestSchema } from '@/features/diagnostic/lib/validati
 import { validateSession } from '@/features/diagnostic/lib/session-manager';
 import { calculateCategoryScores, calculateOverallScore, determineLevel } from '@/features/diagnostic/lib/scoring';
 import { randomUUID } from 'crypto';
+import { getCurrentYear } from '@/features/diagnostic/services/year-service';
+import { validateUniqueSession } from '@/features/diagnostic/services/validation-service';
 
 export async function POST(
   request: NextRequest,
@@ -59,16 +61,16 @@ export async function POST(
     
     // Parse and validate request
     const body = await request.json();
-    const validation = completeSessionRequestSchema.safeParse(body);
+    const requestValidation = completeSessionRequestSchema.safeParse(body);
     
-    if (!validation.success) {
+    if (!requestValidation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: requestValidation.error.errors },
         { status: 400 }
       );
     }
     
-    const { token } = validation.data;
+    const { token } = requestValidation.data;
     
     // Validate session
     const userAgent = request.headers.get('user-agent') || undefined;
@@ -88,6 +90,32 @@ export async function POST(
       return NextResponse.json(
         { error: 'Session is not active' },
         { status: 400 }
+      );
+    }
+    
+    // Get current year and validate uniqueness
+    const currentYear = getCurrentYear();
+    
+    // Validate that we can create a session for this year
+    const uniquenessValidation = await validateUniqueSession(
+      session.institutionId,
+      session.staffId,
+      session.userId,
+      currentYear
+    );
+    
+    if (!uniquenessValidation.valid) {
+      return NextResponse.json(
+        { 
+          error: uniquenessValidation.reason || 'Ya existe un diagnóstico completado para este año',
+          code: 'DUPLICATE_SESSION',
+          data: {
+            existingYear: uniquenessValidation.existingYear,
+            existingSessionId: uniquenessValidation.existingSessionId,
+            completedAt: uniquenessValidation.completedAt,
+          }
+        },
+        { status: 409 }
       );
     }
     
@@ -164,21 +192,40 @@ export async function POST(
     }
     // else: requires approval and staff doesn't exist → leave as 'completed' (pending)
     
-    // Update session
-    await db.update(diagnosticSessions)
-      .set({
-        status: finalStatus,
-        staffId,
-        overallScore,
-        level,
-        categoryScores,
-        completedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(diagnosticSessions.id, session.id));
+    // Update session with year assignment
+    try {
+      await db.update(diagnosticSessions)
+        .set({
+          status: finalStatus,
+          staffId,
+          year: currentYear, // Assign current year
+          overallScore,
+          level,
+          categoryScores,
+          completedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(diagnosticSessions.id, session.id));
+    } catch (updateError: any) {
+      // Handle constraint violation (race condition)
+      if (updateError.code === '23505') {
+        return NextResponse.json(
+          { 
+            error: 'Ya existe un diagnóstico completado para el año ' + currentYear,
+            code: 'DATABASE_CONSTRAINT_VIOLATION',
+            data: {
+              constraint: updateError.constraint || 'unique_institution_staff_year',
+            }
+          },
+          { status: 409 }
+        );
+      }
+      throw updateError;
+    }
     
     return NextResponse.json({
       success: true,
+      year: currentYear,
       overallScore,
       level,
       categoryScores,

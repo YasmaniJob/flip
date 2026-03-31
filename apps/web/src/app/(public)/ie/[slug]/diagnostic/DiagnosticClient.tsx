@@ -25,6 +25,7 @@ export function DiagnosticClient({ initialConfig, slug }: DiagnosticClientProps)
   const [step, setStep] = useState<Step>('landing');
   const [isLoading, setIsLoading] = useState(false);
   const [userName, setUserName] = useState<string>('');
+  const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
   
   const {
     config,
@@ -93,6 +94,14 @@ export function DiagnosticClient({ initialConfig, slug }: DiagnosticClientProps)
       }
       
       const result = await res.json();
+      
+      // Check if teacher already completed this year
+      if (result.canComplete === false) {
+        toast.info(`Ya completaste el diagnóstico de ${result.year}`);
+        throw result; // Pass to form to handle UI state
+      }
+      
+      setCurrentYear(result.year);
       setSession(result.token, result.sessionId);
       
       if (result.isResuming) {
@@ -202,6 +211,7 @@ export function DiagnosticClient({ initialConfig, slug }: DiagnosticClientProps)
         <IdentificationForm
           onSubmit={handleIdentify}
           isLoading={isLoading}
+          year={currentYear}
         />
       )}
       
@@ -236,6 +246,7 @@ export function DiagnosticClient({ initialConfig, slug }: DiagnosticClientProps)
           level={level}
           categoryScores={categoryScores}
           categoryNames={categoryNames}
+          year={currentYear}
           onContinue={handleContinue}
         />
       )}
