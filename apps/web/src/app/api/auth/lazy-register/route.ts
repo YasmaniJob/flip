@@ -178,19 +178,42 @@ export async function POST(request: NextRequest) {
 
         console.log('[Lazy Register] User created via Better Auth:', userId);
 
+        // Verificar si es el primer usuario de la institución
+        const existingUsersCount = await db.query.users.findMany({
+          where: eq(users.institutionId, targetInstitutionId),
+        });
+
+        const isFirstUser = existingUsersCount.length === 0;
+        
+        console.log('[Lazy Register] Is first user of institution?', isFirstUser);
+
         // Actualizar campos adicionales
+        // El primer usuario de una institución es automáticamente superadmin
         await db
           .update(users)
           .set({
             institutionId: targetInstitutionId,
             dni: dni,
-            role: staffRecord.role || 'docente',
-            isSuperAdmin: false,
+            role: isFirstUser ? 'superadmin' : (staffRecord.role || 'docente'),
+            isSuperAdmin: isFirstUser,
             updatedAt: new Date(),
           })
           .where(eq(users.id, userId));
 
-        console.log('[Lazy Register] User fields updated');
+        console.log('[Lazy Register] User fields updated - Role:', isFirstUser ? 'superadmin' : (staffRecord.role || 'docente'));
+
+        // Si es el primer usuario, también actualizar el staff record para que tenga rol admin
+        if (isFirstUser) {
+          await db
+            .update(staff)
+            .set({
+              role: 'admin',
+              updatedAt: new Date(),
+            })
+            .where(eq(staff.id, staffRecord.id));
+          
+          console.log('[Lazy Register] Staff record updated to admin role');
+        }
       } catch (signUpError) {
         console.error('[Lazy Register] Better Auth signUp failed:', signUpError);
         console.error('[Lazy Register] SignUp error details:', JSON.stringify(signUpError, null, 2));
