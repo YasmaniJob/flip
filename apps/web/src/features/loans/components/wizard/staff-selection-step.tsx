@@ -7,9 +7,8 @@ import { cn } from "@/lib/utils";
 import { Staff } from "../../types";
 import { useStaff, useRecurrentStaff } from "@/features/staff/hooks/use-staff";
 import { useDebounce } from "@/hooks/use-debounce";
-import { useGrades } from "@/features/settings/hooks/use-grades";
-import { useSections } from "@/features/settings/hooks/use-sections";
-import { useCurricularAreas } from "@/features/settings/hooks/use-curricular-areas";
+import { useConfigLoadout } from "@/features/settings/hooks/use-config-loadout";
+import { useMemo } from "react";
 
 interface StaffSelectionStepProps {
     onSelect: (staff: Staff | null) => void;
@@ -57,9 +56,15 @@ export function StaffSelectionStep({
     const { staff, isLoading: isLoadingStaff } = useStaff({ search: debouncedStaffSearch, limit: 20, includeAdmins: true });
     const { data: recurrentStaff, isLoading: isLoadingRecurrent } = useRecurrentStaff(6);
 
-    const { data: grades } = useGrades();
-    const { data: sections } = useSections(gradeId || undefined, { enabled: !!gradeId });
-    const { data: curricularAreas } = useCurricularAreas({ activeOnly: true });
+    const { data: config } = useConfigLoadout();
+    const grades = config?.grades;
+    const curricularAreas = config?.curricularAreas;
+    
+    // Local filtering as requested (same as reservation modal)
+    const sections = useMemo(() => {
+        if (!config?.sections || !gradeId) return [];
+        return config.sections.filter(s => s.gradeId === gradeId);
+    }, [config?.sections, gradeId]);
 
     const filteredAreas = curricularAreas?.filter(area =>
         area.name.toLowerCase().includes(areaSearch.toLowerCase())
@@ -381,7 +386,7 @@ export function StaffSelectionStep({
                         onClick={() => { setOpenStaff(false); setOpenArea(false); onSearchOpenChange?.(false); }}
                         className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
                     >
-                        Volver al Manifiesto
+                        Volver a la Solicitud
                     </button>
                     <span className="text-[10px] font-black uppercase tracking-widest text-border">
                         {title}

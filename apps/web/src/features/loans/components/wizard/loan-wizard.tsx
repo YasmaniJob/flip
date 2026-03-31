@@ -13,9 +13,8 @@ import { Resource } from "../../types";
 import { useCategories } from "@/features/inventory/hooks/use-categories";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useUserRole } from "@/hooks/use-user-role";
-import { useGrades } from "@/features/settings/hooks/use-grades";
-import { useSections } from "@/features/settings/hooks/use-sections";
-import { useCurricularAreas } from "@/features/settings/hooks/use-curricular-areas";
+import { useConfigLoadout } from "@/features/settings/hooks/use-config-loadout";
+import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 
@@ -59,20 +58,23 @@ export function LoanWizard({ open, onOpenChange, initialResources }: LoanWizardP
     const { data: categories } = useCategories({ hasResources: true });
     const createLoan = useCreateLoan();
 
-    // Fetch tags names from context state IDs
-    const { data: grades } = useGrades();
-    const { data: sections } = useSections(state.gradeId || undefined, { enabled: !!state.gradeId });
-    const { data: curricularAreas } = useCurricularAreas({ activeOnly: true });
+    // Unified Data Loadout (Same as reservation modal)
+    const { data: config } = useConfigLoadout();
+    const grades = config?.grades;
+    const curricularAreas = config?.curricularAreas;
+    const sections = config?.sections;
 
-    const gradeName = state.gradeId 
+    const gradeName = useMemo(() => state.gradeId 
         ? grades?.find(g => g.id === state.gradeId)?.name.replace('Grado', '').trim() || ''
-        : '';
-    const sectionName = state.sectionId 
+        : '', [state.gradeId, grades]);
+
+    const sectionName = useMemo(() => state.sectionId 
         ? sections?.find(s => s.id === state.sectionId)?.name || ''
-        : '';
-    const areaName = state.curricularAreaId 
+        : '', [state.sectionId, sections]);
+
+    const areaName = useMemo(() => state.curricularAreaId 
         ? curricularAreas?.find(a => a.id === state.curricularAreaId)?.name || 'ÁREA'
-        : '';
+        : '', [state.curricularAreaId, curricularAreas]);
 
     const handleCreate = () => {
         createLoan.mutate(
@@ -107,7 +109,7 @@ export function LoanWizard({ open, onOpenChange, initialResources }: LoanWizardP
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent showCloseButton={false} className="sm:max-w-[900px] w-[95vw] max-h-[88vh] min-h-[560px] h-auto p-0 flex flex-col overflow-hidden border border-border shadow-none bg-background rounded-md">
-                <DialogTitle className="sr-only">Nuevo Manifiesto de Préstamo</DialogTitle>
+                <DialogTitle className="sr-only">Nuevo Pedido de Recursos</DialogTitle>
 
                 {/* Vertical Top-Down Layout */}
                 <div className="flex-1 flex flex-col overflow-hidden">
@@ -118,13 +120,9 @@ export function LoanWizard({ open, onOpenChange, initialResources }: LoanWizardP
                                 <div className="w-1 h-5 bg-primary rounded-full" />
                                 <h2 className="text-sm font-black text-foreground tracking-widest uppercase">
                                     {state.viewState === 'CONTEXT' && !isTeacher && state.selectedStaff
-                                        ? <span className="flex items-center gap-2">
-                                            Manifiesto
-                                            <span className="text-muted-foreground font-bold">·</span>
-                                            <span className="text-primary">{state.selectedStaff.name}</span>
-                                          </span>
-                                        : state.viewState === 'CONTEXT' ? 'Manifiesto: Identificación'
-                                        : 'Manifiesto: Selección'
+                                        ? 'Ficha de Préstamo'
+                                        : state.viewState === 'CONTEXT' ? 'Identificación del Responsable'
+                                        : 'Selección de Recursos'
                                     }
                                 </h2>
                             </div>
@@ -186,7 +184,7 @@ export function LoanWizard({ open, onOpenChange, initialResources }: LoanWizardP
                                             <User className="h-4 w-4 text-primary" />
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-black text-foreground tracking-tight uppercase mb-1">Identificar Responsable</h3>
+                                            <h3 className="text-xl font-black text-foreground tracking-tight uppercase mb-1">Identificación del Responsable</h3>
                                             <p className="text-sm text-muted-foreground font-medium">Busca al docente o personal administrativo que solicita el recurso.</p>
                                         </div>
                                     </div>

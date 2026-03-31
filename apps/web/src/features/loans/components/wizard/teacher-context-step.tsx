@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { Search, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useGrades } from "@/features/settings/hooks/use-grades";
-import { useSections } from "@/features/settings/hooks/use-sections";
-import { useCurricularAreas } from "@/features/settings/hooks/use-curricular-areas";
+import { useConfigLoadout } from "@/features/settings/hooks/use-config-loadout";
+import { useMemo } from "react";
 
 interface TeacherContextStepProps {
     gradeId?: string | null;
@@ -23,9 +22,15 @@ export function TeacherContextStep({
 }: TeacherContextStepProps) {
     const [openArea, setOpenArea] = useState(false);
     const [areaSearch, setAreaSearch] = useState("");
-    const { data: grades } = useGrades();
-    const { data: sections } = useSections(gradeId || undefined, { enabled: !!gradeId });
-    const { data: curricularAreas } = useCurricularAreas({ activeOnly: true });
+    const { data: config } = useConfigLoadout();
+    const grades = config?.grades;
+    const curricularAreas = config?.curricularAreas;
+
+    // Use Memoized filter for sections (Efficiency + consistency with reservation modal)
+    const sections = useMemo(() => {
+        if (!config?.sections || !gradeId) return [];
+        return config.sections.filter(s => s.gradeId === gradeId);
+    }, [config?.sections, gradeId]);
     const filteredAreas = curricularAreas?.filter(a => a.name.toLowerCase().includes(areaSearch.toLowerCase()));
 
     if (openArea) {
