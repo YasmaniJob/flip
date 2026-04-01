@@ -176,7 +176,7 @@ export function BulkCreateHoursDialog({
                 showCloseButton={true}
                 className={cn(
                     "max-w-4xl sm:max-w-4xl p-0 overflow-hidden border border-border shadow-none bg-white transition-all duration-500",
-                    "fixed bottom-0 top-auto translate-y-0 sm:relative sm:top-1/2 sm:-translate-y-1/2 sm:bottom-auto sm:translate-x-0",
+                    "fixed bottom-0 left-0 right-0 sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:bottom-auto sm:right-auto",
                     "rounded-t-xl rounded-b-none sm:rounded-xl h-[85vh] sm:h-[85vh] max-h-[90vh] sm:max-h-[700px]",
                     "animate-in slide-in-from-bottom-5 duration-500"
                 )}
