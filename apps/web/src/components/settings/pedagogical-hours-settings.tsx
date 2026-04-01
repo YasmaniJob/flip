@@ -171,7 +171,6 @@ export function PedagogicalHoursSettings() {
                 description={`Estás por eliminar la "${deletingHour?.name}" del cronograma institucional. Esta acción no se puede deshacer y afectará la visualización de todos los calendarios.`}
                 onConfirm={handleDelete}
                 confirmText="Confirmar eliminación"
-                cancelText="Mantenimiento"
                 variant="destructive"
                 isLoading={deleteMutation.isPending}
             />

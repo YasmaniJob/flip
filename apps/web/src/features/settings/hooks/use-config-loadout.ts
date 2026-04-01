@@ -22,9 +22,9 @@ export function useConfigLoadout(options?: { enabled?: boolean }) {
     return useQuery<ConfigLoadout>({
         queryKey: ['institution', 'config-loadout'],
         queryFn: () => api.get<ConfigLoadout>('/institution/config-loadout'),
-        // Set very high stale time (12h) to rely on local device memory for free-tier savings
-        staleTime: 12 * 60 * 60 * 1000, 
-        gcTime: 24 * 60 * 60 * 1000,
-        enabled: options?.enabled !== false, // Default true but allows conditional disabling
+        // We rely on revalidateTag and query invalidations for consistency
+        staleTime: 0, 
+        gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
+        enabled: options?.enabled !== false, 
     });
 }

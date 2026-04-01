@@ -270,7 +270,6 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
                 description={`Estás por eliminar el "${deletingGrade?.name}" del catálogo institucional. Asegúrate de que no existian secciones vinculadas para proceder con la baja técnica.`}
                 onConfirm={handleDeleteGrade}
                 confirmText="Confirmar eliminación"
-                cancelText="Mantenimiento"
                 variant="destructive"
                 isLoading={deleteGradeMutation.isPending}
                 error={deleteError || undefined}
@@ -283,7 +282,6 @@ export function GradesSectionsSettings({ educationLevel }: GradesSectionsSetting
                 description={`Estás por dar de baja la sección "${deletingSection?.name}" del registro académico institutional. Esta acción no se puede deshacer.`}
                 onConfirm={handleDeleteSection}
                 confirmText="Confirmar eliminación"
-                cancelText="Volver"
                 variant="destructive"
                 isLoading={deleteSectionMutation.isPending}
             />

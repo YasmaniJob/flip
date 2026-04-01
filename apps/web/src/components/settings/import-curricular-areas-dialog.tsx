@@ -11,28 +11,30 @@ interface ImportCurricularAreasDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     existingAreas: CurricularArea[];
+    educationLevel?: string;
     onSuccess?: () => void;
 }
 
 const STANDARD_AREAS = [
-    { id: 'mat', name: 'Matemática', icon: '📐', description: 'Resolución de problemas' },
-    { id: 'com', name: 'Comunicación', icon: '💬', description: 'Lectura, escritura y oralidad' },
-    { id: 'cy t', name: 'Ciencia y Tecnología', icon: '🔬', description: 'Indagación y alfabetización científica' },
-    { id: 'per', name: 'Personal Social', icon: '🤝', description: 'Autoestima y convivencia (Primaria)' },
-    { id: 'dpc', name: 'Desarrollo Personal, Ciudadanía y Cívica', icon: '⚖️', description: 'Valores y ciudadanía (Secundaria)' },
-    { id: 'csc', name: 'Ciencias Sociales', icon: '🌍', description: 'Historia y geografía (Secundaria)' },
-    { id: 'ay c', name: 'Arte y Cultura', icon: '🎨', description: 'Apreciación y expresión artística' },
-    { id: 'efi', name: 'Educación Física', icon: '🏃', description: 'Vida activa y saludable' },
-    { id: 'rel', name: 'Educación Religiosa', icon: '⛪', description: 'Valores espirituales' },
-    { id: 'ing', name: 'Inglés', icon: '🇬🇧', description: 'Lengua extranjera' },
-    { id: 'ept', name: 'Educación para el Trabajo', icon: '💼', description: 'Emprendimiento (Secundaria)' },
-    { id: 'tut', name: 'Tutoría', icon: '👥', description: 'Orientación educativa' },
+    { id: 'mat', name: 'Matemática', icon: '📐', description: 'Resolución de problemas', levels: ['primaria', 'secundaria'] },
+    { id: 'com', name: 'Comunicación', icon: '💬', description: 'Lectura, escritura y oralidad', levels: ['primaria', 'secundaria'] },
+    { id: 'cy t', name: 'Ciencia y Tecnología', icon: '🔬', description: 'Indagación y alfabetización científica', levels: ['primaria', 'secundaria'] },
+    { id: 'per', name: 'Personal Social', icon: '🤝', description: 'Autoestima y convivencia (Primaria)', levels: ['primaria'] },
+    { id: 'dpc', name: 'Desarrollo Personal, Ciudadanía y Cívica', icon: '⚖️', description: 'Valores y ciudadanía (Secundaria)', levels: ['secundaria'] },
+    { id: 'csc', name: 'Ciencias Sociales', icon: '🌍', description: 'Historia y geografía (Secundaria)', levels: ['secundaria'] },
+    { id: 'ay c', name: 'Arte y Cultura', icon: '🎨', description: 'Apreciación y expresión artística', levels: ['primaria', 'secundaria'] },
+    { id: 'efi', name: 'Educación Física', icon: '🏃', description: 'Vida activa y saludable', levels: ['primaria', 'secundaria'] },
+    { id: 'rel', name: 'Educación Religiosa', icon: '⛪', description: 'Valores espirituales', levels: ['primaria', 'secundaria'] },
+    { id: 'ing', name: 'Inglés', icon: '🇬🇧', description: 'Lengua extranjera', levels: ['primaria', 'secundaria'] },
+    { id: 'ept', name: 'Educación para el Trabajo', icon: '💼', description: 'Emprendimiento (Secundaria)', levels: ['secundaria'] },
+    { id: 'tut', name: 'Tutoría', icon: '👥', description: 'Orientación educativa', levels: ['primaria', 'secundaria'] },
 ];
 
 export function ImportCurricularAreasDialog({
     open,
     onOpenChange,
     existingAreas,
+    educationLevel,
     onSuccess,
 }: ImportCurricularAreasDialogProps) {
     const seedMutation = useSeedStandardAreas();
@@ -40,10 +42,19 @@ export function ImportCurricularAreasDialog({
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredAreas = useMemo(() => {
-        return STANDARD_AREAS.filter(area =>
-            area.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [searchTerm]);
+        return STANDARD_AREAS.filter(area => {
+            const matchesSearch = area.name.toLowerCase().includes(searchTerm.toLowerCase());
+            
+            // Level filtering
+            if (!educationLevel) return matchesSearch;
+            
+            const normalized = educationLevel.toLowerCase();
+            if (normalized.includes('ambos')) return matchesSearch;
+            
+            const matchesLevel = area.levels.some(l => normalized.includes(l));
+            return matchesSearch && matchesLevel;
+        });
+    }, [searchTerm, educationLevel]);
 
     const handleToggle = (name: string, isDuplicate: boolean) => {
         if (isDuplicate) return;

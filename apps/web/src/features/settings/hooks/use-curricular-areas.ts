@@ -94,9 +94,10 @@ export function useSeedStandardAreas() {
     return useMutation({
         mutationFn: (selectedAreas?: string[]) =>
             api.post<{ seeded: number }>('/curricular-areas/seed-standard', { selectedAreas }),
-        onSuccess: (data) => {
+        onSuccess: (data: any) => {
             queryClient.invalidateQueries({ queryKey: ['curricular-areas'] });
-            showSuccess(`${data.seeded} áreas curriculares agregadas correctamente`);
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
+            showSuccess(`${data.count || 0} áreas curriculares agregadas correctamente`);
         },
         onError: (error) => {
             handleApiError(error, 'No se pudieron agregar las áreas curriculares');

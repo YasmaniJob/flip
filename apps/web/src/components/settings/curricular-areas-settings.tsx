@@ -116,6 +116,11 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
         setShowModal(true);
     };
 
+    const displayedAreas = useMemo(() => {
+        if (areas.length === 0) return [];
+        return areas.filter(area => area.levels?.some(l => applicableLevels.includes(l as any)));
+    }, [areas, applicableLevels]);
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-12">
@@ -139,9 +144,6 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
             </div>
         );
     }
-
-    // Filter areas based on level selection (frontend filter)
-    const displayedAreas = areas.filter(area => area.levels?.some(l => applicableLevels.includes(l)));
 
     return (
         <div className="space-y-6">
@@ -386,6 +388,7 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
                 open={showImportDialog}
                 onOpenChange={setShowImportDialog}
                 existingAreas={areas}
+                educationLevel={educationLevel}
                 onSuccess={() => {
                     refetch();
                 }}
@@ -399,7 +402,6 @@ export function CurricularAreasSettings({ educationLevel }: CurricularAreasSetti
                 description={`Estás por eliminar permanentemente el área "${deletingArea?.name}" del catálogo institucional. Esta acción afectará los reportes académicos asociados a este registro.`}
                 onConfirm={handleDelete}
                 confirmText="Confirmar eliminación"
-                cancelText="Mantenimiento"
                 variant="destructive"
                 isLoading={deleteMutation.isPending}
             />

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { Loader2, AlertCircle, Trash2, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ActionConfirmProps {
     open: boolean;
@@ -44,19 +45,22 @@ export function ActionConfirm({
     
     const variantStyles = {
         destructive: {
-            marker: 'bg-destructive',
-            button: 'bg-destructive hover:bg-destructive/90 text-destructive-foreground',
+            button: 'destructive' as const,
             icon: <Trash2 className="h-4 w-4 text-destructive" />,
+            iconBg: 'bg-destructive/10',
+            iconBorder: 'border-destructive/20'
         },
         warning: {
-            marker: 'bg-amber-500',
-            button: 'bg-amber-500 hover:bg-amber-600 text-white',
+            button: 'default' as const, // We don't have a specific amber jira button yet, using default
             icon: <AlertCircle className="h-4 w-4 text-amber-500" />,
+            iconBg: 'bg-amber-500/10',
+            iconBorder: 'border-amber-500/20'
         },
         info: {
-            marker: 'bg-primary',
-            button: 'bg-primary hover:bg-primary/90 text-primary-foreground',
-            icon: <Info className="h-4 w-4 text-primary" />,
+            button: 'jira' as const,
+            icon: <Info className="h-4 w-4 text-[#0052cc]" />,
+            iconBg: 'bg-[#0052cc]/5',
+            iconBorder: 'border-[#0052cc]/10'
         }
     };
 
@@ -65,58 +69,67 @@ export function ActionConfirm({
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
             <AlertDialogContent className={cn(
-                "p-0 gap-0 overflow-hidden border-border shadow-none rounded-sm bg-background max-w-[90vw] sm:max-w-md",
+                "p-0 gap-0 overflow-hidden border border-border shadow-none rounded-md bg-background max-w-[95vw] sm:max-w-md",
                 "animate-in fade-in zoom-in-95 duration-200"
             )}>
-                {/* Visual Marker (Top) */}
-                <div className={cn("h-1 w-full shrink-0", style.marker)} />
-                
                 <div className="p-8 sm:p-10">
                     <AlertDialogHeader className="space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className={cn("hidden sm:flex h-8 w-8 rounded-sm items-center justify-center bg-muted/10 border border-border/10")}>
+                        <div className="flex items-center gap-4">
+                            <div className={cn(
+                                "flex h-10 w-10 shrink-0 items-center justify-center rounded-md border transition-colors",
+                                style.iconBg,
+                                style.iconBorder
+                            )}>
                                 {style.icon}
                             </div>
-                            <AlertDialogTitle className="text-[14px] font-black uppercase tracking-tight text-foreground leading-tight">
+                            <AlertDialogTitle className="text-lg font-bold text-foreground leading-tight tracking-tight">
                                 {title}
                             </AlertDialogTitle>
                         </div>
-                        <AlertDialogDescription className="text-[11px] font-medium text-muted-foreground/70 leading-relaxed text-left">
+                        <AlertDialogDescription className="text-sm text-muted-foreground/80 leading-relaxed text-left">
                             {description}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
                     {error && (
-                        <div className="mt-6 flex items-start gap-3 p-4 rounded-sm bg-destructive/10 border border-destructive/20 text-destructive text-[11px] font-bold leading-relaxed animate-in fade-in slide-in-from-top-2">
-                            <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                        <div className="mt-6 flex items-start gap-3 p-4 rounded-md bg-destructive/5 border border-destructive/10 text-destructive text-xs font-medium leading-relaxed animate-in fade-in slide-in-from-top-2">
+                            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                             <span>{error}</span>
                         </div>
                     )}
 
-                    <AlertDialogFooter className="mt-10 sm:mt-12 flex-col sm:flex-row gap-3 sm:gap-4">
+                    <AlertDialogFooter className="mt-10 sm:mt-12 flex flex-col-reverse sm:flex-row gap-3">
                         <AlertDialogCancel 
+                            asChild
                             onClick={onCancel}
                             disabled={isLoading}
-                            className="h-12 flex-1 rounded-sm border-border bg-background hover:bg-muted text-[10px] font-black uppercase tracking-widest transition-all shadow-none m-0"
                         >
-                            {cancelText}
+                            <Button 
+                                variant="ghost" 
+                                className="flex-1 h-11 text-xs font-bold rounded-md transition-all"
+                            >
+                                {cancelText}
+                            </Button>
                         </AlertDialogCancel>
+                        
                         <AlertDialogAction
+                            asChild
                             onClick={(e) => {
                                 e.preventDefault();
                                 onConfirm();
                             }}
                             disabled={isLoading}
-                            className={cn(
-                                "h-12 flex-1 rounded-sm text-[10px] font-black uppercase tracking-widest transition-all shadow-none m-0 gap-3",
-                                style.button
-                            )}
                         >
-                            {isLoading ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                confirmText
-                            )}
+                            <Button
+                                variant={style.button}
+                                className="flex-1 h-11 text-xs font-bold rounded-md transition-all gap-2"
+                            >
+                                {isLoading ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    confirmText
+                                )}
+                            </Button>
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </div>
