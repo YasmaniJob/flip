@@ -19,11 +19,11 @@ export function SubscriptionDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl p-0 overflow-hidden border-none shadow-none bg-background rounded-xl">
+      <DialogContent className="max-w-3xl p-0 overflow-hidden border border-border shadow-none bg-background rounded-md">
         <DialogHeader className="p-0 border-b border-border">
           <div className="flex items-center justify-between p-6 bg-muted/20">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+              <div className="h-12 w-12 rounded-md bg-muted/20 flex items-center justify-center text-primary border border-border shadow-none">
                 <Building2 className="h-6 w-6" />
               </div>
               <div className="space-y-1">
@@ -39,7 +39,7 @@ export function SubscriptionDetailsModal({
             
             {sub && (
               <div className={cn(
-                "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                "px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-widest border",
                 sub.subscriptionStatus === 'active' 
                   ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
                   : "bg-amber-500/10 text-amber-600 border-amber-500/20"
@@ -72,7 +72,7 @@ export function SubscriptionDetailsModal({
                   { label: "Plan Actual", value: sub.subscriptionPlan || "Bonificado", icon: Shield, color: "text-emerald-500" },
                   { label: "Expira en", value: sub.trialEndsAt ? new Date(sub.trialEndsAt).toLocaleDateString() : "Indefinido", icon: Clock, color: "text-amber-500" },
                 ].map((stat, i) => (
-                  <div key={i} className="bg-muted/10 border border-border/50 rounded-xl p-4 space-y-1.5 group hover:bg-muted/20 transition-all cursor-default">
+                  <div key={i} className="bg-muted/10 border border-border rounded-md p-4 space-y-1.5 group hover:bg-muted/20 transition-all cursor-default shadow-none">
                     <div className="flex items-center justify-between">
                       <stat.icon className={cn("h-4 w-4", stat.color)} />
                       <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">{stat.label}</span>
@@ -96,8 +96,8 @@ export function SubscriptionDetailsModal({
                     {sub.institutionalUsers?.map((u) => (
                       <div key={u.id} className="flex items-center justify-between p-3 rounded-lg border border-border/50 hover:bg-muted/5 transition-all">
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8 rounded-lg border border-border">
-                            <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-black uppercase">
+                          <Avatar className="h-8 w-8 rounded-md border border-border">
+                            <AvatarFallback className="bg-muted text-foreground text-[10px] font-black uppercase">
                               {u.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                             </AvatarFallback>
                           </Avatar>
@@ -118,7 +118,7 @@ export function SubscriptionDetailsModal({
                         </div>
                       </div>
                     )) || (
-                      <div className="py-10 text-center border-2 border-dashed border-border rounded-xl">
+                      <div className="py-10 text-center border-2 border-dashed border-border rounded-md">
                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-30">Sin usuarios asociados</p>
                       </div>
                     )}

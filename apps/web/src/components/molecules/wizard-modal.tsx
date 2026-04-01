@@ -54,9 +54,9 @@ interface WizardModalContentProps {
 export function WizardModal({ open, onOpenChange, children, srTitle = 'Modal', className }: WizardModalProps & { className?: string }) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className={cn("sm:max-w-4xl h-[85vh] p-0 gap-0 overflow-hidden [&>button]:hidden", className)}>
+            <DialogContent className={cn("sm:max-w-4xl h-[85vh] p-0 flex flex-col overflow-hidden shadow-none border border-border rounded-md bg-background [&>button]:hidden", className)}>
                 <DialogTitle className="sr-only">{srTitle}</DialogTitle>
-                <div className="absolute inset-0 flex">
+                <div className="flex w-full h-full min-h-0 overflow-hidden">
                     {children}
                 </div>
             </DialogContent>
@@ -75,22 +75,18 @@ export function WizardModalSidebar({
     children,
 }: WizardModalSidebarProps) {
     return (
-        <div className="w-72 shrink-0 bg-primary text-primary-foreground p-6 flex flex-col relative overflow-hidden">
-            {/* Decorative circles */}
-            <div className="absolute top-0 right-0 w-40 h-40 bg-background/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-32 -left-10 w-32 h-32 bg-background/5 rounded-full" />
-
+        <div className="w-72 shrink-0 bg-muted/20 border-r border-border p-6 flex flex-col relative overflow-hidden">
             {/* Header */}
             <div className="relative z-10 mb-2">
                 {icon && (
-                    <div className="w-14 h-14 rounded-2xl bg-background/20 flex items-center justify-center mb-6">
-                        <span className="text-3xl">{icon}</span>
+                    <div className="w-12 h-12 rounded-md bg-background border border-border flex items-center justify-center mb-6 shadow-none">
+                        <span className="text-2xl">{icon}</span>
                     </div>
                 )}
 
-                <h2 className={`text-2xl font-bold ${description ? 'mb-3' : 'mb-1'}`}>{title}</h2>
+                <h2 className={`text-xl font-bold text-foreground tracking-tight ${description ? 'mb-2' : 'mb-1'}`}>{title}</h2>
                 {description && (
-                    <p className="text-sm opacity-90 leading-relaxed text-primary-foreground/80">
+                    <p className="text-xs font-medium leading-relaxed text-muted-foreground/80">
                         {description}
                     </p>
                 )}
@@ -104,24 +100,24 @@ export function WizardModalSidebar({
             {/* Bottom Summary */}
             <div className="mt-4 shrink-0 relative z-10">
                 {summary.length > 0 ? (
-                    <div className="bg-background/10 rounded-2xl p-5 backdrop-blur-sm border border-white/10">
+                    <div className="bg-card rounded-md p-5 border border-border shadow-none">
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="h-0.5 w-3 bg-background/50 rounded-full"></div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-white/90">Resumen</span>
+                            <div className="h-0.5 w-3 bg-primary rounded-full"></div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Resumen</span>
                         </div>
 
                         <div className="relative space-y-4">
                             {/* Vertical Line */}
-                            <div className="absolute left-3 top-2 bottom-6 w-0.5 bg-background/15 rounded-full"></div>
+                            <div className="absolute left-3 top-2 bottom-6 w-px bg-border rounded-full"></div>
 
                             {summary.map((item, idx) => (
                                 <div key={idx} className="relative flex items-center gap-4 group">
-                                    <div className="relative z-10 w-6 h-6 rounded-full bg-background flex items-center justify-center text-xs ring-2 ring-white/30 group-hover:scale-110 transition-transform duration-200">
+                                    <div className="relative z-10 w-6 h-6 rounded-full bg-background border border-border flex items-center justify-center text-xs group-hover:scale-105 transition-transform duration-200">
                                         {item.icon}
                                     </div>
                                     <div>
-                                        <p className="text-[10px] text-primary-foreground/70 uppercase tracking-wide font-medium">{item.label}</p>
-                                        <p className="text-sm font-bold text-primary-foreground leading-tight">{item.value}</p>
+                                        <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-black">{item.label}</p>
+                                        <p className="text-[13px] font-bold text-foreground leading-tight">{item.value}</p>
                                     </div>
                                 </div>
                             ))}
@@ -156,26 +152,26 @@ export function WizardModalContent({
     return (
         <div className="flex-1 flex flex-col bg-background overflow-hidden">
             {/* Header */}
-            <div className="shrink-0 px-8 pt-8 pb-4">
-                <div className="flex items-center justify-between mb-4">
+            <div className="shrink-0 px-8 py-5 border-b border-border bg-background">
+                <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-xl font-bold text-foreground">{title}</h3>
-                        {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
+                        <h3 className="text-xl font-bold text-foreground tracking-tight">{title}</h3>
+                        {subtitle && <p className="text-[11px] font-medium text-muted-foreground mt-0.5">{subtitle}</p>}
                     </div>
                     {onCancel && (
                         <button
                             type="button"
                             onClick={onCancel}
-                            className="w-8 h-8 rounded-full hover:bg-accent flex items-center justify-center transition-colors"
+                            className="w-8 h-8 rounded-md hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground"
                         >
-                            <X className="h-5 w-5 text-muted-foreground" />
+                            <X className="h-4 w-4" />
                         </button>
                     )}
                 </div>
 
                 {/* Progress bar */}
                 {progress && (
-                    <div className="flex gap-1.5">
+                    <div className="flex gap-1 mt-4">
                         {Array.from({ length: progress.total }).map((_, i) => (
                             <div
                                 key={i}
@@ -188,36 +184,33 @@ export function WizardModalContent({
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto px-8 pb-8 min-h-0 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto px-8 py-8 min-h-0 custom-scrollbar">
                 {children}
             </div>
 
             {/* Footer */}
             {showFooter && (
                 <div className={cn(
-                    "shrink-0 flex items-center px-8 py-4 border-t border-border bg-background relative",
-                    footerLayout === 'end' ? "justify-end gap-4" : "justify-between"
+                    "shrink-0 flex items-center px-8 py-5 border-t border-border bg-background relative",
+                    footerLayout === 'end' ? "justify-end gap-3" : "justify-between"
                 )}>
-                    {/* Gradient Fade Top */}
-                    <div className="absolute -top-6 left-0 right-0 h-6 bg-gradient-to-t from-background to-transparent pointer-events-none" />
-
                     {footerLayout === 'between' ? (
                         <>
                             <div className="flex items-center gap-2">
                                 {onCancel && (
                                     <Button
-                                        variant="outline"
+                                        variant="ghost"
                                         onClick={onCancel}
-                                        className="rounded-full px-6 font-medium sm:min-w-[100px]"
+                                        className="rounded-md px-6 font-black uppercase tracking-widest text-[10px]"
                                     >
                                         {cancelLabel}
                                     </Button>
                                 )}
                                 {onBack && (
                                     <Button
-                                        variant="outline"
+                                        variant="ghost"
                                         onClick={onBack}
-                                        className="rounded-full px-6 font-medium sm:min-w-[100px]"
+                                        className="rounded-md px-6 font-black uppercase tracking-widest text-[10px] border border-border"
                                     >
                                         {backLabel}
                                     </Button>
@@ -228,29 +221,22 @@ export function WizardModalContent({
                                 <Button
                                     onClick={onSubmit}
                                     disabled={!canSubmit || isSubmitting}
+                                    variant="jira"
                                     className={cn(
-                                        "rounded-full h-11 transition-all font-bold flex items-center gap-3",
-                                        footerStyle === 'wizard' ? "pl-5 pr-2" : "px-6",
-                                        canSubmit && !isSubmitting
-                                            ? ''
-                                            : 'bg-muted text-muted-foreground cursor-not-allowed'
+                                        "rounded-md min-w-[140px] h-11 transition-all font-black uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-none",
+                                        isSubmitting && 'opacity-80'
                                     )}
                                 >
                                     {isSubmitting ? (
                                         <>
-                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            <Loader2 className="h-3 w-3 animate-spin" />
                                             <span>Procesando...</span>
                                         </>
                                     ) : (
                                         <>
                                             <span>{submitLabel}</span>
                                             {footerStyle === 'wizard' && (
-                                                <div className={cn(
-                                                    "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
-                                                    canSubmit ? 'bg-white/20' : 'bg-muted'
-                                                )}>
-                                                    <ChevronRight className="h-5 w-5" />
-                                                </div>
+                                                <ChevronRight className="h-4 w-4" />
                                             )}
                                         </>
                                     )}
@@ -262,18 +248,18 @@ export function WizardModalContent({
                         <>
                             {onBack && (
                                 <Button
-                                    variant="outline"
+                                    variant="ghost"
                                     onClick={onBack}
-                                    className="rounded-full px-6 font-medium sm:min-w-[100px]"
+                                    className="rounded-md px-6 font-black uppercase tracking-widest text-[10px] border border-border"
                                 >
                                     {backLabel}
                                 </Button>
                             )}
                             {onCancel && (
                                 <Button
-                                    variant="outline"
+                                    variant="ghost"
                                     onClick={onCancel}
-                                    className="rounded-full px-6 font-medium sm:min-w-[100px]"
+                                    className="rounded-md px-6 font-black uppercase tracking-widest text-[10px]"
                                 >
                                     {cancelLabel}
                                 </Button>
@@ -282,29 +268,22 @@ export function WizardModalContent({
                                 <Button
                                     onClick={onSubmit}
                                     disabled={!canSubmit || isSubmitting}
+                                    variant="jira"
                                     className={cn(
-                                        "rounded-full h-11 transition-all font-bold flex items-center gap-3",
-                                        footerStyle === 'wizard' ? "pl-5 pr-2" : "px-6",
-                                        canSubmit && !isSubmitting
-                                            ? ''
-                                            : 'bg-muted text-muted-foreground cursor-not-allowed'
+                                        "rounded-md min-w-[140px] h-11 transition-all font-black uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-none",
+                                        isSubmitting && 'opacity-80'
                                     )}
                                 >
                                     {isSubmitting ? (
                                         <>
-                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            <Loader2 className="h-3 w-3 animate-spin" />
                                             <span>Procesando...</span>
                                         </>
                                     ) : (
                                         <>
                                             <span>{submitLabel}</span>
                                             {footerStyle === 'wizard' && (
-                                                <div className={cn(
-                                                    "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
-                                                    canSubmit ? 'bg-background/20' : 'bg-muted'
-                                                )}>
-                                                    <ChevronRight className="h-5 w-5" />
-                                                </div>
+                                                <ChevronRight className="h-4 w-4" />
                                             )}
                                         </>
                                     )}
@@ -327,7 +306,7 @@ interface SimpleFormModalProps {
     icon: string;
     title: string;
     description: string;
-    formTitle: string;
+    formTitle?: string;
     onSubmit: () => void;
     onCancel: () => void;
     submitLabel?: string;
@@ -336,6 +315,7 @@ interface SimpleFormModalProps {
     children: ReactNode;
     sidebarChildren?: ReactNode;
     summary?: SummaryItem[];
+    srTitle?: string;
 }
 
 export function SimpleFormModal({
@@ -353,19 +333,30 @@ export function SimpleFormModal({
     children,
     sidebarChildren,
     summary = [],
+    srTitle,
 }: SimpleFormModalProps) {
+    const hasSidebar = !!(sidebarChildren || summary?.length > 0);
+
     return (
-        <WizardModal open={open} onOpenChange={onOpenChange} srTitle={title}>
-            <WizardModalSidebar
-                icon={icon}
-                title={title}
-                description={description}
-                summary={summary}
-            >
-                {sidebarChildren}
-            </WizardModalSidebar>
+        <WizardModal 
+            open={open} 
+            onOpenChange={onOpenChange} 
+            srTitle={srTitle || title}
+            className={!hasSidebar ? "sm:max-w-2xl !h-auto !min-h-0" : undefined}
+        >
+            {hasSidebar && (
+                <WizardModalSidebar
+                    icon={icon}
+                    title={title}
+                    description={description}
+                    summary={summary}
+                >
+                    {sidebarChildren}
+                </WizardModalSidebar>
+            )}
             <WizardModalContent
-                title={formTitle}
+                title={formTitle || title}
+                subtitle={hasSidebar ? undefined : description}
                 onCancel={onCancel}
                 onSubmit={onSubmit}
                 submitLabel={submitLabel}

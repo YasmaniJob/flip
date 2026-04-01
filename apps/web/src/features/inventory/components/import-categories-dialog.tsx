@@ -88,32 +88,32 @@ export function ImportCategoriesDialog({ open, onOpenChange, onSuccess, existing
             isSubmitting={seedMutation.isPending}
             sidebarChildren={
                 <div className="w-full space-y-3">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
+                    <div className="relative group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                         <input
                             type="text"
-                            placeholder="Buscar categorías..."
+                            placeholder="Buscar..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-background/10 border border-white/20 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder:text-white/50 focus:outline-none focus:bg-background/20 transition-all font-medium text-sm"
+                            className="w-full bg-background border border-border rounded-md py-2 pl-9 pr-4 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary transition-all font-bold text-[11px] uppercase tracking-widest shadow-none"
                         />
                     </div>
 
                     <button
                         type="button"
                         onClick={handleSelectAll}
-                        className="w-full py-2.5 px-4 bg-background/5 border border-white/10 rounded-xl text-white/80 text-xs font-semibold hover:bg-background/10 transition-colors flex items-center justify-center gap-2"
+                        className="w-full py-2 px-4 bg-background border border-border rounded-md text-foreground text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-colors flex items-center justify-center gap-2 shadow-none"
                     >
-                        <Check className="h-3.5 w-3.5" />
+                        <Check className="h-3 w-3" />
                         {selected.length > 0 ? 'Deseleccionar Todo' : 'Seleccionar Todo'}
                     </button>
 
-                    <div className="bg-background/5 rounded-2xl p-3 border border-white/10 mt-2">
-                        <div className="flex items-center gap-2 text-white/80 mb-1.5">
-                            <Sparkles className="h-3.5 w-3.5 text-emerald-300" />
-                            <span className="font-bold text-xs">Beneficios</span>
+                    <div className="bg-card rounded-md p-4 border border-border mt-2 shadow-none">
+                        <div className="flex items-center gap-2 text-foreground mb-2">
+                            <Sparkles className="h-3.5 w-3.5 text-primary" />
+                            <span className="font-black text-[10px] uppercase tracking-widest">Beneficios</span>
                         </div>
-                        <p className="text-[10px] text-white/60 leading-relaxed">
+                        <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
                             Configuración optimizada y compatibilidad con reportes del sector.
                         </p>
                     </div>
@@ -121,7 +121,7 @@ export function ImportCategoriesDialog({ open, onOpenChange, onSuccess, existing
             }
         >
             <div className="py-2">
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-1 gap-1.5">
                     {filteredCategories.map((cat) => {
                         const isSelected = selected.includes(cat.name);
                         const isDuplicate = existingCategories.some(ec => ec.name.toLowerCase() === cat.name.toLowerCase());
@@ -131,20 +131,19 @@ export function ImportCategoriesDialog({ open, onOpenChange, onSuccess, existing
                                 key={cat.name}
                                 onClick={() => handleToggle(cat.name, isDuplicate)}
                                 className={cn(
-                                    "group flex items-center gap-4 p-3 rounded-xl border transition-all relative overflow-hidden",
+                                    "group flex items-center gap-4 p-3 rounded-md border transition-all relative overflow-hidden shadow-none",
                                     isDuplicate
                                         ? "bg-muted/30 border-border opacity-60 cursor-not-allowed"
                                         : "cursor-pointer",
                                     !isDuplicate && isSelected
-                                        ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/50 shadow-sm"
-                                        : !isDuplicate && "bg-card border-border hover:border-border/80 hover:bg-muted/20"
+                                        ? "bg-primary/[0.03] border-primary/40"
+                                        : !isDuplicate && "bg-card border-border hover:border-primary/20 hover:bg-muted/10"
                                 )}
                             >
                                 <div
                                     className={cn(
-                                        "w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-transform duration-300",
-                                        !isDuplicate && "group-hover:scale-110",
-                                        isSelected ? "bg-card shadow-sm" : "bg-muted"
+                                        "w-9 h-9 rounded-md flex items-center justify-center text-xl transition-all shadow-none",
+                                        isSelected ? "bg-primary/20" : "bg-muted border border-border"
                                     )}
                                 >
                                     {cat.icon}

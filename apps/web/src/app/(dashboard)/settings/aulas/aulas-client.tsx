@@ -220,12 +220,11 @@ export function AulasClient({ showCreateModal, setShowCreateModal }: AulasClient
             <SimpleFormModal
                 open={showCreateModal}
                 onOpenChange={setShowCreateModal}
-                icon="🚪"
+                icon=""
                 title={editingClassroom ? 'Editar Aula' : 'Nueva Aula'}
                 description={editingClassroom
                     ? 'Modifica los datos del aula.'
                     : 'Crea una nueva aula para gestionar espacios físicos.'}
-                formTitle="Detalles del Aula"
                 onSubmit={handleSave}
                 onCancel={() => {
                     setShowCreateModal(false);
@@ -235,29 +234,6 @@ export function AulasClient({ showCreateModal, setShowCreateModal }: AulasClient
                 submitLabel={editingClassroom ? 'Guardar Cambios' : 'Crear Registro'}
                 canSubmit={formData.name.trim().length > 0 && !(createMutation.isPending || updateMutation.isPending)}
                 isSubmitting={createMutation.isPending || updateMutation.isPending}
-                sidebarChildren={
-                    <div className="space-y-6">
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/60 mb-4">Vista Previa</p>
-                            <div className="w-full aspect-square rounded-xl flex items-center justify-center bg-white/10 backdrop-blur-md border border-white/20 shadow-none">
-                                <DoorOpen className="h-16 w-16 text-white" />
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-white font-black text-sm uppercase tracking-tight truncate">
-                                {formData.name || 'Nueva Aula'}
-                            </p>
-                            {formData.code && (
-                                <p className="text-white/60 text-[10px] font-black uppercase tracking-widest">
-                                    {formData.code}
-                                </p>
-                            )}
-                            <p className="text-white/60 text-[10px] font-black uppercase tracking-widest">
-                                {editingClassroom ? 'Editando Aula' : 'Nuevo Registro'}
-                            </p>
-                        </div>
-                    </div>
-                }
             >
                 <div className="space-y-6 pt-2">
                     <div className="space-y-3">
