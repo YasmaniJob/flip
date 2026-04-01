@@ -44,6 +44,29 @@ export async function POST(request: NextRequest) {
     const institutionId = await getInstitutionId(request);
 
     const body = await request.json();
+
+    // Support for Bulk Creation
+    if (Array.isArray(body)) {
+      if (body.length === 0) return successResponse([], 201);
+      
+      const values = body.map((data: any) => ({
+        id: randomUUID(),
+        institutionId,
+        name: data.name,
+        level: data.level,
+        sortOrder: data.sortOrder ?? 0,
+      }));
+
+      const results = await db
+        .insert(grades)
+        .values(values)
+        .returning();
+
+      revalidateTag('config-loadout');
+      return successResponse(results, 201);
+    }
+
+    // Single Creation (Backward compatibility)
     const data = validateBody(createGradeSchema, body);
 
     const [grade] = await db

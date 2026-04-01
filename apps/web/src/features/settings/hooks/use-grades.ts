@@ -32,7 +32,7 @@ export function useCreateGrade() {
     const api = useApiClient();
 
     return useMutation({
-        mutationFn: (data: Omit<Grade, 'id'>) => api.post<Grade>('/grades', data),
+        mutationFn: (data: Omit<Grade, 'id'>) => api.post<Grade | Grade[]>('/grades', data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['grades'] });
             queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
@@ -40,6 +40,23 @@ export function useCreateGrade() {
         },
         onError: (error) => {
             handleApiError(error, 'No se pudo crear el grado');
+        },
+    });
+}
+
+export function useBulkCreateGrades() {
+    const queryClient = useQueryClient();
+    const api = useApiClient();
+
+    return useMutation({
+        mutationFn: (data: Omit<Grade, 'id'>[]) => api.post<Grade[]>('/grades', data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['grades'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
+            showSuccess('Grados configurados correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo crear el catálogo de grados');
         },
     });
 }
