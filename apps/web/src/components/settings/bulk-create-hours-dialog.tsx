@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/atoms/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useBulkCreatePedagogicalHours } from '@/features/settings/hooks/use-pedagogical-hours';
 import { Check, Clock, Loader2, Wand2, ChevronUp, ChevronDown, Plus, Trash2, Settings2, ListChecks } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface BulkCreateHoursDialogProps {
     open: boolean;
@@ -83,6 +82,7 @@ export function BulkCreateHoursDialog({
     const [duration, setDuration] = useState(45);
     const [count, setCount] = useState(7);
     const [breaks, setBreaks] = useState<BreakRule[]>([{ after: 3, duration: 20 }]);
+    const [activeTab, setActiveTab] = useState<'config' | 'preview'>('config');
 
     const startH = startTime.split(':')[0];
     const startM = startTime.split(':')[1];
@@ -175,186 +175,224 @@ export function BulkCreateHoursDialog({
             <DialogContent 
                 showCloseButton={true}
                 className={cn(
-                    "max-w-4xl sm:max-w-4xl p-0 overflow-hidden border border-border shadow-none bg-white transition-all duration-500",
+                    "max-w-4xl sm:max-w-5xl p-0 overflow-hidden border border-border shadow-none bg-white transition-all duration-500",
                     "fixed bottom-0 left-0 right-0 sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:bottom-auto sm:right-auto",
-                    "rounded-t-xl rounded-b-none sm:rounded-xl h-[85vh] sm:h-[85vh] max-h-[90vh] sm:max-h-[700px]",
+                    "rounded-t-xl rounded-b-none sm:rounded-xl h-[85vh] sm:h-[85vh] max-h-[90vh] sm:max-h-[750px]",
                     "animate-in slide-in-from-bottom-5 duration-500"
                 )}
             >
                 <div className="flex flex-col h-full relative">
+                    <DialogTitle className="sr-only">Generador de Horario</DialogTitle>
+                    <DialogDescription className="sr-only">Configura la generación masiva de horas pedagógicas y recesos.</DialogDescription>
+                    
                     <div className="sm:hidden absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-border/40 rounded-full z-10" />
                     
-                    {/* Header */}
-                    <div className="p-6 border-b border-border bg-muted/10 shrink-0">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20 transition-all hover:scale-105 shadow-none">
-                                <Wand2 className="h-5 w-5" />
+                    {/* Mobile Only Header Tabs */}
+                    <div className="md:hidden pt-6 px-4 pb-2 border-b border-border space-y-4 shrink-0">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded bg-primary/10 text-primary">
+                                <Wand2 className="size-4" />
                             </div>
-                            <div>
-                                <DialogTitle className="text-xl font-black uppercase tracking-tighter text-[#0052cc]">Generador de Horario</DialogTitle>
-                            </div>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#0052cc]">Generador</Label>
+                        </div>
+                        <div className="flex p-1 bg-muted/20 border border-border/50 rounded-lg gap-1">
+                            <button 
+                                onClick={() => setActiveTab('config')}
+                                className={cn(
+                                    "flex-1 h-9 rounded-md text-[10px] font-black uppercase tracking-widest transition-all",
+                                    activeTab === 'config' ? "bg-white text-primary shadow-none" : "text-muted-foreground/60 hover:text-foreground"
+                                )}
+                            >
+                                Ajustes
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('preview')}
+                                className={cn(
+                                    "flex-1 h-9 rounded-md text-[10px] font-black uppercase tracking-widest transition-all relative",
+                                    activeTab === 'preview' ? "bg-white text-primary shadow-none" : "text-muted-foreground/60 hover:text-foreground"
+                                )}
+                            >
+                                Previa
+                                {preview.length > 0 && (
+                                    <span className={cn(
+                                        "absolute -top-1 -right-1 size-4 rounded-full flex items-center justify-center text-[7px] font-black border-2 border-white",
+                                        activeTab === 'preview' ? "bg-primary text-white" : "bg-muted-foreground text-white"
+                                    )}>
+                                        {preview.length}
+                                    </span>
+                                )}
+                            </button>
                         </div>
                     </div>
 
-                    <Tabs defaultValue="config" className="flex-1 flex flex-col overflow-hidden">
-                        <div className="px-4 md:px-8 border-b border-border bg-white shrink-0">
-                            <TabsList className="flex items-center justify-start h-14 bg-transparent border-none p-0 gap-8">
-                                <TabsTrigger 
-                                    value="config" 
-                                    className="h-full px-0 bg-transparent border-none rounded-none shadow-none text-[11px] font-black uppercase tracking-widest gap-2.5 text-muted-foreground/60 transition-all data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary"
-                                >
-                                    <Settings2 className="size-4" />
-                                    Ajustes
-                                </TabsTrigger>
-                                <TabsTrigger 
-                                    value="preview" 
-                                    className="h-full px-0 bg-transparent border-none rounded-none shadow-none text-[11px] font-black uppercase tracking-widest gap-2.5 text-muted-foreground/60 transition-all data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary"
-                                >
-                                    <ListChecks className="size-4" />
-                                    Vista Previa
-                                    {preview.length > 0 && (
-                                        <span className="ml-0.5 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] tabular-nums font-black border border-primary/20">
-                                            {preview.length}
-                                        </span>
-                                    )}
-                                </TabsTrigger>
-                            </TabsList>
-                        </div>
+                    <div className="flex-1 flex flex-col md:flex-row overflow-hidden divide-x divide-border">
+                        {/* Configuracion Column */}
+                        <div className={cn(
+                            "flex-1 md:w-[420px] md:flex-none flex flex-col overflow-hidden transition-all duration-300",
+                            activeTab !== 'config' && "hidden md:flex"
+                        )}>
+                            <div className="h-full overflow-y-auto p-4 md:p-8 space-y-8 scrollbar-hide hover:scrollbar-default transition-all bg-muted/5">
+                                <div className="space-y-6">
+                                    <div className="hidden md:flex items-center gap-3 mb-4">
+                                        <div className="p-2.5 rounded-lg bg-primary text-white">
+                                            <Settings2 className="size-5" />
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs font-black uppercase tracking-[0.2em] text-primary">Configuración</Label>
+                                            <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mt-0.5">Parámetros operativos</p>
+                                        </div>
+                                    </div>
 
-                        <div className="flex-1 overflow-hidden relative">
-                            <TabsContent value="config" className="h-full m-0 p-0 outline-none">
-                                <div className="h-full overflow-y-auto p-4 md:p-8 space-y-8 pb-safe bg-muted/5 scrollbar-hide hover:scrollbar-default transition-all">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                                        <div className="space-y-6">
-                                            <div className="space-y-5">
-                                                <Label className="text-[11px] font-black uppercase tracking-widest text-primary block leading-none">Punto de Partida</Label>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="flex-1 space-y-2">
-                                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1 block">Horas</Label>
-                                                        <div className="flex h-14 overflow-hidden rounded-md border border-border focus-within:border-primary/50 transition-all bg-white group">
-                                                            <Input 
-                                                                value={startH} 
-                                                                onChange={(e) => handleHourChange(e.target.value)}
-                                                                className="flex-1 h-full border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all text-center text-xl lg:text-2xl font-black tabular-nums p-0 pl-8 lg:pl-10"
-                                                                maxLength={2}
-                                                            />
-                                                            <div className="flex flex-col border-l border-border w-8 lg:w-10 shrink-0 bg-muted/5">
-                                                                <button onClick={() => handleHourChange(String(Number(startH) + 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors border-b border-border/50 p-0"><ChevronUp className="size-4 lg:size-5" /></button>
-                                                                <button onClick={() => handleHourChange(String(Number(startH) - 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors p-0"><ChevronDown className="size-4 lg:size-5" /></button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="pt-7 text-2xl font-black text-muted-foreground/40">:</div>
-                                                    <div className="flex-1 space-y-2">
-                                                        <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1 block">Minutos</Label>
-                                                        <div className="flex h-14 overflow-hidden rounded-md border border-border focus-within:border-primary/50 transition-all bg-white group">
-                                                            <Input 
-                                                                value={startM} 
-                                                                onChange={(e) => handleMinuteChange(e.target.value)}
-                                                                className="flex-1 h-full border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all text-center text-xl lg:text-2xl font-black tabular-nums p-0 pl-8 lg:pl-10"
-                                                                maxLength={2}
-                                                            />
-                                                            <div className="flex flex-col border-l border-border w-8 lg:w-10 shrink-0 bg-muted/5">
-                                                                <button onClick={() => handleMinuteChange(String(Number(startM) + 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors border-b border-border/50 p-0"><ChevronUp className="size-4 lg:size-5" /></button>
-                                                                <button onClick={() => handleMinuteChange(String(Number(startM) - 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors p-0"><ChevronDown className="size-4 lg:size-5" /></button>
-                                                            </div>
-                                                        </div>
+                                    <div className="space-y-5">
+                                        <Label className="text-[11px] font-black uppercase tracking-widest text-[#0052cc] block leading-none">Punto de Partida</Label>
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex-1 space-y-2">
+                                                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1 block">Horas</Label>
+                                                <div className="flex h-14 overflow-hidden rounded-md border border-border focus-within:border-primary/50 transition-all bg-white group">
+                                                    <Input 
+                                                        value={startH} 
+                                                        onChange={(e) => handleHourChange(e.target.value)}
+                                                        className="flex-1 h-full border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all text-center text-xl lg:text-2xl font-black tabular-nums p-0 pl-8 lg:pl-10"
+                                                        maxLength={2}
+                                                    />
+                                                    <div className="flex flex-col border-l border-border w-8 lg:w-10 shrink-0 bg-muted/5">
+                                                        <button onClick={() => handleHourChange(String(Number(startH) + 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors border-b border-border/50 p-0"><ChevronUp className="size-4 lg:size-5" /></button>
+                                                        <button onClick={() => handleHourChange(String(Number(startH) - 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors p-0"><ChevronDown className="size-4 lg:size-5" /></button>
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <NumberInput 
-                                                    label="Cant. de Horas" 
-                                                    value={count} 
-                                                    onChange={(val) => setCount(Number(val))} 
-                                                    min={1} 
-                                                    max={12} 
-                                                />
-                                                <NumberInput 
-                                                    label="Duración (min)" 
-                                                    value={duration} 
-                                                    onChange={(val) => setDuration(Number(val))} 
-                                                    min={5} 
-                                                    max={120} 
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-6">
-                                            <div className="flex items-center justify-between">
-                                                <Label className="text-[10px] font-black uppercase tracking-widest text-[#0052cc]">Recesos y Descansos</Label>
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    onClick={addBreak}
-                                                    className="h-7 px-3 border-dashed border-primary/30 text-primary hover:bg-primary/5 text-[9px] font-black uppercase tracking-widest shadow-none"
-                                                >
-                                                    <Plus className="size-3 mr-1" />
-                                                    Añadir
-                                                </Button>
-                                            </div>
-                                            
-                                            <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2 scrollbar-hide hover:scrollbar-default transition-all">
-                                                {breaks.length === 0 ? (
-                                                    <div className="p-8 border-2 border-dashed border-border/50 rounded-xl text-center opacity-40">
-                                                        <Clock className="size-6 mx-auto mb-2 text-muted-foreground" />
-                                                        <p className="text-[9px] font-black uppercase tracking-[0.2em]">Sin recesos añadidos</p>
+                                            <div className="pt-7 text-2xl font-black text-muted-foreground/40">:</div>
+                                            <div className="flex-1 space-y-2">
+                                                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1 block">Minutos</Label>
+                                                <div className="flex h-14 overflow-hidden rounded-md border border-border focus-within:border-primary/50 transition-all bg-white group">
+                                                    <Input 
+                                                        value={startM} 
+                                                        onChange={(e) => handleMinuteChange(e.target.value)}
+                                                        className="flex-1 h-full border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all text-center text-xl lg:text-2xl font-black tabular-nums p-0 pl-8 lg:pl-10"
+                                                        maxLength={2}
+                                                    />
+                                                    <div className="flex flex-col border-l border-border w-8 lg:w-10 shrink-0 bg-muted/5">
+                                                        <button onClick={() => handleMinuteChange(String(Number(startM) + 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors border-b border-border/50 p-0"><ChevronUp className="size-4 lg:size-5" /></button>
+                                                        <button onClick={() => handleMinuteChange(String(Number(startM) - 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors p-0"><ChevronDown className="size-4 lg:size-5" /></button>
                                                     </div>
-                                                ) : (
-                                                    <div className="space-y-3">
-                                                        {breaks.map((b, i) => (
-                                                            <div key={i} className="bg-white p-3 rounded-lg border border-border shadow-none flex items-end gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                            <div className="flex-1">
-                                                                <NumberInput 
-                                                                    label="Tras Hora" 
-                                                                    value={b.after} 
-                                                                    onChange={(val) => updateBreak(i, 'after', Number(val))} 
-                                                                    min={1} 
-                                                                    max={count} 
-                                                                    compact
-                                                                />
-                                                            </div>
-                                                            <div className="flex-1">
-                                                                <NumberInput 
-                                                                    label="Minutos" 
-                                                                    value={b.duration} 
-                                                                    onChange={(val) => updateBreak(i, 'duration', Number(val))} 
-                                                                    min={5} 
-                                                                    max={120} 
-                                                                    compact
-                                                                />
-                                                            </div>
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="icon" 
-                                                                onClick={() => removeBreak(i)}
-                                                                className="h-10 w-10 text-muted-foreground/50 hover:text-rose-600 hover:bg-rose-50 transition-colors shadow-none shrink-0"
-                                                            >
-                                                                <Trash2 className="size-4" />
-                                                            </Button>
-                                                        </div>
-                                                        ))}
-                                                    </div>
-                                                )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </TabsContent>
 
-                            <TabsContent value="preview" className="h-full m-0 p-0 outline-none">
-                                <div className="h-full overflow-y-auto p-4 md:p-8 bg-white pb-safe scrollbar-hide hover:scrollbar-default transition-all">
-                                    <div className="max-w-md mx-auto space-y-3">
-                                        <div className="flex items-center justify-between mb-4 border-b border-border pb-4">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">Cronograma Generado</Label>
-                                            <span className="text-[9px] font-bold py-1 px-2 bg-muted rounded uppercase tracking-widest">{shift}</span>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <NumberInput 
+                                            label="Cant. de Horas" 
+                                            value={count} 
+                                            onChange={(val) => setCount(Number(val))} 
+                                            min={1} 
+                                            max={12} 
+                                        />
+                                        <NumberInput 
+                                            label="Duración (min)" 
+                                            value={duration} 
+                                            onChange={(val) => setDuration(Number(val))} 
+                                            min={5} 
+                                            max={120} 
+                                        />
+                                    </div>
+
+                                    <div className="space-y-6 pt-4">
+                                        <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#0052cc]">Recesos y Descansos</Label>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                onClick={addBreak}
+                                                className="h-7 px-3 border-dashed border-primary/30 text-primary hover:bg-primary/5 text-[9px] font-black uppercase tracking-widest shadow-none"
+                                            >
+                                                <Plus className="size-3 mr-1" />
+                                                Añadir
+                                            </Button>
                                         </div>
-                                        {preview.map((h, idx) => (
+                                        
+                                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide hover:scrollbar-default transition-all">
+                                            {breaks.length === 0 ? (
+                                                <div className="p-8 border border-dashed border-border rounded-xl text-center opacity-40 bg-white">
+                                                    <Clock className="size-6 mx-auto mb-2 text-muted-foreground" />
+                                                    <p className="text-[9px] font-black uppercase tracking-[0.2em]">Sin recesos activos</p>
+                                                </div>
+                                            ) : (
+                                                breaks.map((b, i) => (
+                                                    <div key={i} className="bg-white p-3 rounded-lg border border-border shadow-none flex items-end gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                        <div className="flex-1">
+                                                            <NumberInput 
+                                                                label="Tras Hora" 
+                                                                value={b.after} 
+                                                                onChange={(val) => updateBreak(i, 'after', Number(val))} 
+                                                                min={1} 
+                                                                max={count} 
+                                                                compact
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <NumberInput 
+                                                                label="Minutos" 
+                                                                value={b.duration} 
+                                                                onChange={(val) => updateBreak(i, 'duration', Number(val))} 
+                                                                min={5} 
+                                                                max={120} 
+                                                                compact
+                                                            />
+                                                        </div>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            onClick={() => removeBreak(i)}
+                                                            className="h-11 w-11 text-muted-foreground/50 hover:text-rose-600 hover:bg-rose-50 transition-all shadow-none shrink-0"
+                                                        >
+                                                            <Trash2 className="size-4" />
+                                                        </Button>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Preview Column */}
+                        <div className={cn(
+                            "flex-1 flex flex-col overflow-hidden bg-white",
+                            activeTab !== 'preview' && "hidden md:flex"
+                        )}>
+                            <div className="hidden md:flex items-center justify-between px-8 h-20 border-b border-border shrink-0 bg-white">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 rounded-lg bg-emerald-500 text-white shadow-none">
+                                        <ListChecks className="size-5" />
+                                    </div>
+                                    <div>
+                                        <Label className="text-xs font-black uppercase tracking-[0.2em] text-emerald-600">Vista Previa</Label>
+                                        <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mt-0.5">Sincronizado — {preview.length} sesiones</p>
+                                    </div>
+                                </div>
+                                <div className="px-5 py-2.5 rounded-md bg-muted/40 border border-border/50 text-[10px] font-black uppercase tracking-widest text-muted-foreground tabular-nums">
+                                    {shift}
+                                </div>
+                            </div>
+
+                            <div className="h-full overflow-y-auto p-4 md:p-8 bg-white pb-safe scrollbar-hide hover:scrollbar-default transition-all">
+                                <div className="max-w-md mx-auto space-y-3">
+                                    {preview.length === 0 ? (
+                                        <div className="h-[400px] flex flex-col items-center justify-center text-center p-12 opacity-30 select-none">
+                                            <div className="size-20 rounded-full bg-muted flex items-center justify-center mb-6 animate-pulse">
+                                                <Clock className="size-10 text-muted-foreground" />
+                                            </div>
+                                            <h3 className="text-xs font-black uppercase tracking-widest mb-2 text-foreground">Sin Cronograma</h3>
+                                            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest max-w-[200px]">Ajusta los parámetros para generar el cronograma.</p>
+                                        </div>
+                                    ) : (
+                                        preview.map((h, idx) => (
                                             <div 
                                                 key={idx}
                                                 className={cn(
-                                                    "flex items-center justify-between p-4 rounded-xl border transition-all animate-in fade-in slide-in-from-right-4 duration-300",
+                                                    "group flex items-center justify-between p-4 rounded-xl border transition-all animate-in fade-in slide-in-from-right-4 duration-300",
                                                     h.isBreak 
                                                         ? "bg-amber-50/40 border-amber-100/50" 
                                                         : "bg-white border-border/60 hover:border-primary/30 hover:bg-muted/5"
@@ -363,8 +401,8 @@ export function BulkCreateHoursDialog({
                                             >
                                                 <div className="flex items-center gap-4">
                                                     <div className={cn(
-                                                        "size-9 rounded-lg flex items-center justify-center font-black text-xs tabular-nums transition-transform group-hover:scale-110",
-                                                        h.isBreak ? "bg-amber-100 text-amber-600" : "bg-primary/10 text-primary border border-primary/20"
+                                                        "size-10 rounded-lg flex items-center justify-center font-black text-xs tabular-nums transition-transform group-hover:scale-110",
+                                                        h.isBreak ? "bg-amber-100 text-amber-600" : "bg-primary/10 text-primary border border-primary/20 shadow-none"
                                                     )}>
                                                         {h.isBreak ? 'R' : `${idx + 1}°`}
                                                     </div>
@@ -377,14 +415,14 @@ export function BulkCreateHoursDialog({
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="text-[9px] font-black text-muted-foreground/20 uppercase tracking-[0.2em]">{idx + 1}</div>
+                                                <div className="text-[9px] font-black text-muted-foreground/10 uppercase tracking-[0.2em] transition-opacity select-none">{idx + 1}</div>
                                             </div>
-                                        ))}
-                                    </div>
+                                        ))
+                                    )}
                                 </div>
-                            </TabsContent>
+                            </div>
                         </div>
-                    </Tabs>
+                    </div>
 
                     {/* Footer */}
                     <div className="p-4 md:p-8 border-t border-border bg-white flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0 mt-auto">
