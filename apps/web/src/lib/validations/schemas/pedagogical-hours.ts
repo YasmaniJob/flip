@@ -20,5 +20,8 @@ export const updatePedagogicalHourSchema = z.object({
   active: z.boolean().optional(),
 });
 
+export const bulkCreatePedagogicalHourSchema = z.array(createPedagogicalHourSchema);
+
 export type CreatePedagogicalHourInput = z.infer<typeof createPedagogicalHourSchema>;
 export type UpdatePedagogicalHourInput = z.infer<typeof updatePedagogicalHourSchema>;
+export type BulkCreatePedagogicalHourInput = z.infer<typeof bulkCreatePedagogicalHourSchema>;

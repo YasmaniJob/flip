@@ -8,8 +8,9 @@ import {
     useDeletePedagogicalHour,
     type PedagogicalHour,
 } from '@/features/settings/hooks/use-pedagogical-hours';
-import { Plus, Trash2, Loader2, AlertCircle, Sun, Moon } from 'lucide-react';
+import { Plus, Trash2, Loader2, AlertCircle, Sun, Moon, Wand2, Clock } from 'lucide-react';
 import { ActionConfirm } from '@/components/molecules/action-confirm';
+import { BulkCreateHoursDialog } from './bulk-create-hours-dialog';
 import { cn } from '@/lib/utils';
 
 export function PedagogicalHoursSettings() {
@@ -17,8 +18,10 @@ export function PedagogicalHoursSettings() {
     const createMutation = useCreatePedagogicalHour();
     const deleteMutation = useDeletePedagogicalHour();
 
-    // Delete confirmation
+    // Dialog states
     const [deletingHour, setDeletingHour] = useState<PedagogicalHour | null>(null);
+    const [showBulkDialog, setShowBulkDialog] = useState(false);
+    const [selectedShift, setSelectedShift] = useState<'mañana' | 'tarde'>('mañana');
 
     const sortedHours = useMemo(() => 
         [...hours].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)), 
@@ -43,6 +46,11 @@ export function PedagogicalHoursSettings() {
             isBreak: false,
             sortOrder: hours.length,
         });
+    };
+
+    const openBulkGenerator = (shift: 'mañana' | 'tarde') => {
+        setSelectedShift(shift);
+        setShowBulkDialog(true);
     };
 
     const handleDelete = async () => {
@@ -99,36 +107,60 @@ export function PedagogicalHoursSettings() {
                         </p>
                     </div>
                 </div>
-                <Button
-                    onClick={() => addHourByShift(shift)}
-                    disabled={createMutation.isPending}
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 rounded-md border-border hover:bg-primary hover:text-white hover:border-primary transition-all shadow-none"
-                >
-                    <Plus className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-1.5">
+                    <Button
+                        onClick={() => openBulkGenerator(shift)}
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 rounded-md border-border text-[10px] font-black uppercase tracking-widest hover:bg-[#0052cc] hover:text-white transition-all shadow-none flex items-center gap-1.5"
+                    >
+                        <Wand2 className="h-3.5 w-3.5" />
+                        Generar
+                    </Button>
+                    <div className="w-px h-6 bg-border mx-1" />
+                    <Button
+                        onClick={() => addHourByShift(shift)}
+                        disabled={createMutation.isPending}
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-md border-border hover:bg-primary hover:text-white hover:border-primary transition-all shadow-none"
+                    >
+                        <Plus className="h-4 w-4" />
+                    </Button>
+                </div>
             </div>
             
-            <div className="p-2 space-y-1 min-h-[120px]">
+            <div className="p-2 space-y-1 min-h-[200px] bg-white/50 transition-all duration-500">
                 {shiftHours.length === 0 ? (
-                    <div className="h-full flex items-center justify-center py-10 opacity-30 grayscale">
-                         <div className="text-center">
-                            <Icon className="h-8 w-8 mx-auto mb-2" />
-                            <p className="text-[10px] font-black uppercase tracking-widest">Sin horarios</p>
-                         </div>
+                    <div className="h-full flex flex-col items-center justify-center py-12 opacity-30 grayscale">
+                        <Icon className="h-10 w-10 mb-2" />
+                        <p className="text-[10px] font-black uppercase tracking-widest text-center">Sin horarios<br/>configurados</p>
                     </div>
                 ) : (
                     shiftHours.map((hour, idx) => (
                         <div
                             key={hour.id}
-                            className="group flex items-center justify-between p-3 rounded-lg border border-transparent hover:border-border hover:bg-background/80 transition-all text-sm"
+                            className={cn(
+                                "group flex items-center justify-between p-3 rounded-lg border transition-all text-sm",
+                                hour.isBreak ? "bg-amber-50/30 border-amber-100" : "bg-white border-transparent hover:border-border hover:bg-background/80"
+                            )}
                         >
                             <div className="flex items-center gap-4">
-                                <div className="w-7 h-7 rounded bg-primary/10 border border-primary/20 flex items-center justify-center font-black text-primary text-[10px] shrink-0">
-                                    {idx + 1}°
+                                <div className={cn(
+                                    "w-7 h-7 rounded flex items-center justify-center font-black text-[10px] shrink-0",
+                                    hour.isBreak ? "bg-amber-100 text-amber-700" : "bg-primary/10 text-primary border border-primary/20"
+                                )}>
+                                    {hour.isBreak ? 'R' : `${idx + 1}°`}
                                 </div>
-                                <span className="font-bold text-foreground tracking-tight">{hour.name}</span>
+                                <div className="min-w-0">
+                                    <span className={cn("font-bold tracking-tight block", hour.isBreak ? "text-amber-800" : "text-foreground")}>
+                                        {hour.name}
+                                    </span>
+                                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                                        <Clock className="h-3 w-3" />
+                                        {hour.startTime} - {hour.endTime}
+                                    </div>
+                                </div>
                             </div>
                             
                             <Button
@@ -162,6 +194,14 @@ export function PedagogicalHoursSettings() {
                     shift="tarde"
                 />
             </div>
+
+            {/* Bulk Creation Dialog */}
+            <BulkCreateHoursDialog
+                open={showBulkDialog}
+                onOpenChange={setShowBulkDialog}
+                shift={selectedShift}
+                existingCount={selectedShift === 'mañana' ? morningHours.length : afternoonHours.length}
+            />
 
             {/* Delete Confirmation: Institutional Action Box */}
             <ActionConfirm

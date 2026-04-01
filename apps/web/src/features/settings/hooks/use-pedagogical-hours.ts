@@ -41,6 +41,24 @@ export function useCreatePedagogicalHour() {
     });
 }
 
+export function useBulkCreatePedagogicalHours() {
+    const queryClient = useQueryClient();
+    const api = useApiClient();
+
+    return useMutation({
+        mutationFn: (data: Omit<PedagogicalHour, 'id' | 'active'>[]) =>
+            api.post<PedagogicalHour[]>('/pedagogical-hours/bulk', data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['pedagogical-hours'] });
+            queryClient.invalidateQueries({ queryKey: ['institution', 'config-loadout'] });
+            showSuccess('Horario configurado correctamente');
+        },
+        onError: (error) => {
+            handleApiError(error, 'No se pudo configurar el horario');
+        },
+    });
+}
+
 export function useUpdatePedagogicalHour() {
     const queryClient = useQueryClient();
     const api = useApiClient();

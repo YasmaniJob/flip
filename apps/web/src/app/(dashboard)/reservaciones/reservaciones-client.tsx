@@ -503,6 +503,9 @@ export function ReservacionesClient() {
                                                         <span className={cn("text-[10px] font-black uppercase tracking-widest leading-none", isLiveRow ? "text-primary" : "text-muted-foreground")}>
                                                             {hour.name}
                                                         </span>
+                                                        <span className={cn("text-[9px] font-bold uppercase tabular-nums tracking-wider transition-colors", isLiveRow ? "text-primary/70" : "text-muted-foreground/60")}>
+                                                            {hour.startTime} — {hour.endTime}
+                                                        </span>
                                                     </div>
                                                     {isLiveRow && (
                                                         <div className="absolute right-[-1px] top-1/2 -translate-y-1/2 w-1.5 h-11 bg-primary rounded-l-full" />
@@ -517,7 +520,10 @@ export function ReservacionesClient() {
 
                                                     if (hour.isBreak) return (
                                                         <td key={i} className={cn("p-2 border-t border-border", !isLastCol && "border-r")}>
-                                                            <div className="h-full flex items-center justify-center opacity-10 font-black text-xs tracking-[1em] uppercase -rotate-90 text-muted-foreground/50">RECESO</div>
+                                                            <div className="h-full flex flex-col items-center justify-center opacity-20 group-hover:opacity-60 transition-opacity font-black text-[10px] tracking-widest uppercase text-muted-foreground/50">
+                                                                <span className="mb-1">{hour.name}</span>
+                                                                <span className="text-[8px] tabular-nums tracking-tighter">{hour.startTime} - {hour.endTime}</span>
+                                                            </div>
                                                         </td>
                                                     );
 
