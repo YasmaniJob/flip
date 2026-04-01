@@ -26,28 +26,28 @@ const NumberInput = ({
     value, 
     onChange, 
     min = 0, 
-    max = 999,
+    max = 100,
     className,
     compact = false
 }: { 
-    label?: string, 
-    value: number | string, 
-    onChange: (val: string) => void,
-    min?: number,
-    max?: number,
-    className?: string,
-    compact?: boolean
+    label?: string; 
+    value: string | number; 
+    onChange: (val: string) => void;
+    min?: number;
+    max?: number;
+    className?: string;
+    compact?: boolean;
 }) => (
-    <div className={cn("space-y-1.5 flex-1", className)}>
-        {label && <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1 leading-none">{label}</Label>}
-        <div className="flex h-12 lg:h-14 overflow-hidden rounded-md border border-border focus-within:border-primary/50 transition-all bg-white group">
+    <div className={cn("space-y-2 flex-1", className)}>
+        {label && <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-0.5 leading-none">{label}</Label>}
+        <div className="flex h-12 overflow-hidden rounded-md border border-border focus-within:border-primary/50 transition-all bg-white group">
             <Input 
                 type="text"
                 value={value}
                 onChange={(e) => onChange(e.target.value.replace(/\D/g, ''))}
                 className={cn(
-                    "flex-1 h-full border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all text-center font-black tabular-nums placeholder:text-muted-foreground/20 p-0 pl-7 lg:pl-10",
-                    compact ? "text-base lg:text-lg" : "text-xl lg:text-2xl"
+                    "flex-1 h-full border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all text-center font-black tabular-nums placeholder:text-muted-foreground/20 p-0 pl-7",
+                    compact ? "text-base" : "text-xl"
                 )}
                 placeholder="0"
             />
@@ -56,13 +56,13 @@ const NumberInput = ({
                     onClick={() => onChange(String(Math.min(max, (Number(value) || 0) + 1)))} 
                     className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors border-b border-border/50 p-0"
                 >
-                    <ChevronUp className="size-4 lg:size-5" />
+                    <ChevronUp className="size-4" />
                 </button>
                 <button 
                     onClick={() => onChange(String(Math.max(min, (Number(value) || 0) - 1)))} 
                     className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors p-0"
                 >
-                    <ChevronDown className="size-4 lg:size-5" />
+                    <ChevronDown className="size-4" />
                 </button>
             </div>
         </div>
@@ -109,43 +109,46 @@ export function BulkCreateHoursDialog({
 
     // Generated Preview
     const preview = useMemo(() => {
-        const result = [];
-        let currentStart = startTime;
+        const hours: any[] = [];
+        let currentTotalMinutes = parseInt(startH) * 60 + parseInt(startM);
 
-        const addMinutes = (time: string, mins: number) => {
-            const [h, m] = time.split(':').map(Number);
-            const total = h * 60 + m + mins;
-            const newH = Math.floor(total / 60) % 24;
-            const newM = total % 60;
-            return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
-        };
-
-        for (let i = 1; i <= count; i++) {
-            const endTime = addMinutes(currentStart, duration);
-            result.push({
-                name: `${existingCount + i}° Hora`,
-                startTime: currentStart,
-                endTime: endTime,
+        for (let i = 0; i < count; i++) {
+            const hStart = currentTotalMinutes;
+            const hEnd = hStart + duration;
+            const pedagogicalNumber = existingCount + i + 1;
+            
+            hours.push({
+                name: `${pedagogicalNumber}° Hora`,
+                startTime: `${String(Math.floor(hStart / 60)).padStart(2, '0')}:${String(hStart % 60).padStart(2, '0')}`,
+                endTime: `${String(Math.floor(hEnd / 60)).padStart(2, '0')}:${String(hEnd % 60).padStart(2, '0')}`,
+                order: existingCount + i,
+                shift,
                 isBreak: false,
-                sortOrder: existingCount + i - 1,
+                pedagogicalNumber
             });
-            currentStart = endTime;
 
-            const breakRule = breaks.find(b => b.after === i);
-            if (breakRule && i < count) {
-                const breakEnd = addMinutes(currentStart, breakRule.duration);
-                result.push({
+            currentTotalMinutes = hEnd;
+
+            // Check if there's a break after this hour
+            const breakRule = breaks.find(b => b.after === (i + 1));
+            if (breakRule) {
+                const bStart = currentTotalMinutes;
+                const bEnd = bStart + breakRule.duration;
+
+                hours.push({
                     name: 'RECREO',
-                    startTime: currentStart,
-                    endTime: breakEnd,
-                    isBreak: true,
-                    sortOrder: existingCount + i,
+                    startTime: `${String(Math.floor(bStart / 60)).padStart(2, '0')}:${String(bStart % 60).padStart(2, '0')}`,
+                    endTime: `${String(Math.floor(bEnd / 60)).padStart(2, '0')}:${String(bEnd % 60).padStart(2, '0')}`,
+                    order: 0,
+                    shift,
+                    isBreak: true
                 });
-                currentStart = breakEnd;
+
+                currentTotalMinutes = bEnd;
             }
         }
-        return result;
-    }, [startTime, duration, count, breaks, existingCount]);
+        return hours;
+    }, [startTime, duration, count, breaks, shift, existingCount]);
 
     const handleCreate = async () => {
         try {
@@ -157,7 +160,7 @@ export function BulkCreateHoursDialog({
     };
 
     const addBreak = () => {
-        setBreaks([...breaks, { after: count - 1, duration: 15 }]);
+        setBreaks([...breaks, { after: Math.min(count, breaks.length + 1), duration: 15 }]);
     };
 
     const removeBreak = (idx: number) => {
@@ -173,107 +176,113 @@ export function BulkCreateHoursDialog({
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent 
-                showCloseButton={true}
+                showCloseButton={false}
                 className={cn(
                     "max-w-4xl sm:max-w-5xl p-0 overflow-hidden border border-border shadow-none bg-white transition-all duration-500",
-                    "fixed bottom-0 left-0 right-0 sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:bottom-auto sm:right-auto",
-                    "rounded-t-xl rounded-b-none sm:rounded-xl h-[85vh] sm:h-[85vh] max-h-[90vh] sm:max-h-[750px]",
-                    "animate-in slide-in-from-bottom-5 duration-500"
+                    "fixed bottom-0 left-0 right-0 sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2",
+                    "rounded-t-xl rounded-b-none sm:rounded-xl h-[85vh] max-h-[90vh] sm:max-h-full",
+                    "flex flex-col animate-in slide-in-from-bottom-5 duration-500"
                 )}
             >
                 <div className="flex flex-col h-full relative">
                     <DialogTitle className="sr-only">Generador de Horario</DialogTitle>
-                    <DialogDescription className="sr-only">Configura la generación masiva de horas pedagógicas y recesos.</DialogDescription>
+                    <DialogDescription className="sr-only">Configuración institucional del cronograma pedagógico.</DialogDescription>
                     
                     <div className="sm:hidden absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-border/40 rounded-full z-10" />
-                    
-                    {/* Mobile Only Header Tabs */}
-                    <div className="md:hidden pt-6 px-4 pb-2 border-b border-border space-y-4 shrink-0">
+
+                    <div className="flex items-center justify-between px-6 py-4 md:px-8 border-b border-border bg-white shrink-0">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded bg-primary/10 text-primary">
-                                <Wand2 className="size-4" />
+                            <div className="p-2 rounded bg-[#0052cc] text-white shadow-none">
+                                <Wand2 className="size-5" />
                             </div>
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#0052cc]">Generador</Label>
+                            <div>
+                                <h2 className="text-sm font-black uppercase tracking-[0.15em] text-foreground">Generador de Horarios</h2>
+                            </div>
                         </div>
-                        <div className="flex p-1 bg-muted/20 border border-border/50 rounded-lg gap-1">
-                            <button 
-                                onClick={() => setActiveTab('config')}
-                                className={cn(
-                                    "flex-1 h-9 rounded-md text-[10px] font-black uppercase tracking-widest transition-all",
-                                    activeTab === 'config' ? "bg-white text-primary shadow-none" : "text-muted-foreground/60 hover:text-foreground"
-                                )}
-                            >
-                                Ajustes
-                            </button>
-                            <button 
-                                onClick={() => setActiveTab('preview')}
-                                className={cn(
-                                    "flex-1 h-9 rounded-md text-[10px] font-black uppercase tracking-widest transition-all relative",
-                                    activeTab === 'preview' ? "bg-white text-primary shadow-none" : "text-muted-foreground/60 hover:text-foreground"
-                                )}
-                            >
-                                Previa
-                                {preview.length > 0 && (
-                                    <span className={cn(
-                                        "absolute -top-1 -right-1 size-4 rounded-full flex items-center justify-center text-[7px] font-black border-2 border-white",
-                                        activeTab === 'preview' ? "bg-primary text-white" : "bg-muted-foreground text-white"
-                                    )}>
-                                        {preview.length}
-                                    </span>
-                                )}
-                            </button>
+                        <div className={cn(
+                            "px-4 py-1.5 rounded border text-[10px] font-black uppercase tracking-widest tabular-nums transition-colors",
+                            shift === 'mañana' ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-indigo-50 text-indigo-700 border-indigo-200"
+                        )}>
+                            Turno {shift}
                         </div>
                     </div>
 
-                    <div className="flex-1 flex flex-col md:flex-row overflow-hidden divide-x divide-border">
-                        {/* Configuracion Column */}
-                        <div className={cn(
-                            "flex-1 md:w-[420px] md:flex-none flex flex-col overflow-hidden transition-all duration-300",
-                            activeTab !== 'config' && "hidden md:flex"
-                        )}>
-                            <div className="h-full overflow-y-auto p-4 md:p-8 space-y-8 scrollbar-hide hover:scrollbar-default transition-all bg-muted/5">
-                                <div className="space-y-6">
-                                    <div className="hidden md:flex items-center gap-3 mb-4">
-                                        <div className="p-2.5 rounded-lg bg-primary text-white">
-                                            <Settings2 className="size-5" />
-                                        </div>
-                                        <div>
-                                            <Label className="text-xs font-black uppercase tracking-[0.2em] text-primary">Configuración</Label>
-                                            <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mt-0.5">Parámetros operativos</p>
-                                        </div>
-                                    </div>
+                    <div className="md:hidden flex p-1.5 bg-muted/20 border-b border-border gap-1.5">
+                        <button 
+                            onClick={() => setActiveTab('config')}
+                            className={cn(
+                                "flex-1 h-9 rounded text-[10px] font-black uppercase tracking-widest transition-all",
+                                activeTab === 'config' ? "bg-white text-[#0052cc] border border-border shadow-none" : "text-muted-foreground/60 hover:text-foreground"
+                            )}
+                        >
+                            <Settings2 className="size-3.5 inline mr-1.5" />
+                            Ajustes
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('preview')}
+                            className={cn(
+                                "flex-1 h-9 rounded text-[10px] font-black uppercase tracking-widest transition-all relative",
+                                activeTab === 'preview' ? "bg-white text-[#0052cc] border border-border shadow-none" : "text-muted-foreground/60 hover:text-foreground"
+                            )}
+                        >
+                            <ListChecks className="size-3.5 inline mr-1.5" />
+                            Previa
+                            {preview.length > 0 && (
+                                <span className="ml-2 px-1.5 py-0.5 rounded bg-[#0052cc]/10 text-[#0052cc] text-[9px]">
+                                    {preview.length}
+                                </span>
+                            )}
+                        </button>
+                    </div>
 
-                                    <div className="space-y-5">
-                                        <Label className="text-[11px] font-black uppercase tracking-widest text-[#0052cc] block leading-none">Punto de Partida</Label>
+                        <div className="flex-1 flex flex-col md:flex-row overflow-hidden divide-x divide-border min-h-0 bg-white">
+                            {/* Configuracion Column */}
+                            <div className={cn(
+                                "flex-1 md:w-[380px] md:flex-none flex flex-col min-h-0 transition-all duration-300",
+                                activeTab !== 'config' && "hidden md:flex"
+                            )}>
+                            <div className={cn(
+                                "flex-1 overflow-y-auto p-6 md:p-8 space-y-10 bg-muted/5 min-h-0 transition-colors",
+                                "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent",
+                                "[&::-webkit-scrollbar-thumb]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/10 [&::-webkit-scrollbar-thumb]:rounded-full"
+                            )}>
+                                <div className="space-y-8">
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-px flex-1 bg-border/60" />
+                                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30 shrink-0">Punto de Partida</Label>
+                                            <div className="h-px flex-1 bg-border/60" />
+                                        </div>
+                                        
                                         <div className="flex items-center gap-4">
-                                            <div className="flex-1 space-y-2">
-                                                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1 block">Horas</Label>
-                                                <div className="flex h-14 overflow-hidden rounded-md border border-border focus-within:border-primary/50 transition-all bg-white group">
+                                            <div className="flex-1 space-y-2.5">
+                                                <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest ml-1">Horas</Label>
+                                                <div className="flex h-14 overflow-hidden rounded-md border border-border bg-white focus-within:border-primary/50 transition-all group">
                                                     <Input 
                                                         value={startH} 
                                                         onChange={(e) => handleHourChange(e.target.value)}
-                                                        className="flex-1 h-full border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all text-center text-xl lg:text-2xl font-black tabular-nums p-0 pl-8 lg:pl-10"
+                                                        className="flex-1 h-full border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all text-center text-3xl font-black tabular-nums p-0 pl-8"
                                                         maxLength={2}
                                                     />
-                                                    <div className="flex flex-col border-l border-border w-8 lg:w-10 shrink-0 bg-muted/5">
-                                                        <button onClick={() => handleHourChange(String(Number(startH) + 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors border-b border-border/50 p-0"><ChevronUp className="size-4 lg:size-5" /></button>
-                                                        <button onClick={() => handleHourChange(String(Number(startH) - 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors p-0"><ChevronDown className="size-4 lg:size-5" /></button>
+                                                    <div className="flex flex-col border-l border-border w-10 shrink-0 bg-muted/5">
+                                                        <button onClick={() => handleHourChange(String(Number(startH) + 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors border-b border-border/50 p-0"><ChevronUp className="size-4" /></button>
+                                                        <button onClick={() => handleHourChange(String(Number(startH) - 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors p-0"><ChevronDown className="size-4" /></button>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="pt-7 text-2xl font-black text-muted-foreground/40">:</div>
-                                            <div className="flex-1 space-y-2">
-                                                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1 block">Minutos</Label>
-                                                <div className="flex h-14 overflow-hidden rounded-md border border-border focus-within:border-primary/50 transition-all bg-white group">
+                                            <div className="pt-8 text-2xl font-black text-muted-foreground/10">:</div>
+                                            <div className="flex-1 space-y-2.5">
+                                                <Label className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest ml-1">Minutos</Label>
+                                                <div className="flex h-14 overflow-hidden rounded-md border border-border bg-white focus-within:border-primary/50 transition-all group">
                                                     <Input 
                                                         value={startM} 
                                                         onChange={(e) => handleMinuteChange(e.target.value)}
-                                                        className="flex-1 h-full border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all text-center text-xl lg:text-2xl font-black tabular-nums p-0 pl-8 lg:pl-10"
+                                                        className="flex-1 h-full border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all text-center text-3xl font-black tabular-nums p-0 pl-8"
                                                         maxLength={2}
                                                     />
-                                                    <div className="flex flex-col border-l border-border w-8 lg:w-10 shrink-0 bg-muted/5">
-                                                        <button onClick={() => handleMinuteChange(String(Number(startM) + 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors border-b border-border/50 p-0"><ChevronUp className="size-4 lg:size-5" /></button>
-                                                        <button onClick={() => handleMinuteChange(String(Number(startM) - 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors p-0"><ChevronDown className="size-4 lg:size-5" /></button>
+                                                    <div className="flex flex-col border-l border-border w-10 shrink-0 bg-muted/5">
+                                                        <button onClick={() => handleMinuteChange(String(Number(startM) + 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors border-b border-border/50 p-0"><ChevronUp className="size-4" /></button>
+                                                        <button onClick={() => handleMinuteChange(String(Number(startM) - 1))} className="flex-1 flex items-center justify-center hover:bg-muted active:bg-muted-foreground/10 text-muted-foreground/40 hover:text-primary transition-colors p-0"><ChevronDown className="size-4" /></button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -298,28 +307,34 @@ export function BulkCreateHoursDialog({
                                     </div>
 
                                     <div className="space-y-6 pt-4">
-                                        <div className="flex items-center justify-between border-b border-border/50 pb-2">
-                                            <Label className="text-[10px] font-black uppercase tracking-widest text-[#0052cc]">Recesos y Descansos</Label>
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-px flex-1 bg-border/60" />
+                                            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/30 shrink-0">Recesos y Descansos</Label>
+                                            <div className="h-px flex-1 bg-border/60" />
                                             <Button 
                                                 variant="outline" 
                                                 size="sm" 
                                                 onClick={addBreak}
-                                                className="h-7 px-3 border-dashed border-primary/30 text-primary hover:bg-primary/5 text-[9px] font-black uppercase tracking-widest shadow-none"
+                                                className="h-7 px-3 border border-primary/20 text-[#0052cc] hover:bg-[#0052cc]/5 text-[9px] font-black uppercase tracking-widest shadow-none"
                                             >
                                                 <Plus className="size-3 mr-1" />
                                                 Añadir
                                             </Button>
                                         </div>
                                         
-                                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide hover:scrollbar-default transition-all">
+                                        <div className={cn(
+                                            "space-y-4 max-h-[300px] overflow-y-auto pr-2 transition-colors",
+                                            "[&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent",
+                                            "[&::-webkit-scrollbar-thumb]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/10 [&::-webkit-scrollbar-thumb]:rounded-full"
+                                        )}>
                                             {breaks.length === 0 ? (
-                                                <div className="p-8 border border-dashed border-border rounded-xl text-center opacity-40 bg-white">
-                                                    <Clock className="size-6 mx-auto mb-2 text-muted-foreground" />
-                                                    <p className="text-[9px] font-black uppercase tracking-[0.2em]">Sin recesos activos</p>
+                                                <div className="p-10 border border-dashed border-border rounded text-center opacity-30 bg-white">
+                                                    <Clock className="size-5 mx-auto mb-2 text-muted-foreground" />
+                                                    <p className="text-[9px] font-black uppercase tracking-[0.2em]">Cero interrupciones</p>
                                                 </div>
                                             ) : (
                                                 breaks.map((b, i) => (
-                                                    <div key={i} className="bg-white p-3 rounded-lg border border-border shadow-none flex items-end gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                    <div key={i} className="bg-white p-4 rounded border border-border shadow-none flex items-end gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
                                                         <div className="flex-1">
                                                             <NumberInput 
                                                                 label="Tras Hora" 
@@ -344,7 +359,7 @@ export function BulkCreateHoursDialog({
                                                             variant="ghost" 
                                                             size="icon" 
                                                             onClick={() => removeBreak(i)}
-                                                            className="h-11 w-11 text-muted-foreground/50 hover:text-rose-600 hover:bg-rose-50 transition-all shadow-none shrink-0"
+                                                            className="h-10 w-10 text-muted-foreground/20 hover:text-rose-600 hover:bg-rose-50 transition-all shadow-none shrink-0"
                                                         >
                                                             <Trash2 className="size-4" />
                                                         </Button>
@@ -362,60 +377,62 @@ export function BulkCreateHoursDialog({
                             "flex-1 flex flex-col overflow-hidden bg-white",
                             activeTab !== 'preview' && "hidden md:flex"
                         )}>
-                            <div className="hidden md:flex items-center justify-between px-8 h-20 border-b border-border shrink-0 bg-white">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2.5 rounded-lg bg-emerald-500 text-white shadow-none">
-                                        <ListChecks className="size-5" />
-                                    </div>
-                                    <div>
-                                        <Label className="text-xs font-black uppercase tracking-[0.2em] text-emerald-600">Vista Previa</Label>
-                                        <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest mt-0.5">Sincronizado — {preview.length} sesiones</p>
-                                    </div>
-                                </div>
-                                <div className="px-5 py-2.5 rounded-md bg-muted/40 border border-border/50 text-[10px] font-black uppercase tracking-widest text-muted-foreground tabular-nums">
-                                    {shift}
-                                </div>
-                            </div>
-
-                            <div className="h-full overflow-y-auto p-4 md:p-8 bg-white pb-safe scrollbar-hide hover:scrollbar-default transition-all">
-                                <div className="max-w-md mx-auto space-y-3">
+                            <div className={cn(
+                                "flex-1 overflow-y-auto p-6 md:p-8 bg-white pb-safe min-h-0 transition-colors",
+                                "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent",
+                                "[&::-webkit-scrollbar-thumb]:bg-transparent hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/10 [&::-webkit-scrollbar-thumb]:rounded-full"
+                            )}>
+                                <div className="space-y-4 w-full">
                                     {preview.length === 0 ? (
-                                        <div className="h-[400px] flex flex-col items-center justify-center text-center p-12 opacity-30 select-none">
-                                            <div className="size-20 rounded-full bg-muted flex items-center justify-center mb-6 animate-pulse">
-                                                <Clock className="size-10 text-muted-foreground" />
+                                        <div className="h-[400px] flex flex-col items-center justify-center text-center p-12 opacity-20 select-none bg-muted/5 rounded border border-dashed border-border">
+                                            <div className="size-16 rounded-full bg-muted flex items-center justify-center mb-6">
+                                                <Clock className="size-8 text-muted-foreground" />
                                             </div>
-                                            <h3 className="text-xs font-black uppercase tracking-widest mb-2 text-foreground">Sin Cronograma</h3>
-                                            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest max-w-[200px]">Ajusta los parámetros para generar el cronograma.</p>
+                                            <h3 className="text-xs font-black uppercase tracking-widest mb-2 text-foreground">Ajustes Requeridos</h3>
+                                            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest max-w-[200px]">Define los parámetros para previsualizar.</p>
                                         </div>
                                     ) : (
                                         preview.map((h, idx) => (
                                             <div 
                                                 key={idx}
                                                 className={cn(
-                                                    "group flex items-center justify-between p-4 rounded-xl border transition-all animate-in fade-in slide-in-from-right-4 duration-300",
+                                                    "group flex items-center gap-6 p-5 rounded border transition-all animate-in fade-in slide-in-from-right-4 duration-300",
                                                     h.isBreak 
-                                                        ? "bg-amber-50/40 border-amber-100/50" 
-                                                        : "bg-white border-border/60 hover:border-primary/30 hover:bg-muted/5"
+                                                        ? "bg-amber-50/50 border-amber-200" 
+                                                        : "bg-white border-border hover:border-[#0052cc]/30 hover:bg-[#0052cc]/[0.01]"
                                                 )}
                                                 style={{ animationDelay: `${idx * 40}ms` }}
                                             >
-                                                <div className="flex items-center gap-4">
-                                                    <div className={cn(
-                                                        "size-10 rounded-lg flex items-center justify-center font-black text-xs tabular-nums transition-transform group-hover:scale-110",
-                                                        h.isBreak ? "bg-amber-100 text-amber-600" : "bg-primary/10 text-primary border border-primary/20 shadow-none"
-                                                    )}>
-                                                        {h.isBreak ? 'R' : `${idx + 1}°`}
+                                                <div className={cn(
+                                                    "size-12 rounded flex items-center justify-center font-black text-xs tabular-nums shrink-0 transition-transform group-hover:scale-105",
+                                                    h.isBreak 
+                                                        ? "bg-amber-100 text-amber-700 border border-amber-200" 
+                                                        : "bg-muted/10 text-[#0052cc] border border-border shadow-none"
+                                                )}>
+                                                    {h.isBreak ? 'R' : `${h.pedagogicalNumber}°`}
+                                                </div>
+                                                
+                                                <div className="flex-1 min-w-0">
+                                                    <div className={cn("text-xs font-black tracking-tight uppercase truncate", h.isBreak ? "text-amber-900" : "text-foreground")}>
+                                                        {h.name}
                                                     </div>
-                                                    <div>
-                                                        <div className={cn("text-xs font-black tracking-tight", h.isBreak ? "text-amber-800" : "text-foreground")}>
-                                                            {h.name}
-                                                        </div>
-                                                        <div className="text-[10px] font-bold text-muted-foreground/60 tabular-nums uppercase tracking-widest mt-0.5">
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Clock className={cn("size-3", h.isBreak ? "text-amber-500/30" : "text-muted-foreground/20")} />
+                                                        <span className={cn(
+                                                            "text-[10px] font-bold tabular-nums uppercase tracking-[0.1em]",
+                                                            h.isBreak ? "text-amber-600/60" : "text-muted-foreground/40"
+                                                        )}>
                                                             {h.startTime} — {h.endTime}
-                                                        </div>
+                                                        </span>
                                                     </div>
                                                 </div>
-                                                <div className="text-[9px] font-black text-muted-foreground/10 uppercase tracking-[0.2em] transition-opacity select-none">{idx + 1}</div>
+
+                                                <div className={cn(
+                                                    "text-[8px] font-black uppercase tracking-[0.2em] px-2 py-1 rounded border tabular-nums transition-opacity select-none",
+                                                    h.isBreak ? "border-amber-200/50 text-amber-700/50" : "border-border/50 text-muted-foreground/20"
+                                                )}>
+                                                    {h.isBreak ? 'R' : h.pedagogicalNumber}
+                                                </div>
                                             </div>
                                         ))
                                     )}
@@ -425,7 +442,7 @@ export function BulkCreateHoursDialog({
                     </div>
 
                     {/* Footer */}
-                    <div className="p-4 md:p-8 border-t border-border bg-white flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0 mt-auto">
+                    <div className="p-6 md:p-8 border-t border-border bg-white flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0 mt-auto">
                         <Button 
                             variant="jira" 
                             size="lg"
@@ -438,14 +455,14 @@ export function BulkCreateHoursDialog({
                             ) : (
                                 <Check className="h-4 w-4 stroke-[3]" />
                             )}
-                            Crear Horario Completo
+                            Sincronizar Todo
                         </Button>
                         <Button 
                             variant="ghost" 
                             onClick={() => onOpenChange(false)}
                             className="w-full sm:w-auto px-8 h-12 text-[11px] font-black uppercase tracking-widest shadow-none text-muted-foreground hover:text-foreground order-2 sm:order-1 transition-all"
                         >
-                            Cancelar
+                            Cerrar
                         </Button>
                     </div>
                 </div>

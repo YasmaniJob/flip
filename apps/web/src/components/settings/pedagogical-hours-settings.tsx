@@ -8,7 +8,7 @@ import {
     useDeletePedagogicalHour,
     type PedagogicalHour,
 } from '@/features/settings/hooks/use-pedagogical-hours';
-import { Plus, Trash2, Loader2, AlertCircle, Sun, Moon, Wand2, Clock } from 'lucide-react';
+import { Plus, Trash2, Loader2, AlertCircle, Sun, Moon, Wand2, Clock, Coffee } from 'lucide-react';
 import { ActionConfirm } from '@/components/molecules/action-confirm';
 import { BulkCreateHoursDialog } from './bulk-create-hours-dialog';
 import { cn } from '@/lib/utils';
@@ -44,6 +44,16 @@ export function PedagogicalHoursSettings() {
             startTime: shift === 'mañana' ? '08:00' : '13:00',
             endTime: shift === 'mañana' ? '08:45' : '13:45',
             isBreak: false,
+            sortOrder: hours.length,
+        });
+    };
+
+    const addBreakByShift = async (shift: 'mañana' | 'tarde') => {
+        await createMutation.mutateAsync({
+            name: 'RECREO',
+            startTime: shift === 'mañana' ? '10:00' : '15:45',
+            endTime: shift === 'mañana' ? '10:15' : '16:00',
+            isBreak: true,
             sortOrder: hours.length,
         });
     };
@@ -91,88 +101,124 @@ export function PedagogicalHoursSettings() {
         hours: PedagogicalHour[];
         shift: 'mañana' | 'tarde';
     }) => (
-        <div className="flex-1 min-w-[320px] bg-card/40 border border-border rounded-xl flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-border bg-muted/20 flex items-center justify-between">
+        <div className="flex-1 min-w-[320px] bg-white border border-border rounded-xl flex flex-col overflow-hidden shadow-none">
+            <div className="px-6 py-5 border-b border-border bg-muted/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center",
-                        shift === 'mañana' ? "bg-amber-100 text-amber-600" : "bg-indigo-100 text-indigo-600"
+                        "w-10 h-10 rounded flex items-center justify-center transition-transform hover:scale-105",
+                        shift === 'mañana' ? "bg-amber-100 text-amber-700 border border-amber-200" : "bg-indigo-100 text-indigo-700 border border-indigo-200"
                     )}>
-                        <Icon className="h-5 w-5" />
+                        <Icon className="size-5" />
                     </div>
                     <div>
-                        <h3 className="font-black text-sm uppercase tracking-tighter text-foreground">{title}</h3>
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest leading-none mt-0.5">
-                            {shiftHours.length} {shiftHours.length === 1 ? 'Hora' : 'Horas'} Configurada{shiftHours.length !== 1 && 's'}
+                        <h3 className="font-black text-sm uppercase tracking-[0.1em] text-foreground">{title}</h3>
+                        <p className="text-[10px] text-muted-foreground/40 uppercase font-bold tracking-widest leading-none mt-1">
+                            {shiftHours.filter(h => !h.isBreak).length} horas pedagógicas
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                     <Button
                         onClick={() => openBulkGenerator(shift)}
-                        variant="outline"
+                        variant="jiraOutline"
                         size="sm"
-                        className="h-8 px-3 rounded-md border-border text-[10px] font-black uppercase tracking-widest hover:bg-[#0052cc] hover:text-white transition-all shadow-none flex items-center gap-1.5"
+                        className="h-8 px-4 text-[10px] font-black uppercase tracking-widest shadow-none gap-2"
                     >
                         <Wand2 className="h-3.5 w-3.5" />
-                        Generar
+                        Generador
                     </Button>
-                    <div className="w-px h-6 bg-border mx-1" />
+                    <Button
+                        onClick={() => addBreakByShift(shift)}
+                        disabled={createMutation.isPending}
+                        variant="jiraOutline"
+                        size="sm"
+                        className="h-8 px-3 text-[10px] font-black uppercase tracking-widest shadow-none gap-2 border-amber-200 text-amber-700 hover:bg-amber-50"
+                    >
+                        <Coffee className="h-3.5 w-3.5" />
+                        Receso
+                    </Button>
+                    <div className="w-px h-5 bg-border mx-1" />
                     <Button
                         onClick={() => addHourByShift(shift)}
                         disabled={createMutation.isPending}
-                        variant="outline"
+                        variant="jira"
                         size="icon"
-                        className="h-8 w-8 rounded-md border-border hover:bg-primary hover:text-white hover:border-primary transition-all shadow-none"
+                        className="h-8 w-8 shadow-none"
                     >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-4 w-4 stroke-[3]" />
                     </Button>
                 </div>
             </div>
             
-            <div className="p-2 space-y-1 min-h-[200px] bg-white/50 transition-all duration-500">
+            <div className="p-6 md:p-8 space-y-4 flex-1 bg-white">
                 {shiftHours.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center py-12 opacity-30 grayscale">
                         <Icon className="h-10 w-10 mb-2" />
                         <p className="text-[10px] font-black uppercase tracking-widest text-center">Sin horarios<br/>configurados</p>
                     </div>
                 ) : (
-                    shiftHours.map((hour, idx) => (
-                        <div
-                            key={hour.id}
-                            className={cn(
-                                "group flex items-center justify-between p-3 rounded-lg border transition-all text-sm",
-                                hour.isBreak ? "bg-amber-50/30 border-amber-100" : "bg-white border-transparent hover:border-border hover:bg-background/80"
-                            )}
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className={cn(
-                                    "w-7 h-7 rounded flex items-center justify-center font-black text-[10px] shrink-0",
-                                    hour.isBreak ? "bg-amber-100 text-amber-700" : "bg-primary/10 text-primary border border-primary/20"
-                                )}>
-                                    {hour.isBreak ? 'R' : `${idx + 1}°`}
-                                </div>
-                                <div className="min-w-0">
-                                    <span className={cn("font-bold tracking-tight block", hour.isBreak ? "text-amber-800" : "text-foreground")}>
-                                        {hour.name}
-                                    </span>
-                                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
-                                        <Clock className="h-3 w-3" />
-                                        {hour.startTime} - {hour.endTime}
+                    (() => {
+                        let pedagogicalCounter = 0;
+                        return shiftHours.map((hour, idx) => {
+                            if (!hour.isBreak) pedagogicalCounter++;
+                            const currentNum = pedagogicalCounter;
+                            
+                            return (
+                                <div
+                                    key={hour.id}
+                                    className={cn(
+                                        "group flex items-center gap-5 p-4 rounded-xl border transition-all animate-in fade-in slide-in-from-right-4 duration-300",
+                                        hour.isBreak 
+                                            ? "bg-amber-50/50 border-amber-200/60" 
+                                            : "bg-white border-border/80 hover:border-primary/40 hover:bg-primary/[0.02]"
+                                    )}
+                                    style={{ animationDelay: `${idx * 40}ms` }}
+                                >
+                                    <div className={cn(
+                                        "size-10 rounded flex items-center justify-center font-black text-xs tabular-nums shrink-0 transition-transform group-hover:scale-105",
+                                        hour.isBreak 
+                                            ? "bg-amber-100 text-amber-700 border border-amber-200" 
+                                            : "bg-muted/10 text-primary border border-border shadow-none"
+                                    )}>
+                                        {hour.isBreak ? 'R' : `${currentNum}°`}
+                                    </div>
+                                    
+                                    <div className="flex-1 min-w-0">
+                                        <div className={cn("text-xs font-black tracking-tight uppercase truncate", hour.isBreak ? "text-amber-900" : "text-foreground")}>
+                                            {hour.name}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <Clock className={cn("size-3", hour.isBreak ? "text-amber-500/30" : "text-muted-foreground/20")} />
+                                            <span className={cn(
+                                                "text-[10px] font-bold tabular-nums uppercase tracking-[0.1em]",
+                                                hour.isBreak ? "text-amber-600/60" : "text-muted-foreground/40"
+                                            )}>
+                                                {hour.startTime} — {hour.endTime}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "text-[8px] font-black uppercase tracking-[0.2em] px-2 py-1 rounded border tabular-nums group-hover:opacity-100 transition-opacity select-none",
+                                            hour.isBreak ? "border-amber-200/50 text-amber-700/50" : "border-border/50 text-muted-foreground/20"
+                                        )}>
+                                            {hour.isBreak ? 'R' : currentNum}
+                                        </div>
+                                        
+                                        <Button
+                                            onClick={() => setDeletingHour(hour)}
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-9 w-9 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-rose-600 hover:bg-rose-50 shadow-none shrink-0"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <Button
-                                onClick={() => setDeletingHour(hour)}
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-rose-600 hover:bg-rose-50"
-                            >
-                                <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                        </div>
-                    ))
+                            );
+                        });
+                    })()
                 )}
             </div>
         </div>
