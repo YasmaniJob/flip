@@ -61,11 +61,19 @@ export async function POST(
     
     // Parse and validate request
     const body = await request.json();
+    console.log('[DIAGNOSTIC_COMPLETE] Request body:', { token: body.token, tokenType: typeof body.token });
+    
     const requestValidation = completeSessionRequestSchema.safeParse(body);
     
     if (!requestValidation.success) {
+      console.error('[DIAGNOSTIC_COMPLETE] Validation failed:', requestValidation.error.errors);
       return NextResponse.json(
-        { error: 'Invalid request data', details: requestValidation.error.errors },
+        { 
+          error: 'Invalid request data', 
+          details: requestValidation.error.errors,
+          receivedToken: body.token,
+          tokenType: typeof body.token,
+        },
         { status: 400 }
       );
     }
