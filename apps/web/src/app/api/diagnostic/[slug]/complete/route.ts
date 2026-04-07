@@ -25,18 +25,6 @@ export async function POST(
     // Get IP for session validation
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     
-    // Rate limiting (disabled for testing)
-    // const isDev = process.env.NODE_ENV === 'development';
-    // const limit = isDev ? 100 : 25;
-    // const rateLimitResult = rateLimit(ip, limit, 3600000);
-    // 
-    // if (!rateLimitResult.success && !isDev) {
-    //   return NextResponse.json(
-    //     { error: 'Demasiados intentos. Por favor, intenta de nuevo en una hora.' },
-    //     { status: 429 }
-    //   );
-    // }
-    
     // Check feature flag
     const diagnosticEnabled = process.env.FEATURE_DIAGNOSTIC_ENABLED === 'true';
     if (!diagnosticEnabled) {
