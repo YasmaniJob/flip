@@ -9,32 +9,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { diagnosticSessions } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { verifyAdminAccess } from '@/features/diagnostic/lib/auth-middleware';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string; sessionId: string } }
+  { params }: { params: Promise<{ id: string; sessionId: string }> }
 ) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session?.user || !session.session.activeInstitutionId) {
+    const { id: institutionId, sessionId } = await params;
+    
+    // Verify admin access
+    const authResult = await verifyAdminAccess(request, institutionId);
+    if (!authResult.authorized) {
       return NextResponse.json(
-        { error: 'No autorizado' },
-        { status: 401 }
-      );
-    }
-
-    const { id: institutionId, sessionId } = params;
-
-    // Verify user belongs to this institution
-    if (session.session.activeInstitutionId !== institutionId) {
-      return NextResponse.json(
-        { error: 'No tienes acceso a esta institución' },
-        { status: 403 }
+        { error: authResult.error },
+        { status: authResult.error === 'Not authenticated' ? 401 : 403 }
       );
     }
 

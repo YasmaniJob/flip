@@ -11,7 +11,7 @@ import { getPendingSessions } from '@/features/diagnostic/lib/staff-integration'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check feature flag
@@ -23,7 +23,7 @@ export async function GET(
       );
     }
     
-    const { id: institutionId } = params;
+    const { id: institutionId } = await params;
     
     // Verify admin access
     const authResult = await verifyAdminAccess(request, institutionId);
