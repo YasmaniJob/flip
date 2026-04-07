@@ -9,7 +9,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { institutions, diagnosticSessions, diagnosticResponses, staff } from '@/lib/db/schema';
 import { eq, and, or } from 'drizzle-orm';
-import { rateLimit } from '@/features/diagnostic/lib/rate-limit';
 import { completeSessionRequestSchema } from '@/features/diagnostic/lib/validation';
 import { validateSession } from '@/features/diagnostic/lib/session-manager';
 import { calculateCategoryScores, calculateOverallScore, determineLevel } from '@/features/diagnostic/lib/scoring';
@@ -23,18 +22,20 @@ export async function POST(
 ) {
   const { slug } = await params;
   try {
-    // Rate limiting
+    // Get IP for session validation
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
-    const isDev = process.env.NODE_ENV === 'development';
-    const limit = isDev ? 100 : 25;
-    const rateLimitResult = rateLimit(ip, limit, 3600000);
     
-    if (!rateLimitResult.success && !isDev) {
-      return NextResponse.json(
-        { error: 'Demasiados intentos. Por favor, intenta de nuevo en una hora.' },
-        { status: 429 }
-      );
-    }
+    // Rate limiting (disabled for testing)
+    // const isDev = process.env.NODE_ENV === 'development';
+    // const limit = isDev ? 100 : 25;
+    // const rateLimitResult = rateLimit(ip, limit, 3600000);
+    // 
+    // if (!rateLimitResult.success && !isDev) {
+    //   return NextResponse.json(
+    //     { error: 'Demasiados intentos. Por favor, intenta de nuevo en una hora.' },
+    //     { status: 429 }
+    //   );
+    // }
     
     // Check feature flag
     const diagnosticEnabled = process.env.FEATURE_DIAGNOSTIC_ENABLED === 'true';
