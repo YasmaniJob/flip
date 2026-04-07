@@ -34,15 +34,18 @@ export async function approveAndCreateStaff(sessionId: string): Promise<ApproveR
     }
     
     // 2. Check if staff already exists with same DNI or email
-    const existingStaff = await tx.query.staff.findFirst({
-      where: and(
-        eq(staff.institutionId, session.institutionId),
-        or(
-          session.dni ? eq(staff.dni, session.dni) : undefined,
-          session.email ? eq(staff.email, session.email) : undefined
-        )
-      ),
-    });
+    const staffConditions = [];
+    if (session.dni) staffConditions.push(eq(staff.dni, session.dni));
+    if (session.email) staffConditions.push(eq(staff.email, session.email));
+    
+    const existingStaff = staffConditions.length > 0
+      ? await tx.query.staff.findFirst({
+          where: and(
+            eq(staff.institutionId, session.institutionId),
+            staffConditions.length > 1 ? or(...(staffConditions as any)) : staffConditions[0]
+          ),
+        })
+      : null;
     
     if (existingStaff) {
       // 3a. Staff exists → Link session to existing staff
