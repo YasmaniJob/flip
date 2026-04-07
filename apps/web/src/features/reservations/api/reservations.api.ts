@@ -11,6 +11,8 @@ export interface ReservationSlot {
     date: string;
     attended: boolean;
     attendedAt: string | null;
+    notAttended: boolean;
+    notAttendedAt: string | null;
     pedagogicalHour: PedagogicalHour;
     staff?: {
         id: string;
@@ -116,6 +118,8 @@ export const ReservationsApi = {
                         date: slot.date,
                         attended: slot.attended,
                         attendedAt: slot.attendedAt,
+                        notAttended: slot.notAttended,
+                        notAttendedAt: slot.notAttendedAt,
                         pedagogicalHour: slot.pedagogicalHour,
                         staff: reservation.staff ? {
                             id: reservation.staff.id,
@@ -162,11 +166,11 @@ export const ReservationsApi = {
         return handleResponse<any>(res);
     },
 
-    markAttendance: async (slotId: string, attended: boolean = true): Promise<any> => {
+    markAttendance: async (slotId: string, options: { attended?: boolean; notAttended?: boolean }): Promise<any> => {
         const res = await fetch(`${BASE_URL}/slots/${slotId}/attendance`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ attended }),
+            body: JSON.stringify(options),
         });
         return handleResponse<any>(res);
     },

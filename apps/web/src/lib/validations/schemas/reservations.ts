@@ -55,7 +55,8 @@ export const rescheduleBlockSchema = z.object({
 
 // Mark attendance on slot
 export const markAttendanceSchema = z.object({
-  attended: z.boolean(),
+  attended: z.boolean().optional(),
+  notAttended: z.boolean().optional(),
 });
 
 // Create attendance (workshop)

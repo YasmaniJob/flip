@@ -78,8 +78,8 @@ export function useCancelSlot() {
 export function useMarkAttendance() {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ slotId, attended }: { slotId: string; attended?: boolean }) =>
-            ReservationsApi.markAttendance(slotId, attended),
+        mutationFn: ({ slotId, attended, notAttended }: { slotId: string; attended?: boolean; notAttended?: boolean }) =>
+            ReservationsApi.markAttendance(slotId, { attended, notAttended }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
             showSuccess('Asistencia actualizada');

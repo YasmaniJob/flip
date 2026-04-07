@@ -1,4 +1,4 @@
-import { ActionConfirm } from '@/components/molecules/action-confirm';
+nimport { ConfirmDeleteDialog } from '@/components/molecules/confirm-delete-dialog';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,10 @@ import { cn } from '@/lib/utils';
 import { useLastDamageReport } from '../hooks/use-last-damage-report';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface MaintenanceDialogProps {
     isOpen: boolean;
@@ -35,6 +39,7 @@ export function MaintenanceDialog({
 }: MaintenanceDialogProps) {
     const [condition, setCondition] = useState('bueno');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showFinishAlert, setShowFinishAlert] = useState(false);
     const [showDecommissionConfirm, setShowDecommissionConfirm] = useState(false);
 
     const [selectedDamages, setSelectedDamages] = useState<Set<number>>(() =>
@@ -52,16 +57,22 @@ export function MaintenanceDialog({
     const completedItems = selectedDamages.size + selectedSuggestions.size;
     const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
+    const checkCompletion = (d: Set<number>, s: Set<number>) => {
+        if (totalItems > 0 && d.size + s.size === totalItems) setShowFinishAlert(true);
+    };
+
     const toggleDamage = (idx: number) => {
         const next = new Set(selectedDamages);
         next.has(idx) ? next.delete(idx) : next.add(idx);
         setSelectedDamages(next);
+        if (!selectedDamages.has(idx)) checkCompletion(next, selectedSuggestions);
     };
 
     const toggleSuggestion = (idx: number) => {
         const next = new Set(selectedSuggestions);
         next.has(idx) ? next.delete(idx) : next.add(idx);
         setSelectedSuggestions(next);
+        if (!selectedSuggestions.has(idx)) checkCompletion(selectedDamages, next);
     };
 
     const toggleNote = (id: string, e: React.MouseEvent) => {
@@ -160,7 +171,7 @@ export function MaintenanceDialog({
                                 </span>
                                 <span className="flex items-center gap-1.5">
                                     <Calendar className="w-3 h-3" />
-                                    {damageReport.reportDate ? format(new Date(damageReport.reportDate), "d MMM yyyy", { locale: es }) : '—'}
+                                    {format(new Date(damageReport.reportDate), "d MMM yyyy", { locale: es })}
                                 </span>
                             </div>
                         )}
@@ -306,20 +317,12 @@ export function MaintenanceDialog({
                             </div>
                         </div>
 
-                        {/* Status Feedback Banner */}
+                        {/* Warning when progress < 100% */}
                         {hasReports && progress < 100 && (
-                            <div className="bg-amber-500/5 border border-amber-500/20 p-3 flex items-start gap-2 animate-in fade-in transition-all">
+                            <div className="bg-amber-500/5 border border-amber-500/20 p-3 flex items-start gap-2">
                                 <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
                                 <p className="text-[10px] text-amber-600 font-medium leading-relaxed">
                                     El recurso no puede marcarse como Disponible hasta que el progreso sea del 100%. Guarda el avance si falta refacción.
-                                </p>
-                            </div>
-                        )}
-                        {hasReports && progress === 100 && (
-                            <div className="bg-primary/5 border border-primary/20 p-3 flex items-start gap-2 animate-in fade-in zoom-in-95 duration-300">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                                <p className="text-[10px] text-primary font-black uppercase tracking-widest leading-relaxed">
-                                    ¡Excelente! Has atendido todos los puntos críticos. El activo puede ser habilitado.
                                 </p>
                             </div>
                         )}
@@ -330,23 +333,23 @@ export function MaintenanceDialog({
                         <Button type="button" variant="ghost"
                             className="text-destructive font-black uppercase tracking-widest text-[10px] hover:text-destructive hover:bg-destructive/5 -ml-2"
                             onClick={() => setShowDecommissionConfirm(true)} disabled={isSubmitting}>
-                            Dar de Baja
+                            Inhabilitar Recurso
                         </Button>
                         <div className="flex gap-2">
                             {onSaveProgress && (
-                                <Button type="button" variant="outline"
+                                <Button type="button" variant="jiraOutline"
                                     className="px-4 font-black text-[10px] uppercase tracking-widest flex items-center gap-2"
                                     onClick={handleSaveProgress} disabled={isSubmitting}>
                                     {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                                    Guardar Avance
+                                    Suspender Taller
                                 </Button>
                             )}
-                            <Button type="button" variant="default" onClick={handleSubmit}
+                            <Button type="button" variant="jira" onClick={handleSubmit}
                                 disabled={!isValid || isSubmitting}
                                 className="px-5 font-black uppercase tracking-widest text-[10px] flex items-center gap-2 h-9">
                                 {isSubmitting
-                                    ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Habilitando...</>
-                                    : <><span>Habilitar</span><CheckCircle2 className="h-3.5 w-3.5" /></>
+                                    ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Firmando...</>
+                                    : <><span>Sellar y Habilitar</span><CheckCircle2 className="h-3.5 w-3.5" /></>
                                 }
                             </Button>
                         </div>
@@ -354,17 +357,26 @@ export function MaintenanceDialog({
                 </DialogContent>
             </Dialog>
 
-            <ActionConfirm
-                open={showDecommissionConfirm}
-                onOpenChange={setShowDecommissionConfirm}
-                onConfirm={confirmDecommission}
-                title="¿Confirmar baja del recurso?"
-                description="Estás por cambiar el estado del activo a Baja. Esto lo inhabilitará permanentemente para préstamos y uso en talleres técnicos."
-                confirmText="Confirmar baja"
-                cancelText="Mantenimiento"
-                variant="destructive"
-                isLoading={isSubmitting}
-            />
-        </>
-    );
-}
+            <AlertDialog open={showFinishAlert} onOpenChange={setShowFinishAlert}>
+                <AlertDialogContent className="max-w-sm border border-border shadow-none">
+                    <AlertDialogHeader>
+                        <div className="w-9 h-9 bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-3">
+                            <CheckCircle2 className="w-4 h-4" />
+                        </div>
+                        <AlertDialogTitle className="text-base font-black uppercase tracking-tight">¿Validar Mantenimiento?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
+                            Has atendido todos los puntos críticos. El activo quedará como{' '}
+                            <span className="text-primary font-black">DISPONIBLE</span>.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-4">
+                        <AlertDialogCancel className="font-black uppercase tracking-widest text-[10px] border border-border shadow-none">Seguir revisando</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleSubmit} className="font-black uppercase tracking-widest text-[10px] bg-primary hover:bg-primary/90 shadow-none h-9">
+                            Sellar y Habilitar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <ConfirmDeleteDialog
+                open={showDec

@@ -102,7 +102,7 @@ export function PedagogicalHoursSettings() {
         shift: 'mañana' | 'tarde';
     }) => (
         <div className="flex-1 min-w-[320px] bg-white border border-border rounded-xl flex flex-col overflow-hidden shadow-none">
-            <div className="px-6 py-5 border-b border-border bg-muted/5 flex items-center justify-between">
+            <div className="px-6 py-5 border-b border-border bg-muted/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <div className={cn(
                         "w-10 h-10 rounded flex items-center justify-center transition-transform hover:scale-105",
@@ -117,33 +117,33 @@ export function PedagogicalHoursSettings() {
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-end gap-2">
                     <Button
                         onClick={() => openBulkGenerator(shift)}
                         variant="jiraOutline"
                         size="sm"
-                        className="h-8 px-4 text-[10px] font-black uppercase tracking-widest shadow-none gap-2"
+                        className="h-8 px-4 text-[10px] font-black uppercase tracking-widest shadow-none gap-2 flex-1 sm:flex-none"
                     >
                         <Wand2 className="h-3.5 w-3.5" />
-                        Generador
+                        <span className="truncate">Generador</span>
                     </Button>
                     <Button
                         onClick={() => addBreakByShift(shift)}
                         disabled={createMutation.isPending}
                         variant="jiraOutline"
                         size="sm"
-                        className="h-8 px-3 text-[10px] font-black uppercase tracking-widest shadow-none gap-2 border-amber-200 text-amber-700 hover:bg-amber-50"
+                        className="h-8 px-3 text-[10px] font-black uppercase tracking-widest shadow-none gap-2 border-amber-200 text-amber-700 hover:bg-amber-50 flex-1 sm:flex-none"
                     >
                         <Coffee className="h-3.5 w-3.5" />
-                        Receso
+                        <span className="truncate">Receso</span>
                     </Button>
-                    <div className="w-px h-5 bg-border mx-1" />
+                    <div className="hidden sm:block w-px h-5 bg-border mx-1" />
                     <Button
                         onClick={() => addHourByShift(shift)}
                         disabled={createMutation.isPending}
                         variant="jira"
                         size="icon"
-                        className="h-8 w-8 shadow-none"
+                        className="h-8 w-8 shadow-none shrink-0"
                     >
                         <Plus className="h-4 w-4 stroke-[3]" />
                     </Button>

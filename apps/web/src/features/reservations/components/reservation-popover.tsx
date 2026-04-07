@@ -21,7 +21,8 @@ export function ReservationPopover({ slot, children, classroomId, shift }: Reser
     const [open, setOpen] = useState(false);
     const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
     const [rescheduleOpen, setRescheduleOpen] = useState(false);
-    const { isTeacher } = useUserRole();
+    const { isTeacher, isPIP, isAdmin, isSuperAdmin } = useUserRole();
+    const canAdmin = isAdmin || isPIP || isSuperAdmin;
 
     const cancelMutation = useCancelSlot();
     const attendanceMutation = useMarkAttendance();
@@ -31,6 +32,18 @@ export function ReservationPopover({ slot, children, classroomId, shift }: Reser
             await attendanceMutation.mutateAsync({
                 slotId: slot.id,
                 attended: !slot.attended,
+            });
+            setOpen(false);
+        } catch (error) {
+            // Error handled by mutation
+        }
+    };
+
+    const handleMarkNotAttended = async () => {
+        try {
+            await attendanceMutation.mutateAsync({
+                slotId: slot.id,
+                notAttended: !slot.notAttended,
             });
             setOpen(false);
         } catch (error) {
@@ -69,9 +82,9 @@ export function ReservationPopover({ slot, children, classroomId, shift }: Reser
                     {/* Header */}
                     <div className="p-4 border-b border-border">
                         <div className="flex items-center gap-2 mb-1">
-                            <div className={`w-2 h-2 rounded-full ${slot.attended ? 'bg-emerald-500' : 'bg-blue-500'}`} />
+                            <div className={`w-2 h-2 rounded-full ${slot.notAttended ? 'bg-red-500' : slot.attended ? 'bg-emerald-500' : 'bg-blue-500'}`} />
                             <span className="text-xs font-medium text-muted-foreground">
-                                {slot.attended ? 'Asistencia confirmada' : 'Pendiente'}
+                                {slot.notAttended ? 'No asistió' : slot.attended ? 'Asistencia confirmada' : 'Pendiente'}
                             </span>
                         </div>
                         <h3 className="font-semibold text-foreground">{slot.staff?.name || 'Sin docente'}</h3>
@@ -136,6 +149,29 @@ export function ReservationPopover({ slot, children, classroomId, shift }: Reser
                                 </>
                             )}
                         </Button>
+
+                        {/* Not Attended Toggle - PIP/Admin only */}
+                        {canAdmin && (
+                            <Button
+                                variant={slot.notAttended ? 'destructive' : 'outline'}
+                                size="sm"
+                                className={`w-full justify-start gap-2 ${!slot.notAttended ? 'text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30' : ''}`}
+                                onClick={handleMarkNotAttended}
+                                disabled={attendanceMutation.isPending}
+                            >
+                                {slot.notAttended ? (
+                                    <>
+                                        <RefreshCw className="h-4 w-4" />
+                                        Revertir "No asistió"
+                                    </>
+                                ) : (
+                                    <>
+                                        <X className="h-4 w-4" />
+                                        Marcar como "No asistió"
+                                    </>
+                                )}
+                            </Button>
+                        )}
 
                         {/* Reschedule - admin only */}
                         {!isTeacher && canManage && (

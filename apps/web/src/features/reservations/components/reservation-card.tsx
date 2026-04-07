@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { memo } from "react";
 import { cn } from "@/lib/utils";
-import { BookOpen, Check, ShieldCheck, Users } from "lucide-react";
+import { BookOpen, Check, ShieldCheck, Users, X } from "lucide-react";
 import { ReservationSlot } from "../api/reservations.api";
 import { ReservationPopover } from "./reservation-popover";
 
@@ -72,19 +72,23 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
       );
     }
 
-    const cardStyles = slot.attended
+    const cardStyles = slot.notAttended
       ? isLive
-        ? "bg-emerald-500/10 border-emerald-500/30"
-        : "bg-emerald-100/50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200/50 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
-      : isInstitutional
+        ? "bg-red-500/10 border-red-500/30"
+        : "bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/50 hover:bg-red-100 dark:hover:bg-red-900/30"
+      : slot.attended
         ? isLive
-          ? "bg-muted border-border"
-          : "bg-muted/40 text-muted-foreground border-border hover:bg-muted/60"
-        : isLive
-          ? "bg-primary/10 border-primary/30"
-          : isToday
-            ? "bg-primary/[0.04] border-primary/10 hover:bg-primary/[0.08]"
-            : "bg-card/50 text-foreground border-border hover:bg-card";
+          ? "bg-emerald-500/10 border-emerald-500/30"
+          : "bg-emerald-100/50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200/50 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
+        : isInstitutional
+          ? isLive
+            ? "bg-muted border-border"
+            : "bg-muted/40 text-muted-foreground border-border hover:bg-muted/60"
+          : isLive
+            ? "bg-primary/10 border-primary/30"
+            : isToday
+              ? "bg-primary/[0.04] border-primary/10 hover:bg-primary/[0.08]"
+              : "bg-card/50 text-foreground border-border hover:bg-card";
 
     return (
       <div className="h-full">
@@ -94,14 +98,18 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
               <div
                 className={cn(
                   "p-2 rounded-xl shrink-0 border border-transparent transition-transform group-hover/card:scale-110",
-                  slot.attended
-                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    : isInstitutional
-                      ? "bg-muted/50 text-muted-foreground"
-                      : "bg-primary/10 text-primary transition-all",
+                  slot.notAttended
+                    ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                    : slot.attended
+                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : isInstitutional
+                        ? "bg-muted/50 text-muted-foreground"
+                        : "bg-primary/10 text-primary transition-all",
                 )}
               >
-                {slot.attended ? (
+                {slot.notAttended ? (
+                  <X className="h-4 w-4 font-black" />
+                ) : slot.attended ? (
                   <Check className="w-4 h-4 font-black" />
                 ) : isInstitutional ? (
                   <ShieldCheck className="w-4 h-4" />
@@ -114,7 +122,7 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
                   <span
                     className={cn(
                       "text-sm font-black truncate leading-tight tracking-tight",
-                      slot.attended ? "text-emerald-900 dark:text-emerald-100" : "text-foreground",
+                      slot.notAttended ? "text-red-900 dark:text-red-100" : slot.attended ? "text-emerald-900 dark:text-emerald-100" : "text-foreground",
                     )}
                   >
                     {slot.staff?.name}
@@ -125,9 +133,11 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
                         "w-1.5 h-1.5 rounded-full animate-pulse shrink-0",
                         isInstitutional
                           ? "bg-muted-foreground/70"
-                          : slot.attended
-                            ? "bg-emerald-500"
-                            : "bg-primary",
+                          : slot.notAttended
+                            ? "bg-red-500"
+                            : slot.attended
+                              ? "bg-emerald-500"
+                              : "bg-primary",
                       )}
                     />
                   )}

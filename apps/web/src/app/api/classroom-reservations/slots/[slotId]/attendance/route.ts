@@ -43,12 +43,31 @@ export async function PUT(
     await requireModifyPermission(slot.reservation, user);
 
     // Update attendance
+    const updateData: any = {};
+    
+    if (data.attended !== undefined) {
+      updateData.attended = data.attended;
+      updateData.attendedAt = data.attended ? new Date() : null;
+      // If marking as attended, clear notAttended
+      if (data.attended) {
+        updateData.notAttended = false;
+        updateData.notAttendedAt = null;
+      }
+    }
+    
+    if (data.notAttended !== undefined) {
+      updateData.notAttended = data.notAttended;
+      updateData.notAttendedAt = data.notAttended ? new Date() : null;
+      // If marking as not attended, clear attended
+      if (data.notAttended) {
+        updateData.attended = false;
+        updateData.attendedAt = null;
+      }
+    }
+
     const [updated] = await db
       .update(reservationSlots)
-      .set({
-        attended: data.attended,
-        attendedAt: data.attended ? new Date() : null,
-      })
+      .set(updateData)
       .where(eq(reservationSlots.id, slotId))
       .returning();
 

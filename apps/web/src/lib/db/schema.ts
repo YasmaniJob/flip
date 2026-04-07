@@ -390,6 +390,8 @@ export const reservationSlots = pgTable('reservation_slots', {
     date: timestamp('date').notNull(),
     attended: boolean('attended').default(false),
     attendedAt: timestamp('attended_at'),
+    notAttended: boolean('not_attended').default(false),
+    notAttendedAt: timestamp('not_attended_at'),
 }, (table) => ({
     reservationIdx: index('idx_slot_reservation').on(table.reservationId),
     classroomIdx: index('idx_slot_classroom').on(table.classroomId),
