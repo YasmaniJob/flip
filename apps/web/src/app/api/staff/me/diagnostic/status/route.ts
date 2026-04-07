@@ -2,8 +2,8 @@ import { NextRequest } from 'next/server';
 import { requireAuth, getInstitutionId } from '@/lib/auth/helpers';
 import { successResponse, errorResponse } from '@/lib/utils/response';
 import { db } from '@/lib/db';
-import { diagnosticSessions, institutions, diagnosticCategories } from '@/lib/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { diagnosticSessions, institutions, diagnosticCategories, staff } from '@/lib/db/schema';
+import { eq, and, desc, or } from 'drizzle-orm';
 
 // GET /api/staff/me/diagnostic/status - Get current user's diagnostic status
 export async function GET(request: NextRequest) {
@@ -28,16 +28,25 @@ export async function GET(request: NextRequest) {
     }
 
     // Find the latest completed or in-progress session for this user
-    // We match by email or DNI since the session might not be linked to staffId yet
-    // OR if it is linked, we use that.
-    
+    // Get the staff record to find DNI if available
+    const staffRecord = await db.query.staff.findFirst({
+      where: and(
+        eq(staff.institutionId, institutionId),
+        eq(staff.email, user.email)
+      ),
+      columns: {
+        dni: true,
+      }
+    });
+
     // Find all completed or in-progress sessions for this user (history)
     const sessions = await db.query.diagnosticSessions.findMany({
       where: and(
         eq(diagnosticSessions.institutionId, institutionId),
-        user.dni 
-          ? eq(diagnosticSessions.dni, user.dni) 
-          : eq(diagnosticSessions.email, user.email)
+        or(
+          eq(diagnosticSessions.email, user.email),
+          staffRecord?.dni ? eq(diagnosticSessions.dni, staffRecord.dni) : undefined
+        )
       ),
       orderBy: [desc(diagnosticSessions.createdAt)]
     });
