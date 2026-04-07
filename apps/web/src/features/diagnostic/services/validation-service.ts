@@ -9,7 +9,7 @@
 
 import { db } from '@/lib/db';
 import { diagnosticSessions } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or } from 'drizzle-orm';
 
 /**
  * Result of session validation
@@ -26,12 +26,14 @@ export interface ValidationResult {
  * Check if a session already exists for a teacher in a specific year
  * 
  * This function searches for an existing diagnostic session for the given teacher
- * (identified by staffId or userId) in the specified year.
+ * (identified by staffId, userId, email, or dni) in the specified year.
  * 
  * @param institutionId - The institution ID
  * @param staffId - The staff ID (for registered teachers) - can be null
- * @param userId - The user ID (for temporary users) - can be null
+ * @param userId - The user ID (for logged-in users) - can be null
  * @param year - The year to check
+ * @param email - The email (for unregistered users) - can be null
+ * @param dni - The DNI (for unregistered users) - can be null
  * @returns The existing session if found, null otherwise
  * 
  * @example
@@ -44,28 +46,98 @@ export async function checkExistingSession(
   institutionId: string,
   staffId: string | null,
   userId: string | null,
-  year: number
+  year: number,
+  email?: string | null,
+  dni?: string | null
 ): Promise<typeof diagnosticSessions.$inferSelect | null> {
-  // At least one of staffId or userId must be provided
-  if (!staffId && !userId) {
-    throw new Error('Either staffId or userId must be provided');
+  // At least one identifier must be provided
+  if (!staffId && !userId && !email && !dni) {
+    throw new Error('At least one identifier (staffId, userId, email, or dni) must be provided');
   }
   
-  // Build the where clause based on which identifier is provided
-  const whereConditions = [
+  // Build the where clause based on which identifiers are provided
+  const baseConditions = [
     eq(diagnosticSessions.institutionId, institutionId),
     eq(diagnosticSessions.year, year),
     eq(diagnosticSessions.status, 'completed'), // Only check completed sessions
   ];
   
-  if (staffId) {
-    whereConditions.push(eq(diagnosticSessions.staffId, staffId));
+  // Build OR conditions for all available identifiers
+  let whereClause: any;
+  
+  if (staffId && userId && email && dni) {
+    whereClause = and(...baseConditions, or(
+      eq(diagnosticSessions.staffId, staffId),
+      eq(diagnosticSessions.userId, userId),
+      eq(diagnosticSessions.email, email),
+      eq(diagnosticSessions.dni, dni)
+    ));
+  } else if (staffId && userId && email) {
+    whereClause = and(...baseConditions, or(
+      eq(diagnosticSessions.staffId, staffId),
+      eq(diagnosticSessions.userId, userId),
+      eq(diagnosticSessions.email, email)
+    ));
+  } else if (staffId && userId && dni) {
+    whereClause = and(...baseConditions, or(
+      eq(diagnosticSessions.staffId, staffId),
+      eq(diagnosticSessions.userId, userId),
+      eq(diagnosticSessions.dni, dni)
+    ));
+  } else if (staffId && email && dni) {
+    whereClause = and(...baseConditions, or(
+      eq(diagnosticSessions.staffId, staffId),
+      eq(diagnosticSessions.email, email),
+      eq(diagnosticSessions.dni, dni)
+    ));
+  } else if (userId && email && dni) {
+    whereClause = and(...baseConditions, or(
+      eq(diagnosticSessions.userId, userId),
+      eq(diagnosticSessions.email, email),
+      eq(diagnosticSessions.dni, dni)
+    ));
+  } else if (staffId && userId) {
+    whereClause = and(...baseConditions, or(
+      eq(diagnosticSessions.staffId, staffId),
+      eq(diagnosticSessions.userId, userId)
+    ));
+  } else if (staffId && email) {
+    whereClause = and(...baseConditions, or(
+      eq(diagnosticSessions.staffId, staffId),
+      eq(diagnosticSessions.email, email)
+    ));
+  } else if (staffId && dni) {
+    whereClause = and(...baseConditions, or(
+      eq(diagnosticSessions.staffId, staffId),
+      eq(diagnosticSessions.dni, dni)
+    ));
+  } else if (userId && email) {
+    whereClause = and(...baseConditions, or(
+      eq(diagnosticSessions.userId, userId),
+      eq(diagnosticSessions.email, email)
+    ));
+  } else if (userId && dni) {
+    whereClause = and(...baseConditions, or(
+      eq(diagnosticSessions.userId, userId),
+      eq(diagnosticSessions.dni, dni)
+    ));
+  } else if (email && dni) {
+    whereClause = and(...baseConditions, or(
+      eq(diagnosticSessions.email, email),
+      eq(diagnosticSessions.dni, dni)
+    ));
+  } else if (staffId) {
+    whereClause = and(...baseConditions, eq(diagnosticSessions.staffId, staffId));
   } else if (userId) {
-    whereConditions.push(eq(diagnosticSessions.userId, userId));
+    whereClause = and(...baseConditions, eq(diagnosticSessions.userId, userId));
+  } else if (email) {
+    whereClause = and(...baseConditions, eq(diagnosticSessions.email, email));
+  } else if (dni) {
+    whereClause = and(...baseConditions, eq(diagnosticSessions.dni, dni));
   }
   
   const session = await db.query.diagnosticSessions.findFirst({
-    where: and(...whereConditions),
+    where: whereClause,
   });
   
   return session || null;
@@ -79,8 +151,10 @@ export async function checkExistingSession(
  * 
  * @param institutionId - The institution ID
  * @param staffId - The staff ID (for registered teachers) - can be null
- * @param userId - The user ID (for temporary users) - can be null
+ * @param userId - The user ID (for logged-in users) - can be null
  * @param year - The year to validate
+ * @param email - The email (for unregistered users) - can be null
+ * @param dni - The DNI (for unregistered users) - can be null
  * @returns ValidationResult with valid flag and optional error details
  * 
  * @example
@@ -93,7 +167,9 @@ export async function validateUniqueSession(
   institutionId: string,
   staffId: string | null,
   userId: string | null,
-  year: number
+  year: number,
+  email?: string | null,
+  dni?: string | null
 ): Promise<ValidationResult> {
   // Validate inputs
   if (!institutionId) {
@@ -103,10 +179,11 @@ export async function validateUniqueSession(
     };
   }
   
-  if (!staffId && !userId) {
+  // At least one identifier must be provided
+  if (!staffId && !userId && !email && !dni) {
     return {
       valid: false,
-      reason: 'Either staffId or userId must be provided',
+      reason: 'At least one identifier (staffId, userId, email, or dni) must be provided',
     };
   }
   
@@ -122,7 +199,9 @@ export async function validateUniqueSession(
     institutionId,
     staffId,
     userId,
-    year
+    year,
+    email,
+    dni
   );
   
   if (existingSession) {
@@ -147,7 +226,9 @@ export async function validateUniqueSession(
  * 
  * @param institutionId - The institution ID
  * @param staffId - The staff ID (for registered teachers) - can be null
- * @param userId - The user ID (for temporary users) - can be null
+ * @param userId - The user ID (for logged-in users) - can be null
+ * @param email - The email (for unregistered users) - can be null
+ * @param dni - The DNI (for unregistered users) - can be null
  * @returns ValidationResult for the current year
  * 
  * @example
@@ -159,8 +240,10 @@ export async function validateUniqueSession(
 export async function canCompleteThisYear(
   institutionId: string,
   staffId: string | null,
-  userId: string | null
+  userId: string | null,
+  email?: string | null,
+  dni?: string | null
 ): Promise<ValidationResult> {
   const currentYear = new Date().getFullYear();
-  return validateUniqueSession(institutionId, staffId, userId, currentYear);
+  return validateUniqueSession(institutionId, staffId, userId, currentYear, email, dni);
 }

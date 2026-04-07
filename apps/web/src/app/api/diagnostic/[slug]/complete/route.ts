@@ -94,12 +94,14 @@ export async function POST(
     const currentYear = getCurrentYear();
     
     // Validate that we can create a session for this year
-    // Use staffId if available (existing staff), otherwise use userId
+    // Use all available identifiers: staffId, userId, email, dni
     const uniquenessValidation = await validateUniqueSession(
       session.institutionId,
       session.staffId || null,
       session.userId || null,
-      currentYear
+      currentYear,
+      session.email || null,
+      session.dni || null
     );
     
     if (!uniquenessValidation.valid) {
