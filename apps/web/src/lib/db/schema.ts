@@ -785,7 +785,7 @@ export const diagnosticSessions = pgTable('diagnostic_sessions', {
     institutionId: text('institution_id').references(() => institutions.id).notNull(),
     userId: text('user_id').references(() => users.id), // Reference to the registered user
     staffId: text('staff_id').references(() => staff.id), // NULL until approved
-    year: integer('year').notNull(), // Year of the diagnostic session (2025+)
+    year: integer('year').notNull(), // Year of the diagnostic session (2026+)
     name: text('name').notNull(),
     dni: text('dni'),
     email: text('email'),

@@ -187,10 +187,10 @@ export async function validateUniqueSession(
     };
   }
   
-  if (year < 2025) {
+  if (year < 2026) {
     return {
       valid: false,
-      reason: 'Year must be 2025 or later',
+      reason: 'Year must be 2026 or later',
     };
   }
   

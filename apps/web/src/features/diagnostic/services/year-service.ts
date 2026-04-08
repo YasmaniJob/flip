@@ -25,20 +25,20 @@ export function getCurrentYear(): number {
  * Validate if a year is within the acceptable range
  * 
  * Valid years must be:
- * - Greater than or equal to 2025 (system start year)
+ * - Greater than or equal to 2026 (system start year)
  * - Less than or equal to current year + 1 (allow next year planning)
  * 
  * @param year - The year to validate
  * @returns true if the year is valid, false otherwise
  * 
  * @example
- * isValidYear(2025); // true
+ * isValidYear(2026); // true
  * isValidYear(2024); // false (before system start)
  * isValidYear(2030); // false (too far in future)
  */
 export function isValidYear(year: number): boolean {
   const currentYear = getCurrentYear();
-  return year >= 2025 && year <= currentYear + 1;
+  return year >= 2026 && year <= currentYear + 1;
 }
 
 /**
@@ -52,9 +52,9 @@ export function isValidYear(year: number): boolean {
  *   { year: 2027, ... },
  *   { year: 2026, ... },
  *   { year: 2027, ... }, // duplicate
- *   { year: 2025, ... }
+ *   { year: 2026, ... }
  * ];
- * getAvailableYears(sessions); // [2027, 2026, 2025]
+ * getAvailableYears(sessions); // [2027, 2026]
  */
 export function getAvailableYears(sessions: Pick<DiagnosticSession, 'year'>[]): number[] {
   const uniqueYears = new Set(sessions.map(session => session.year));

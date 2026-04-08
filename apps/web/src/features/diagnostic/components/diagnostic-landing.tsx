@@ -16,7 +16,7 @@ interface DiagnosticLandingProps {
 
 export function DiagnosticLanding({ customMessage, institutionName, institutionLogo, totalQuestions, onStart }: DiagnosticLandingProps) {
   const [displayedText, setDisplayedText] = useState('');
-  const fullText = 'Diagnóstico de Habilidades Digitales 2025';
+  const fullText = 'Diagnóstico de Habilidades Digitales 2026';
   
   useEffect(() => {
     let index = 0;
