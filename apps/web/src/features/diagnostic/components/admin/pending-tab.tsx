@@ -6,7 +6,7 @@ import { useMyInstitution } from '@/features/institutions/hooks/use-my-instituti
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CheckCircle, XCircle, User, Mail, CreditCard, Calendar } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Mail, CreditCard, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -98,6 +98,53 @@ export function DiagnosticPendingTab() {
     },
   });
 
+  // Approve all mutation
+  const approveAllMutation = useMutation({
+    mutationFn: async () => {
+      if (!institution) throw new Error('No institution');
+      const res = await fetch(
+        `/api/institutions/${institution.id}/diagnostic/approve-all`,
+        { method: 'POST' }
+      );
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Error al aprobar todos los docentes');
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Todos los docentes aprobados exitosamente');
+      queryClient.invalidateQueries({ queryKey: ['diagnostic-pending', institution?.id] });
+      queryClient.invalidateQueries({ queryKey: ['diagnostic-results', institution?.id] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  // Reject all mutation
+  const rejectAllMutation = useMutation({
+    mutationFn: async () => {
+      if (!institution) throw new Error('No institution');
+      const res = await fetch(
+        `/api/institutions/${institution.id}/diagnostic/reject-all`,
+        { method: 'POST' }
+      );
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Error al rechazar todos los docentes');
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Todos los docentes rechazados exitosamente');
+      queryClient.invalidateQueries({ queryKey: ['diagnostic-pending', institution?.id] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
   const handleApprove = (sessionId: string) => {
     setApprovingId(sessionId);
     approveMutation.mutate(sessionId);
@@ -106,6 +153,16 @@ export function DiagnosticPendingTab() {
   const handleReject = (sessionId: string) => {
     setRejectingId(sessionId);
     rejectMutation.mutate(sessionId);
+  };
+
+  const handleApproveAll = () => {
+    if (!confirm(`¿Estás seguro de aprobar ${sessions.length} docentes?`)) return;
+    approveAllMutation.mutate();
+  };
+
+  const handleRejectAll = () => {
+    if (!confirm(`¿Estás seguro de rechazar ${sessions.length} docentes? Esta acción no se puede deshacer.`)) return;
+    rejectAllMutation.mutate();
   };
 
   const getLevelColor = (level: DiagnosticLevel) => {
@@ -146,7 +203,52 @@ export function DiagnosticPendingTab() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Docentes Pendientes de Aprobación</CardTitle>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Docentes Pendientes de Aprobación</CardTitle>
+            <CardDescription>
+              {sessions.length > 0 && `${sessions.length} docente${sessions.length !== 1 ? 's' : ''} pendiente${sessions.length !== 1 ? 's' : ''}`}
+            </CardDescription>
+          </div>
+          {sessions.length > 0 && (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={handleRejectAll}
+                disabled={rejectAllMutation.isPending || approveAllMutation.isPending}
+                className="border-red-200 text-red-600 hover:bg-red-50"
+              >
+                {rejectAllMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Rechazando...
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Rechazar Todos
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleApproveAll}
+                disabled={approveAllMutation.isPending || rejectAllMutation.isPending}
+              >
+                {approveAllMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Aprobando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Aprobar Todos
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {sessions.length === 0 ? (
