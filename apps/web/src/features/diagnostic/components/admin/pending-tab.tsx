@@ -13,6 +13,7 @@ import { es } from 'date-fns/locale';
 import { LEVEL_LABELS, LEVEL_ICONS } from '../../types';
 import type { DiagnosticLevel } from '../../types';
 import { ActionConfirm } from '@/components/molecules/action-confirm';
+import { BatchProgressDialog } from './batch-progress-dialog';
 
 interface PendingSession {
   id: string;
@@ -33,6 +34,8 @@ export function DiagnosticPendingTab() {
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [showApproveAllDialog, setShowApproveAllDialog] = useState(false);
   const [showRejectAllDialog, setShowRejectAllDialog] = useState(false);
+  const [showProgressDialog, setShowProgressDialog] = useState(false);
+  const [progressVariant, setProgressVariant] = useState<'approve' | 'reject'>('approve');
 
   // Fetch pending sessions
   const { data, isLoading, error } = useQuery({
@@ -115,13 +118,23 @@ export function DiagnosticPendingTab() {
       }
       return res.json();
     },
+    onMutate: () => {
+      setProgressVariant('approve');
+      setShowProgressDialog(true);
+    },
     onSuccess: (data) => {
-      toast.success(data.message || 'Todos los docentes aprobados exitosamente');
-      queryClient.invalidateQueries({ queryKey: ['diagnostic-pending', institution?.id] });
-      queryClient.invalidateQueries({ queryKey: ['diagnostic-results', institution?.id] });
+      setTimeout(() => {
+        setShowProgressDialog(false);
+        toast.success(data.message || 'Todos los docentes aprobados exitosamente');
+        queryClient.invalidateQueries({ queryKey: ['diagnostic-pending', institution?.id] });
+        queryClient.invalidateQueries({ queryKey: ['diagnostic-results', institution?.id] });
+      }, 1500);
     },
     onError: (error: Error) => {
-      toast.error(error.message);
+      setTimeout(() => {
+        setShowProgressDialog(false);
+        toast.error(error.message);
+      }, 1000);
     },
   });
 
@@ -139,12 +152,22 @@ export function DiagnosticPendingTab() {
       }
       return res.json();
     },
+    onMutate: () => {
+      setProgressVariant('reject');
+      setShowProgressDialog(true);
+    },
     onSuccess: (data) => {
-      toast.success(data.message || 'Todos los docentes rechazados exitosamente');
-      queryClient.invalidateQueries({ queryKey: ['diagnostic-pending', institution?.id] });
+      setTimeout(() => {
+        setShowProgressDialog(false);
+        toast.success(data.message || 'Todos los docentes rechazados exitosamente');
+        queryClient.invalidateQueries({ queryKey: ['diagnostic-pending', institution?.id] });
+      }, 1500);
     },
     onError: (error: Error) => {
-      toast.error(error.message);
+      setTimeout(() => {
+        setShowProgressDialog(false);
+        toast.error(error.message);
+      }, 1000);
     },
   });
 
@@ -383,6 +406,17 @@ export function DiagnosticPendingTab() {
         cancelText="Cancelar"
         variant="destructive"
         isLoading={rejectAllMutation.isPending}
+      />
+
+      {/* Progress Dialog */}
+      <BatchProgressDialog
+        open={showProgressDialog}
+        title={progressVariant === 'approve' ? 'Aprobando Docentes...' : 'Rechazando Docentes...'}
+        total={sessions.length}
+        isLoading={approveAllMutation.isPending || rejectAllMutation.isPending}
+        isSuccess={approveAllMutation.isSuccess || rejectAllMutation.isSuccess}
+        isError={approveAllMutation.isError || rejectAllMutation.isError}
+        variant={progressVariant}
       />
     </Card>
   );
