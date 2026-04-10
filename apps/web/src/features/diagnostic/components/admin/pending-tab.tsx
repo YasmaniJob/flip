@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { LEVEL_LABELS, LEVEL_ICONS } from '../../types';
 import type { DiagnosticLevel } from '../../types';
+import { ActionConfirm } from '@/components/molecules/action-confirm';
 
 interface PendingSession {
   id: string;
@@ -30,6 +31,8 @@ export function DiagnosticPendingTab() {
   const queryClient = useQueryClient();
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [showApproveAllDialog, setShowApproveAllDialog] = useState(false);
+  const [showRejectAllDialog, setShowRejectAllDialog] = useState(false);
 
   // Fetch pending sessions
   const { data, isLoading, error } = useQuery({
@@ -156,13 +159,13 @@ export function DiagnosticPendingTab() {
   };
 
   const handleApproveAll = () => {
-    if (!confirm(`¿Estás seguro de aprobar ${sessions.length} docentes?`)) return;
     approveAllMutation.mutate();
+    setShowApproveAllDialog(false);
   };
 
   const handleRejectAll = () => {
-    if (!confirm(`¿Estás seguro de rechazar ${sessions.length} docentes? Esta acción no se puede deshacer.`)) return;
     rejectAllMutation.mutate();
+    setShowRejectAllDialog(false);
   };
 
   const getLevelColor = (level: DiagnosticLevel) => {
@@ -214,7 +217,7 @@ export function DiagnosticPendingTab() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={handleRejectAll}
+                onClick={() => setShowRejectAllDialog(true)}
                 disabled={rejectAllMutation.isPending || approveAllMutation.isPending}
                 className="border-red-200 text-red-600 hover:bg-red-50"
               >
@@ -231,7 +234,7 @@ export function DiagnosticPendingTab() {
                 )}
               </Button>
               <Button
-                onClick={handleApproveAll}
+                onClick={() => setShowApproveAllDialog(true)}
                 disabled={approveAllMutation.isPending || rejectAllMutation.isPending}
               >
                 {approveAllMutation.isPending ? (
@@ -353,6 +356,34 @@ export function DiagnosticPendingTab() {
           </div>
         )}
       </CardContent>
+
+      {/* Approve All Dialog */}
+      <ActionConfirm
+        open={showApproveAllDialog}
+        onOpenChange={setShowApproveAllDialog}
+        title="Aprobar todos los docentes"
+        description={`¿Estás seguro de aprobar ${sessions.length} docente${sessions.length !== 1 ? 's' : ''}? Se crearán cuentas de staff para los docentes nuevos y se vincularán los existentes.`}
+        onConfirm={handleApproveAll}
+        onCancel={() => setShowApproveAllDialog(false)}
+        confirmText="Aprobar Todos"
+        cancelText="Cancelar"
+        variant="info"
+        isLoading={approveAllMutation.isPending}
+      />
+
+      {/* Reject All Dialog */}
+      <ActionConfirm
+        open={showRejectAllDialog}
+        onOpenChange={setShowRejectAllDialog}
+        title="Rechazar todos los docentes"
+        description={`¿Estás seguro de rechazar ${sessions.length} docente${sessions.length !== 1 ? 's' : ''}? Esta acción no se puede deshacer y los docentes no podrán acceder al sistema.`}
+        onConfirm={handleRejectAll}
+        onCancel={() => setShowRejectAllDialog(false)}
+        confirmText="Rechazar Todos"
+        cancelText="Cancelar"
+        variant="destructive"
+        isLoading={rejectAllMutation.isPending}
+      />
     </Card>
   );
 }
