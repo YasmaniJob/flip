@@ -1,6 +1,18 @@
 ---
 import '../styles/global.css';
 const appUrl = "https://app.flip.org.pe/";
+
+// Fetch trial days from API
+let trialDays = 15; // Default fallback
+try {
+  const response = await fetch('https://app.flip.org.pe/api/public/trial-days');
+  if (response.ok) {
+    const data = await response.json();
+    trialDays = data.trialDays || 15;
+  }
+} catch (error) {
+  console.error('Error fetching trial days:', error);
+}
 ---
 
 <!doctype html>
@@ -69,7 +81,7 @@ const appUrl = "https://app.flip.org.pe/";
 
           <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
             <a href={appUrl} class="px-8 py-4 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition text-base">
-              Probar 15 días gratis
+              Probar {trialDays} días gratis
             </a>
             <a href="#roles" class="px-8 py-4 border border-gray-300 text-gray-700 font-medium rounded-full hover:border-gray-400 transition text-base flex items-center gap-2">
               Conocer perfiles
@@ -397,7 +409,7 @@ const appUrl = "https://app.flip.org.pe/";
           </h2>
           
           <p class="text-xl text-gray-600 mb-12 font-light">
-            Comienza con 15 días de prueba gratuita. Sin tarjeta de crédito.
+            Comienza con {trialDays} días de prueba gratuita. Sin tarjeta de crédito.
           </p>
           
           <a href={appUrl} class="inline-block px-12 py-5 bg-blue-600 text-white text-lg font-medium rounded-full hover:bg-blue-700 hover:scale-105 transition-all shadow-xl">
