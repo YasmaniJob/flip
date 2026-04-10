@@ -12,7 +12,7 @@ import { eq } from 'drizzle-orm';
 import { rateLimit } from '@/features/diagnostic/lib/rate-limit';
 import { identifyRequestSchema } from '@/features/diagnostic/lib/validation';
 import { createOrResumeSession, findExistingStaff } from '@/features/diagnostic/lib/session-manager';
-import { getCurrentYear } from '@/features/diagnostic/services/year-service';
+import { getActiveDiagnosticYear } from '@/features/diagnostic/services/year-service';
 import { checkExistingSession } from '@/features/diagnostic/services/validation-service';
 
 export async function POST(
@@ -60,8 +60,8 @@ export async function POST(
     
     const { dni, name, email, userId } = validation.data;
     
-    // Get current year for annual periodization
-    const currentYear = getCurrentYear();
+    // Get active diagnostic year (uses institution's configured year or current year)
+    const activeYear = getActiveDiagnosticYear(institution.diagnosticActiveYear);
     
     // Check if this person is already a staff member
     const existingStaff = await findExistingStaff(institution.id, dni ?? undefined, email);
@@ -72,14 +72,14 @@ export async function POST(
         institution.id,
         existingStaff.id,
         null,
-        currentYear
+        activeYear
       );
       
       if (existingSession) {
         // Teacher already completed diagnostic this year
         return NextResponse.json({
           canComplete: false,
-          year: currentYear,
+          year: activeYear,
           existingSession: {
             id: existingSession.id,
             completedAt: existingSession.completedAt,
@@ -111,11 +111,12 @@ export async function POST(
       ipAddress: ip,
       userAgent,
       totalQuestions: questions.length,
+      activeYear, // Pass the active year to the session
     });
     
     return NextResponse.json({
       canComplete: true,
-      year: currentYear,
+      year: activeYear,
       token,
       sessionId: session.id,
       isResuming,

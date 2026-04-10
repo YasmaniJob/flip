@@ -75,7 +75,7 @@ export const PLANS = {
     ENTERPRISE: 'enterprise',
 } as const;
 
-export const DEFAULT_TRIAL_DAYS = 15;
+export const DEFAULT_TRIAL_DAYS = parseInt(process.env.DEFAULT_TRIAL_DAYS || '15', 10);
 
 // ============================================
 // EDUCATION LEVELS

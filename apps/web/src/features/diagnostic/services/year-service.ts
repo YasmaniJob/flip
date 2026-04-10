@@ -10,6 +10,26 @@
 import type { DiagnosticSession } from '../types';
 
 /**
+ * Get the active diagnostic year for an institution
+ * Returns the manually configured year if set, otherwise returns current year
+ * 
+ * @param institutionActiveYear - The manually configured year from institution settings (can be null)
+ * @returns The active diagnostic year
+ * 
+ * @example
+ * const year = getActiveDiagnosticYear(institution.diagnosticActiveYear); // 2026 or current year
+ */
+export function getActiveDiagnosticYear(institutionActiveYear: number | null | undefined): number {
+  // If institution has a manually configured year, use it
+  if (institutionActiveYear !== null && institutionActiveYear !== undefined) {
+    return institutionActiveYear;
+  }
+  
+  // Otherwise, use current year
+  return getCurrentYear();
+}
+
+/**
  * Get the current calendar year
  * 
  * @returns The current year (e.g., 2026)

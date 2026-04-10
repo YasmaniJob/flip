@@ -22,6 +22,7 @@ export function DiagnosticConfigTab() {
     diagnosticEnabled: false,
     diagnosticRequiresApproval: true,
     diagnosticCustomMessage: '',
+    diagnosticActiveYear: null as number | null,
     publicUrl: '',
   });
   
@@ -41,6 +42,7 @@ export function DiagnosticConfigTab() {
         diagnosticEnabled: fetchConfig.diagnosticEnabled ?? false,
         diagnosticRequiresApproval: fetchConfig.diagnosticRequiresApproval ?? true,
         diagnosticCustomMessage: fetchConfig.diagnosticCustomMessage ?? '',
+        diagnosticActiveYear: fetchConfig.diagnosticActiveYear ?? null,
         publicUrl: fetchConfig.publicUrl ?? '',
       });
     }
@@ -58,6 +60,7 @@ export function DiagnosticConfigTab() {
           diagnosticEnabled: config.diagnosticEnabled,
           diagnosticRequiresApproval: config.diagnosticRequiresApproval,
           diagnosticCustomMessage: config.diagnosticCustomMessage || null,
+          diagnosticActiveYear: config.diagnosticActiveYear,
         }),
       });
       
@@ -183,6 +186,64 @@ export function DiagnosticConfigTab() {
                   </div>
                 </div>
               )}
+            </div>
+          </section>
+
+          {/* Year Configuration Section */}
+          <section className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertCircle className="w-4 h-4 text-primary" />
+              <h3 className="text-[11px] font-black uppercase tracking-widest text-foreground">Período de Evaluación</h3>
+            </div>
+            
+            <div className="border border-border rounded-lg bg-background p-5 shadow-none hover:border-border/80 transition-colors space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="activeYear" className="text-[13px] font-bold tracking-tight block text-foreground">
+                  Año Activo del Diagnóstico
+                </Label>
+                <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+                  Configura manualmente el año del período de diagnóstico. Si se deja vacío, se usará automáticamente el año actual ({new Date().getFullYear()}).
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <Input
+                    id="activeYear"
+                    type="number"
+                    min={2025}
+                    max={new Date().getFullYear() + 2}
+                    placeholder={`Automático (${new Date().getFullYear()})`}
+                    value={config.diagnosticActiveYear ?? ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setConfig({ 
+                        ...config, 
+                        diagnosticActiveYear: value ? parseInt(value) : null 
+                      });
+                    }}
+                    className="h-10 text-sm font-mono shadow-none"
+                  />
+                </div>
+                {config.diagnosticActiveYear !== null && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setConfig({ ...config, diagnosticActiveYear: null })}
+                    className="h-10 px-4 text-xs font-black uppercase tracking-widest shrink-0"
+                  >
+                    Usar Automático
+                  </Button>
+                )}
+              </div>
+              
+              <div className="bg-muted/30 border border-border/50 p-3 rounded-lg">
+                <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+                  <span className="font-bold text-foreground">Año efectivo:</span> {config.diagnosticActiveYear ?? new Date().getFullYear()}
+                  {!config.diagnosticActiveYear && <span className="text-primary ml-1">(automático)</span>}
+                </p>
+              </div>
             </div>
           </section>
 

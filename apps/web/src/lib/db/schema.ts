@@ -43,6 +43,7 @@ export const institutions = pgTable('institutions', {
     diagnosticEnabled: boolean('diagnostic_enabled').default(false),
     diagnosticRequiresApproval: boolean('diagnostic_requires_approval').default(true),
     diagnosticCustomMessage: text('diagnostic_custom_message'),
+    diagnosticActiveYear: integer('diagnostic_active_year'), // Manual override for diagnostic year (null = use current year)
     createdAt: timestamp('created_at').defaultNow(),
 }, (table) => ({
     slugIdx: index('idx_institution_slug').on(table.slug),

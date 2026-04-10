@@ -66,6 +66,7 @@ export const updateConfigRequestSchema = z.object({
   diagnosticEnabled: z.boolean().optional(),
   diagnosticRequiresApproval: z.boolean().optional(),
   diagnosticCustomMessage: z.string().max(500).optional().nullable(),
+  diagnosticActiveYear: z.number().int().min(2025).max(2100).optional().nullable(),
 });
 
 // Admin: Create/Update question validation

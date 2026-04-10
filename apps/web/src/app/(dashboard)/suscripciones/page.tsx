@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSubscriptions, useUpdateSubscription, type Subscription } from "@/hooks/use-subscriptions";
 import { SubscriptionDetailsModal } from "@/features/subscriptions/components/subscription-details-modal";
+import { TrialConfigCard } from "@/features/subscriptions/components/trial-config-card";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -291,6 +292,9 @@ export default function SuscripcionesPage() {
   return (
     <div className="p-8 max-w-[1600px] mx-auto min-h-screen space-y-6">
       <PageHeader title="Suscripciones" subtitle="Gestión administrativa de instituciones y accesos" />
+
+      {/* Trial Configuration Card */}
+      <TrialConfigCard />
 
       <div className="bg-card border border-border overflow-hidden">
         <div className="overflow-x-auto">

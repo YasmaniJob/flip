@@ -6,7 +6,6 @@ import { db } from '@/lib/db';
 import { diagnosticSessions, staff } from '@/lib/db/schema';
 import { eq, and, gt, or } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
-import { getCurrentYear } from '@/features/diagnostic/services/year-service';
 
 const SESSION_EXPIRY_DAYS = 7;
 
@@ -19,6 +18,7 @@ export interface CreateSessionData {
   ipAddress?: string;
   userAgent?: string;
   totalQuestions: number;
+  activeYear: number; // The active diagnostic year for this institution
 }
 
 export interface SessionValidation {
@@ -60,16 +60,13 @@ export async function createOrResumeSession(data: CreateSessionData) {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + SESSION_EXPIRY_DAYS);
   
-  // Get current year for annual periodization
-  const currentYear = getCurrentYear();
-  
   const [session] = await db.insert(diagnosticSessions)
     .values({
       id: randomUUID(),
       token,
       institutionId: data.institutionId,
       userId: data.userId,
-      year: currentYear, // Assign current year
+      year: data.activeYear, // Use the active year from institution config
       name: data.name,
       dni: data.dni,
       email: data.email,

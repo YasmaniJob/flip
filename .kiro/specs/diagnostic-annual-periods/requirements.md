@@ -29,10 +29,24 @@ Este sistema opera en una arquitectura SaaS multi-tenant donde cada institución
 
 #### Criterios de Aceptación
 
-1. WHEN el Sistema inicia una sesión de diagnóstico, THE Sistema SHALL obtener el año actual del calendario del servidor
-2. THE Sistema SHALL usar el año actual como periodo de diagnóstico por defecto
-3. THE Sistema SHALL mostrar el año actual en la interfaz de usuario del quiz
-4. THE Sistema SHALL validar que el año detectado sea mayor o igual a 2025
+1. WHEN el Sistema inicia una sesión de diagnóstico, THE Sistema SHALL obtener el año activo configurado para la institución
+2. IF la institución tiene un año configurado manualmente, THE Sistema SHALL usar ese año
+3. IF la institución NO tiene un año configurado, THE Sistema SHALL usar el año actual del calendario del servidor
+4. THE Sistema SHALL mostrar el año activo en la interfaz de usuario del quiz
+5. THE Sistema SHALL validar que el año sea mayor o igual a 2025
+
+### Requisito 1.1: Configuración Manual del Año (NUEVO)
+
+**User Story:** Como administrador de institución, quiero poder configurar manualmente el año del diagnóstico, para tener flexibilidad en la asignación del período de evaluación.
+
+#### Criterios de Aceptación
+
+1. WHEN un Admin accede al panel de configuración del diagnóstico, THE Sistema SHALL mostrar un campo para configurar el año activo
+2. THE Sistema SHALL permitir valores entre 2025 y el año actual + 2
+3. THE Sistema SHALL permitir dejar el campo vacío para usar el año automático
+4. WHEN el Admin guarda un año manual, THE Sistema SHALL usar ese año para todas las nuevas sesiones
+5. THE Sistema SHALL mostrar claramente cuál es el año efectivo (manual o automático)
+6. THE Sistema SHALL validar que el año configurado sea un número entero válido
 
 ### Requisito 2: Unicidad de Sesión por Año
 

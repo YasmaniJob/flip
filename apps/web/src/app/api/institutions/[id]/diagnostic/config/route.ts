@@ -43,6 +43,7 @@ export async function GET(
       diagnosticEnabled: institution.diagnosticEnabled ?? false,
       diagnosticRequiresApproval: institution.diagnosticRequiresApproval ?? true,
       diagnosticCustomMessage: institution.diagnosticCustomMessage,
+      diagnosticActiveYear: institution.diagnosticActiveYear,
       publicUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://flip.org.pe'}/ie/${institution.slug}/diagnostic`,
     });
     
@@ -99,6 +100,7 @@ export async function PATCH(
         ...(updates.diagnosticEnabled !== undefined && { diagnosticEnabled: updates.diagnosticEnabled }),
         ...(updates.diagnosticRequiresApproval !== undefined && { diagnosticRequiresApproval: updates.diagnosticRequiresApproval }),
         ...(updates.diagnosticCustomMessage !== undefined && { diagnosticCustomMessage: updates.diagnosticCustomMessage }),
+        ...(updates.diagnosticActiveYear !== undefined && { diagnosticActiveYear: updates.diagnosticActiveYear }),
       })
       .where(eq(institutions.id, institutionId))
       .returning();
@@ -108,6 +110,7 @@ export async function PATCH(
       diagnosticEnabled: updated.diagnosticEnabled,
       diagnosticRequiresApproval: updated.diagnosticRequiresApproval,
       diagnosticCustomMessage: updated.diagnosticCustomMessage,
+      diagnosticActiveYear: updated.diagnosticActiveYear,
     });
     
   } catch (error) {

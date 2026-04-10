@@ -13,7 +13,7 @@ import { completeSessionRequestSchema } from '@/features/diagnostic/lib/validati
 import { validateSession } from '@/features/diagnostic/lib/session-manager';
 import { calculateCategoryScores, calculateOverallScore, determineLevel } from '@/features/diagnostic/lib/scoring';
 import { randomUUID } from 'crypto';
-import { getCurrentYear } from '@/features/diagnostic/services/year-service';
+import { getActiveDiagnosticYear } from '@/features/diagnostic/services/year-service';
 import { validateUniqueSession } from '@/features/diagnostic/services/validation-service';
 
 export async function POST(
@@ -90,8 +90,8 @@ export async function POST(
       );
     }
     
-    // Get current year and validate uniqueness
-    const currentYear = getCurrentYear();
+    // Get active diagnostic year (uses institution's configured year or current year)
+    const activeYear = getActiveDiagnosticYear(institution.diagnosticActiveYear);
     
     // Validate that we can create a session for this year
     // Use all available identifiers: staffId, userId, email, dni
