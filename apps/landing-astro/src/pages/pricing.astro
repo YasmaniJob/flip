@@ -23,6 +23,7 @@ const plans = [
       "Sin tarjeta de crédito"
     ],
     cta: "Comenzar prueba",
+    ctaUrl: appUrl,
     highlighted: false,
     badge: "Recomendado para probar"
   },
@@ -42,7 +43,8 @@ const plans = [
       "Soporte por email",
       "Actualizaciones automáticas"
     ],
-    cta: "Suscribirse",
+    cta: "Elegir plan",
+    ctaUrl: "https://wa.me/51987654321?text=Hola,%20quiero%20suscribirme%20al%20plan%20Mensual",
     highlighted: false
   },
   {
@@ -57,7 +59,8 @@ const plans = [
       "Facturación cada 2 meses",
       "Soporte prioritario"
     ],
-    cta: "Suscribirse",
+    cta: "Elegir plan",
+    ctaUrl: "https://wa.me/51987654321?text=Hola,%20quiero%20suscribirme%20al%20plan%20Bimestral",
     highlighted: false
   },
   {
@@ -72,7 +75,8 @@ const plans = [
       "Facturación cada 3 meses",
       "Soporte prioritario"
     ],
-    cta: "Suscribirse",
+    cta: "Elegir plan",
+    ctaUrl: "https://wa.me/51987654321?text=Hola,%20quiero%20suscribirme%20al%20plan%20Trimestral",
     highlighted: false
   },
   {
@@ -89,7 +93,8 @@ const plans = [
       "Soporte prioritario 24/7",
       "Capacitación incluida"
     ],
-    cta: "Suscribirse",
+    cta: "Elegir plan",
+    ctaUrl: "https://wa.me/51987654321?text=Hola,%20quiero%20suscribirme%20al%20plan%20Anual",
     highlighted: true,
     badge: "Más popular"
   }
@@ -211,7 +216,7 @@ const plans = [
                   </ul>
 
                   <a 
-                    href={appUrl}
+                    href={plan.ctaUrl}
                     class={`block w-full py-3 text-center font-medium rounded-full transition-all text-sm ${
                       plan.highlighted
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
