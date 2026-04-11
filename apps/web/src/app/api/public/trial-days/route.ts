@@ -5,7 +5,7 @@
  * Used by landing page to display dynamic trial period
  */
 
-import { NextResponse } from 'next/response';
+import { NextResponse } from 'next/server';
 import { getTrialDays } from '@/lib/trial-config';
 
 export async function GET() {
