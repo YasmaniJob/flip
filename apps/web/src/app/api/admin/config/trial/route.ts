@@ -8,45 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
-import { writeFileSync, readFileSync, existsSync } from 'fs';
-import { join } from 'path';
-
-const CONFIG_FILE_PATH = join(process.cwd(), '.trial-config.json');
-
-interface TrialConfig {
-  trialDays: number;
-  updatedAt: string;
-  updatedBy: string;
-}
-
-function getDefaultConfig(): TrialConfig {
-  return {
-    trialDays: 15,
-    updatedAt: new Date().toISOString(),
-    updatedBy: 'system',
-  };
-}
-
-function readConfig(): TrialConfig {
-  try {
-    if (existsSync(CONFIG_FILE_PATH)) {
-      const data = readFileSync(CONFIG_FILE_PATH, 'utf-8');
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error reading trial config:', error);
-  }
-  return getDefaultConfig();
-}
-
-function writeConfig(config: TrialConfig): void {
-  try {
-    writeFileSync(CONFIG_FILE_PATH, JSON.stringify(config, null, 2), 'utf-8');
-  } catch (error) {
-    console.error('Error writing trial config:', error);
-    throw error;
-  }
-}
+import { getTrialConfig, setTrialDays } from '@/lib/trial-config';
 
 export async function GET(request: NextRequest) {
   try {
@@ -70,7 +32,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const config = readConfig();
+    const config = await getTrialConfig();
     
     return NextResponse.json({
       trialDays: config.trialDays,
@@ -120,19 +82,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Save config
-    const config: TrialConfig = {
-      trialDays,
-      updatedAt: new Date().toISOString(),
-      updatedBy: session.user.email || session.user.id,
-    };
-
-    writeConfig(config);
+    // Save config to database
+    const updatedBy = session.user.email || session.user.id;
+    await setTrialDays(trialDays, updatedBy);
     
     return NextResponse.json({
       success: true,
-      trialDays: config.trialDays,
-      updatedAt: config.updatedAt,
+      trialDays,
+      updatedAt: new Date().toISOString(),
     });
     
   } catch (error) {

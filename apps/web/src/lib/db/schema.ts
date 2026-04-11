@@ -743,6 +743,20 @@ export const changelog = pgTable('changelog', {
 }));
 
 // ============================================
+// GLOBAL CONFIG (Platform-wide settings)
+// ============================================
+export const globalConfig = pgTable('global_config', {
+    id: text('id').primaryKey(),
+    key: text('key').unique().notNull(), // e.g., 'trial_days'
+    value: text('value').notNull(), // JSON string
+    updatedBy: text('updated_by'), // User email or ID
+    updatedAt: timestamp('updated_at').defaultNow(),
+    createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+    keyIdx: uniqueIndex('idx_global_config_key').on(table.key),
+}));
+
+// ============================================
 // DIAGNOSTIC MODULE
 // ============================================
 
