@@ -35,6 +35,9 @@ coverage
 # Misc
 *.tsbuildinfo
 
+# Trial config (deprecated - now in database)
+.trial-config.json
+
 # Data files (MINEDU padron)
 apps/web/data/*.xlsx
 apps/web/data/*.csv
