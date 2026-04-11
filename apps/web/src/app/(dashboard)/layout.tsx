@@ -185,12 +185,14 @@ export default function DashboardLayout({
                                         variant="outline"
                                         size="sm"
                                         className="h-8 px-4 border-white/30 bg-transparent hover:bg-white/10 text-white text-[10px] font-black tracking-widest transition-colors rounded-md py-0"
+                                        onClick={() => window.open('https://www.flip.org.pe/pricing', '_blank')}
                                     >
                                         PLANES
                                     </Button>
                                     <Button
                                         size="sm"
                                         className="h-8 px-4 bg-white text-foreground text-[10px] font-black tracking-widest hover:bg-white/90 transition-colors flex items-center gap-2 rounded-md border-0 shadow-none py-0"
+                                        onClick={() => window.open('https://www.flip.org.pe/pricing', '_blank')}
                                     >
                                         ACTUALIZAR
                                         <ArrowRight size={12} className="opacity-50" />
