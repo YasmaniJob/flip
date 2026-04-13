@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHmac, scryptSync, randomBytes } from 'crypto';
+import { createHmac } from 'crypto';
 import { db } from '@/lib/db';
 import { staff, users, sessions, accounts } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -22,8 +22,9 @@ type LazyRegisterRequest = {
  * - Usuarios existentes: Se actualiza su password HMAC directamente en la BD
  * - Ambos: Usan el mismo password determinístico para signIn
  * 
- * IMPORTANTE: El password se hashea usando scrypt (mismo que Better Auth)
- * para garantizar compatibilidad total.
+ * IMPORTANTE: Para usuarios existentes, se recrea el account credential
+ * usando Better Auth para garantizar compatibilidad total con el formato
+ * de hash que Better Auth espera.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -162,9 +163,9 @@ export async function POST(request: NextRequest) {
           .where(eq(users.id, userId));
       }
 
-      // SOLUCIÓN ESTRUCTURAL: Actualizar el password directamente en la tabla accounts
-      // Hashear usando scrypt (mismo algoritmo que Better Auth)
-      console.log('[Lazy Register] Syncing password for existing user');
+      // SOLUCIÓN PRAGMÁTICA: Para usuarios existentes, eliminar el account credential
+      // y recrearlo con el nuevo password. Esto garantiza compatibilidad total.
+      console.log('[Lazy Register] Recreating credential account for existing user');
       
       const existingAccount = await db.query.accounts.findFirst({
         where: and(
@@ -174,23 +175,63 @@ export async function POST(request: NextRequest) {
       });
 
       if (existingAccount) {
-        // Generar salt y hashear con scrypt (parámetros compatibles con Better Auth)
-        const salt = randomBytes(16);
-        const hashedPassword = scryptSync(internalPassword, salt, 64).toString('base64');
-        const passwordWithSalt = `${salt.toString('base64')}:${hashedPassword}`;
-
+        // Eliminar el account existente
         await db
-          .update(accounts)
-          .set({
-            password: passwordWithSalt,
-            updatedAt: new Date(),
-          })
+          .delete(accounts)
           .where(eq(accounts.id, existingAccount.id));
         
-        console.log('[Lazy Register] Password synced successfully');
-      } else {
-        // Si no existe account de tipo credential, lo creamos en el próximo signIn
-        console.log('[Lazy Register] No credential account found, will be created on signIn');
+        console.log('[Lazy Register] Old credential account deleted');
+      }
+
+      // Crear nuevo usuario con Better Auth para obtener el hash correcto
+      // Luego transferir el account al usuario existente
+      try {
+        // Crear usuario temporal
+        const tempEmail = `temp-${Date.now()}-${email.toLowerCase()}`;
+        const tempSignUpResult = await auth.api.signUpEmail({
+          body: {
+            email: tempEmail,
+            password: internalPassword,
+            name: 'Temporary',
+          },
+        });
+
+        const tempUserId = (tempSignUpResult as any).user?.id;
+        
+        if (tempUserId) {
+          // Obtener el account del usuario temporal
+          const tempAccount = await db.query.accounts.findFirst({
+            where: and(
+              eq(accounts.userId, tempUserId),
+              eq(accounts.providerId, 'credential')
+            ),
+          });
+
+          if (tempAccount) {
+            // Transferir el account al usuario real
+            await db
+              .update(accounts)
+              .set({
+                userId: userId,
+                accountId: email.toLowerCase(),
+                updatedAt: new Date(),
+              })
+              .where(eq(accounts.id, tempAccount.id));
+
+            console.log('[Lazy Register] Account transferred to existing user');
+          }
+
+          // Eliminar usuario temporal
+          await db.delete(users).where(eq(users.id, tempUserId));
+          console.log('[Lazy Register] Temporary user cleaned up');
+        }
+      } catch (error) {
+        console.error('[Lazy Register] Failed to recreate account:', error);
+        // Si falla, el usuario tendrá que usar reset password
+        return NextResponse.json(
+          { error: 'Error al actualizar la cuenta. Por favor, use "Olvidé mi contraseña".' },
+          { status: 500 }
+        );
       }
     } else {
       // 6. Crear nuevo usuario
