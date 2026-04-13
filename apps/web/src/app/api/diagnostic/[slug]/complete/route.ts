@@ -99,7 +99,7 @@ export async function POST(
       session.institutionId,
       session.staffId || null,
       session.userId || null,
-      currentYear,
+      activeYear, // Use activeYear instead of currentYear
       session.email || null,
       session.dni || null
     );
@@ -198,7 +198,7 @@ export async function POST(
         .set({
           status: finalStatus,
           staffId,
-          year: currentYear, // Assign current year
+          year: activeYear, // Use activeYear instead of currentYear
           overallScore,
           level,
           categoryScores,
@@ -211,7 +211,7 @@ export async function POST(
       if (updateError.code === '23505') {
         return NextResponse.json(
           { 
-            error: 'Ya existe un diagnóstico completado para el año ' + currentYear,
+            error: 'Ya existe un diagnóstico completado para el año ' + activeYear,
             code: 'DATABASE_CONSTRAINT_VIOLATION',
             data: {
               constraint: updateError.constraint || 'unique_institution_staff_year',
@@ -225,7 +225,7 @@ export async function POST(
     
     return NextResponse.json({
       success: true,
-      year: currentYear,
+      year: activeYear, // Use activeYear instead of currentYear
       overallScore,
       level,
       categoryScores,
