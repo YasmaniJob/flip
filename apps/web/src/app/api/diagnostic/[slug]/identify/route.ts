@@ -52,8 +52,25 @@ export async function POST(
     const validation = identifyRequestSchema.safeParse(body);
     
     if (!validation.success) {
+      // Extract specific error messages
+      const errorMessages = validation.error.errors.map(err => {
+        if (err.path.includes('dni')) {
+          return err.message;
+        }
+        if (err.path.includes('name')) {
+          return err.message;
+        }
+        if (err.path.includes('email')) {
+          return err.message;
+        }
+        return err.message;
+      });
+      
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { 
+          error: errorMessages[0] || 'Datos inválidos',
+          details: validation.error.errors 
+        },
         { status: 400 }
       );
     }
