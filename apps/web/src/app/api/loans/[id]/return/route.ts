@@ -18,10 +18,7 @@ export async function PATCH(
     const institutionId = await getInstitutionId(request);
 
     const body = await request.json();
-    console.log('[RETURN_LOAN] Request body:', JSON.stringify(body, null, 2));
-    
     const data = validateBody(returnLoanSchema, body);
-    console.log('[RETURN_LOAN] Validated data:', JSON.stringify(data, null, 2));
 
     const { id } = await params;
 
