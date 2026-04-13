@@ -63,6 +63,17 @@ function OnboardingContent() {
 
             if (!response.ok) throw new Error('Error al completar onboarding');
 
+            const result = await response.json();
+
+            // If backend requires re-authentication (session was invalidated)
+            if (result.requiresReauth) {
+                // Force logout and redirect to login
+                const { authClient } = await import('@/lib/auth-client');
+                await authClient.signOut();
+                window.location.href = '/login?message=onboarding_complete';
+                return;
+            }
+
             const { authClient } = await import('@/lib/auth-client');
             await authClient.getSession();
 

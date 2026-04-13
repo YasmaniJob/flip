@@ -92,12 +92,12 @@ export async function POST(request: NextRequest) {
           })
           .returning();
 
-        // Update user atomically
+        // Update user atomically - user creating institution becomes admin
         await tx
           .update(users)
           .set({
             institutionId: newInst.id,
-            role: 'superadmin', // User creating the IE is always its superadmin
+            role: 'admin', // Admin of their own institution (not superadmin)
           })
           .where(eq(users.id, user.id));
 
@@ -114,6 +114,8 @@ export async function POST(request: NextRequest) {
 
     /**
      * 🔐 SESSION REFRESH (Multi-tenancy Sync)
+     * CRITICAL: We need to invalidate the session after role change
+     * so Better Auth creates a new session with the updated role
      */
     const cookieHeader = request.headers.get('cookie') || '';
     const sessionToken = cookieHeader
@@ -122,12 +124,20 @@ export async function POST(request: NextRequest) {
       ?.split('=')[1];
 
     if (sessionToken) {
-      await db.update(sessions)
-        .set({ activeInstitutionId: institutionId, updatedAt: new Date() })
+      // Delete old session to force re-authentication with new role
+      await db.delete(sessions)
         .where(eq(sessions.token, decodeURIComponent(sessionToken)));
     }
 
-    const response = successResponse({ id: institutionId, success: true }, 201);
+    const response = successResponse({ 
+      id: institutionId, 
+      success: true,
+      requiresReauth: true, // Signal frontend to re-authenticate
+    }, 201);
+    
+    // Clear session cookies to force re-login
+    response.cookies.delete('better-auth.session_token');
+    response.cookies.delete('__Secure-better-auth.session_token');
     response.cookies.delete('better-auth.session_data');
     response.cookies.delete('__Secure-better-auth.session_data');
     
