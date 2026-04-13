@@ -12,6 +12,7 @@ import { validateBody } from '@/lib/validations/helpers';
 import { onboardSchema } from '@/lib/validations/schemas/institutions';
 import { successResponse, errorResponse } from '@/lib/utils/response';
 import { ValidationError } from '@/lib/utils/errors';
+import { getTrialDays } from '@/lib/trial-config';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
@@ -66,8 +67,11 @@ export async function POST(request: NextRequest) {
       }
 
       const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Math.random().toString(36).substring(2, 7)}`;
+      
+      // Get dynamic trial days from configuration
+      const trialDays = await getTrialDays();
       const trialEndsAt = new Date();
-      trialEndsAt.setDate(trialEndsAt.getDate() + 15);
+      trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
 
       /**
        * ⚡ OPTIMIZED TRANSACTION

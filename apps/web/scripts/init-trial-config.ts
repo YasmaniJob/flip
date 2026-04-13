@@ -1,3 +1,6 @@
+// IMPORTANT: Load environment variables FIRST using require
+require('dotenv').config({ path: require('path').join(__dirname, '../.env.local') });
+
 /**
  * Initialize trial configuration in database
  * Sets default trial period to 15 days
