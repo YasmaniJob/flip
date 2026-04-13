@@ -70,14 +70,34 @@ export function ReturnLoanModal({ loan, open, onClose }: ReturnLoanModalProps) {
     }, []);
 
     const handleDamageReportChange = useCallback((resourceId: string, report: any) => {
-        setDamageReports(prev => ({ ...prev, [resourceId]: report }));
+        setDamageReports(prev => {
+            if (report === null) {
+                // Remove the key entirely when report is null
+                const { [resourceId]: _, ...rest } = prev;
+                return rest;
+            }
+            return { ...prev, [resourceId]: report };
+        });
         if (report && (report.commonProblems?.length > 0 || report.otherNotes)) {
             setResourceStatusDecisions(prev => ({ ...prev, [resourceId]: 'mantenimiento' }));
+        } else {
+            // Remove status decision when report is cleared
+            setResourceStatusDecisions(prev => {
+                const { [resourceId]: _, ...rest } = prev;
+                return rest;
+            });
         }
     }, []);
 
     const handleSuggestionReportChange = useCallback((resourceId: string, report: any) => {
-        setSuggestionReports(prev => ({ ...prev, [resourceId]: report }));
+        setSuggestionReports(prev => {
+            if (report === null) {
+                // Remove the key entirely when report is null
+                const { [resourceId]: _, ...rest } = prev;
+                return rest;
+            }
+            return { ...prev, [resourceId]: report };
+        });
     }, []);
 
     const handleConfirmReturn = () => {
