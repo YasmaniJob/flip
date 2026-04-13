@@ -16,6 +16,7 @@ import { ActionConfirm } from '@/components/molecules/action-confirm';
 import { AnimatePresence } from "framer-motion";
 import { useUserRole } from "@/hooks/use-user-role";
 import { useConfigLoadout } from "@/features/settings/hooks/use-config-loadout";
+import { useMyInstitution } from "@/features/institutions/hooks/use-my-institution";
 import { ReservationCard } from "@/features/reservations/components/reservation-card";
 import { SelectionActionBar } from "@/features/reservations/components/selection-action-bar";
 
@@ -45,6 +46,7 @@ export function ReservacionesClient() {
     const router = useRouter();
     const { canManage, canAction, isSuperAdmin } = useUserRole();
     const canReserve = canAction('reservations');
+    const { data: institution } = useMyInstitution();
     
     // Config Loadout (combines defaults, classrooms, pedagogic hours to eliminate waterfall)
     const { data: config, isLoading: isLoadingConfig, error: errorConfig } = useConfigLoadout();
@@ -65,6 +67,7 @@ export function ReservacionesClient() {
     const [selectedSlots, setSelectedSlots] = useState<{ date: Date; pedagogicalHourId: string }[]>([]);
     const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
     const [selectedTitle, setSelectedTitle] = useState<string>("");
+    const [selectedReservationSlot, setSelectedReservationSlot] = useState<ReservationSlot | null>(null);
     const [selectedMobileDate, setSelectedMobileDate] = useState<Date>(new Date());
     const [mobileSheetSlot, setMobileSheetSlot] = useState<ReservationSlot | null>(null);
     const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
@@ -184,6 +187,7 @@ export function ReservacionesClient() {
             if (canManage && (isWorkshop || isPIPReservation || isSuperAdmin) && existingSlot.reservationMainId) {
                 setSelectedReservationId(existingSlot.reservationMainId);
                 setSelectedTitle(existingSlot.title || `Taller: ${existingSlot.staff?.name}`);
+                setSelectedReservationSlot(existingSlot);
             }
             return;
         }
@@ -623,6 +627,14 @@ export function ReservacionesClient() {
                                           setRescheduleOpen(true);
                                         }
                                     }}
+                                    reservation={selectedReservationSlot ? {
+                                        date: new Date(selectedReservationSlot.date),
+                                        startTime: selectedReservationSlot.pedagogicalHour.startTime,
+                                        endTime: selectedReservationSlot.pedagogicalHour.endTime,
+                                        classroomName: config?.classrooms?.find(c => c.id === selectedReservationSlot.classroomId)?.name,
+                                        purpose: selectedReservationSlot.purpose,
+                                    } : undefined}
+                                    institutionName={institution?.name}
                                 />
                             </DialogContent>
                         </Dialog>

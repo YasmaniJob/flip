@@ -18,20 +18,31 @@ import {
 } from '../hooks/use-reservations';
 import { useStaff } from '@/features/staff/hooks/use-staff';
 import { useDebounce } from '@/hooks/use-debounce';
-import { Users, ListChecks, Check, Trash2, Search, Plus, Loader2, RefreshCw, X } from 'lucide-react';
+import { Users, ListChecks, Check, Trash2, Search, Plus, Loader2, RefreshCw, X, QrCode, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ActionConfirm } from '@/components/molecules/action-confirm';
+import { QRAttendanceDialog } from './qr-attendance-dialog';
+import { AttendancePDFGenerator } from './attendance-pdf-generator';
 
 interface WorkshopDetailSheetProps {
     reservationId: string;
     title?: string;
     onClose?: () => void;
     onReschedule?: () => void;
+    reservation?: {
+        date: Date;
+        startTime: string;
+        endTime: string;
+        classroomName?: string;
+        purpose?: string;
+    };
+    institutionName?: string;
 }
 
-export function WorkshopDetailSheet({ reservationId, title, onClose, onReschedule }: WorkshopDetailSheetProps) {
+export function WorkshopDetailSheet({ reservationId, title, onClose, onReschedule, reservation, institutionName }: WorkshopDetailSheetProps) {
     const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
     const [showSearch, setShowSearch] = useState(false);
+    const [showQR, setShowQR] = useState(false);
     
     const cancelMutation = useCancelReservation();
     const checkInMutation = useCheckInReservation();
@@ -57,7 +68,9 @@ export function WorkshopDetailSheet({ reservationId, title, onClose, onReschedul
     };
     
     const { data: attendance } = useReservationAttendance(reservationId);
+    const { data: tasks } = useReservationTasks(reservationId);
     const records = (attendance as ReservationAttendance[]) || [];
+    const taskList = (tasks as ReservationTask[]) || [];
     const existingStaffIds = new Set(records.map(r => r.staffId));
     const filteredStaff = staff?.filter(s => !existingStaffIds.has(s.id));
 
@@ -119,7 +132,13 @@ export function WorkshopDetailSheet({ reservationId, title, onClose, onReschedul
                 </div>
 
                 <TabsContent value="attendance" className="flex-1 mt-0 overflow-hidden outline-none bg-card/10">
-                    <AttendanceTab reservationId={reservationId} onOpenSearch={() => setShowSearch(true)} />
+                    <AttendanceTab 
+                        reservationId={reservationId} 
+                        onOpenSearch={() => setShowSearch(true)}
+                        onOpenQR={() => setShowQR(true)}
+                        reservation={reservation}
+                        institutionName={institutionName}
+                    />
                 </TabsContent>
                 <TabsContent value="tasks" className="flex-1 mt-0 overflow-hidden outline-none bg-card/10">
                     <TasksTab reservationId={reservationId} />
@@ -273,6 +292,14 @@ export function WorkshopDetailSheet({ reservationId, title, onClose, onReschedul
                 variant="destructive"
                 isLoading={cancelMutation.isPending}
             />
+
+            {/* QR Attendance Dialog */}
+            <QRAttendanceDialog
+                open={showQR}
+                onOpenChange={setShowQR}
+                reservationId={reservationId}
+                title={title}
+            />
         </div>
     );
 }
@@ -281,8 +308,27 @@ export function WorkshopDetailSheet({ reservationId, title, onClose, onReschedul
 // ATTENDANCE TAB
 // ============================================
 
-function AttendanceTab({ reservationId, onOpenSearch }: { reservationId: string, onOpenSearch: () => void }) {
+function AttendanceTab({ 
+    reservationId, 
+    onOpenSearch, 
+    onOpenQR,
+    reservation,
+    institutionName 
+}: { 
+    reservationId: string;
+    onOpenSearch: () => void;
+    onOpenQR: () => void;
+    reservation?: {
+        date: Date;
+        startTime: string;
+        endTime: string;
+        classroomName?: string;
+        purpose?: string;
+    };
+    institutionName?: string;
+}) {
     const { data: attendance, isLoading } = useReservationAttendance(reservationId);
+    const { data: tasks } = useReservationTasks(reservationId);
     const bulkUpdate = useBulkUpdateReservationAttendance();
     const removeAttendee = useRemoveReservationAttendee();
 
@@ -296,6 +342,7 @@ function AttendanceTab({ reservationId, onOpenSearch }: { reservationId: string,
     }
 
     const records = (attendance as ReservationAttendance[]) || [];
+    const taskList = (tasks as ReservationTask[]) || [];
 
     const handleToggleStatus = (record: ReservationAttendance) => {
         const nextStatus = record.status === 'presente' ? 'ausente' : 'presente';
@@ -311,14 +358,45 @@ function AttendanceTab({ reservationId, onOpenSearch }: { reservationId: string,
                         Asistentes ({records.length})
                     </span>
                 </div>
-                <Button
-                    onClick={onOpenSearch}
-                    variant="outline"
-                    className="h-10 px-6 gap-3 border-border bg-background hover:bg-muted font-black text-[9px] uppercase tracking-widest transition-all rounded-sm"
-                >
-                    <Plus className="h-3.5 w-3.5" />
-                    Registrar personal
-                </Button>
+                <div className="flex items-center gap-4">
+                    {/* QR and PDF buttons grouped together */}
+                    <div className="flex items-center gap-2">
+                        <Button
+                            onClick={onOpenQR}
+                            variant="outline"
+                            className="h-10 px-4 gap-2 border-border bg-background hover:bg-muted font-black text-[9px] uppercase tracking-widest transition-all rounded-sm"
+                            title="Mostrar código QR"
+                        >
+                            <QrCode className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">QR</span>
+                        </Button>
+                        <AttendancePDFGenerator
+                            reservation={{
+                                id: reservationId,
+                                date: reservation?.date || new Date(),
+                                startTime: reservation?.startTime || '08:00',
+                                endTime: reservation?.endTime || '09:00',
+                                classroomName: reservation?.classroomName,
+                                purpose: reservation?.purpose,
+                            }}
+                            attendees={records}
+                            tasks={taskList}
+                            institutionName={institutionName}
+                            variant="outline"
+                            className="h-10 px-4 gap-2 border-border bg-background hover:bg-muted font-black text-[9px] uppercase tracking-widest transition-all rounded-sm"
+                        />
+                    </div>
+                    
+                    {/* Register button separate */}
+                    <Button
+                        onClick={onOpenSearch}
+                        variant="outline"
+                        className="h-10 px-6 gap-3 border-border bg-background hover:bg-muted font-black text-[9px] uppercase tracking-widest transition-all rounded-sm"
+                    >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Registrar personal</span>
+                    </Button>
+                </div>
             </div>
 
             {/* Attendance List: Squared Grid */}
