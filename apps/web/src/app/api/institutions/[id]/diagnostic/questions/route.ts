@@ -155,8 +155,13 @@ export async function POST(
     const validation = questionRequestSchema.safeParse(body);
     
     if (!validation.success) {
+      // Extract specific error messages
+      const errorMessages = validation.error.errors.map(err => err.message);
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { 
+          error: errorMessages[0] || 'Invalid request data',
+          details: validation.error.errors 
+        },
         { status: 400 }
       );
     }
