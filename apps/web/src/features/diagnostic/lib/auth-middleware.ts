@@ -34,6 +34,16 @@ export async function verifyAdminAccess(
       headers: request.headers,
     });
     
+    // DEBUG: Log session data
+    console.log('[Auth Debug] Session data:', {
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userId: session?.user?.id,
+      userRole: session?.user?.role,
+      userIsSuperAdmin: session?.user?.isSuperAdmin,
+      userInstitutionId: session?.user?.institutionId,
+    });
+    
     if (!session?.user) {
       return {
         authorized: false,
@@ -54,6 +64,14 @@ export async function verifyAdminAccess(
     // Check if user has admin role (director, coordinador, or super admin)
     const adminRoles = ['director', 'coordinador', 'admin'];
     const isAdmin = adminRoles.includes(user.role) || user.isSuperAdmin;
+    
+    // DEBUG: Log permission check
+    console.log('[Auth Debug] Permission check:', {
+      userRole: user.role,
+      isInAdminRoles: adminRoles.includes(user.role),
+      isSuperAdmin: user.isSuperAdmin,
+      finalIsAdmin: isAdmin,
+    });
     
     if (!isAdmin) {
       return {

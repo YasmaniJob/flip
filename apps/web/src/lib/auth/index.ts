@@ -42,6 +42,8 @@ export const auth = betterAuth({
       role: { type: "string", required: false, defaultValue: "docente" },
       isSuperAdmin: { type: "boolean", required: false, defaultValue: false },
     },
+    // Ensure custom fields are included in session
+    modelName: "user",
   },
 });
 
