@@ -26,7 +26,7 @@ interface LoanWizardProps {
 
 export function LoanWizard({ open, onOpenChange, initialResources }: LoanWizardProps) {
     const { state, selectStaff, setMetadata, addToCart, removeFromCart, clearCart, setViewState } = useLoanWizard();
-    const { isTeacher } = useUserRole();
+    const { isTeacher, user } = useUserRole();
 
     // Stage State
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -85,6 +85,7 @@ export function LoanWizard({ open, onOpenChange, initialResources }: LoanWizardP
                 sectionId: state.sectionId || undefined,
                 curricularAreaId: state.curricularAreaId || undefined,
                 studentPickupNote: studentPickupNote.trim() || undefined,
+                purpose: state.loanPurpose === 'EVENT' ? state.purposeDetails?.trim() : undefined,
             },
             {
                 onSuccess: () => {
@@ -93,7 +94,7 @@ export function LoanWizard({ open, onOpenChange, initialResources }: LoanWizardP
                     setSelectedCategoryId(null);
                     setSearch("");
                     setStudentPickupNote("");
-                    setMetadata({ gradeId: null, sectionId: null, curricularAreaId: null });
+                    setMetadata({ gradeId: null, sectionId: null, curricularAreaId: null, loanPurpose: 'CLASS', purposeDetails: '' });
                 },
                 onError: (error: Error) => {
                     alert(`Error al crear el préstamo: ${error.message}`);
@@ -119,9 +120,8 @@ export function LoanWizard({ open, onOpenChange, initialResources }: LoanWizardP
                             <div className="flex items-center gap-3">
                                 <div className="w-1 h-5 bg-primary rounded-full" />
                                 <h2 className="text-sm font-black text-foreground tracking-widest uppercase">
-                                    {state.viewState === 'CONTEXT' && !isTeacher && state.selectedStaff
-                                        ? 'Ficha de Préstamo'
-                                        : state.viewState === 'CONTEXT' ? 'Identificación del Responsable'
+                                    {state.viewState === 'CONTEXT' 
+                                        ? (isTeacher ? 'Configurar Préstamo' : (state.selectedStaff ? 'Ficha de Préstamo' : 'Identificación del Responsable'))
                                         : 'Selección de Recursos'
                                     }
                                 </h2>
@@ -178,34 +178,45 @@ export function LoanWizard({ open, onOpenChange, initialResources }: LoanWizardP
                     <main className="flex-1 flex flex-col bg-background overflow-hidden relative">
                         {state.viewState === 'CONTEXT' ? (
                             <div className="overflow-y-auto p-7 w-full custom-scrollbar animate-in fade-in zoom-in-95 duration-300">
-                                {(!state.selectedStaff || isTeacher) && (
-                                    <div className="text-center space-y-2 mb-6 transition-all duration-300">
-                                        <div className="mx-auto w-10 h-10 flex items-center justify-center rounded-full bg-primary/5 border border-primary/20 mb-2">
-                                            <User className="h-4 w-4 text-primary" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-black text-foreground tracking-tight uppercase mb-1">Identificación del Responsable</h3>
-                                            <p className="text-sm text-muted-foreground font-medium">Busca al docente o personal administrativo que solicita el recurso.</p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="flex flex-col gap-5">
-                                    {isTeacher ? (
-                                        <div className="space-y-8">
-                                            <div className="p-6 rounded-md border border-primary/20 bg-primary/5 text-center">
-                                                <p className="text-sm font-bold text-primary uppercase tracking-widest">Solicitud a tu nombre</p>
+                                {isTeacher ? (
+                                    // Teacher View: Show their name and context selection
+                                    <div className="space-y-8">
+                                        <div className="text-center space-y-3">
+                                            <div className="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-primary/10 border-2 border-primary/20">
+                                                <User className="h-7 w-7 text-primary" />
                                             </div>
-                                            <TeacherContextStep
-                                                gradeId={state.gradeId}
-                                                sectionId={state.sectionId}
-                                                curricularAreaId={state.curricularAreaId}
-                                                onGradeChange={(id) => setMetadata({ gradeId: id })}
-                                                onSectionChange={(id) => setMetadata({ sectionId: id })}
-                                                onCurricularAreaChange={(id) => setMetadata({ curricularAreaId: id })}
-                                            />
+                                            <div>
+                                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Responsable del Préstamo</p>
+                                                <h3 className="text-2xl font-black text-foreground tracking-tight uppercase">{user?.name || 'Docente'}</h3>
+                                            </div>
                                         </div>
-                                    ) : (
+                                        <TeacherContextStep
+                                            gradeId={state.gradeId}
+                                            sectionId={state.sectionId}
+                                            curricularAreaId={state.curricularAreaId}
+                                            onGradeChange={(id) => setMetadata({ gradeId: id })}
+                                            onSectionChange={(id) => setMetadata({ sectionId: id })}
+                                            onCurricularAreaChange={(id) => setMetadata({ curricularAreaId: id })}
+                                            loanPurpose={state.loanPurpose}
+                                            purposeDetails={state.purposeDetails}
+                                            onPurposeChange={(purpose) => setMetadata({ loanPurpose: purpose })}
+                                            onPurposeDetailsChange={(details) => setMetadata({ purposeDetails: details })}
+                                        />
+                                    </div>
+                                ) : (
+                                    // Admin View: Show staff selection
+                                    <div className="flex flex-col gap-5">
+                                        {!state.selectedStaff && (
+                                            <div className="text-center space-y-2 mb-6 transition-all duration-300">
+                                                <div className="mx-auto w-10 h-10 flex items-center justify-center rounded-full bg-primary/5 border border-primary/20 mb-2">
+                                                    <User className="h-4 w-4 text-primary" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xl font-black text-foreground tracking-tight uppercase mb-1">Identificación del Responsable</h3>
+                                                    <p className="text-sm text-muted-foreground font-medium">Busca al docente o personal administrativo que solicita el recurso.</p>
+                                                </div>
+                                            </div>
+                                        )}
                                         <StaffSelectionStep
                                             discovery
                                             selectedStaff={state.selectedStaff}
@@ -223,8 +234,8 @@ export function LoanWizard({ open, onOpenChange, initialResources }: LoanWizardP
                                             onPurposeChange={(purpose) => setMetadata({ loanPurpose: purpose })}
                                             onPurposeDetailsChange={(details) => setMetadata({ purposeDetails: details })}
                                         />
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="flex-1 min-h-0 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -334,7 +345,14 @@ export function LoanWizard({ open, onOpenChange, initialResources }: LoanWizardP
                                     // Validar que se pueda continuar al catálogo
                                     let canProceedToCatalog = false;
                                     if (isTeacher) {
-                                        canProceedToCatalog = true;
+                                        // Teachers must follow same rules as admin
+                                        if (state.loanPurpose === 'CLASS') {
+                                            // En clase regular, exigimos al menos Sección
+                                            canProceedToCatalog = !!state.sectionId;
+                                        } else {
+                                            // En Evento, exigimos que haya escrito el motivo
+                                            canProceedToCatalog = (state.purposeDetails || '').trim().length > 3;
+                                        }
                                     } else if (state.selectedStaff) {
                                         if (state.loanPurpose === 'CLASS') {
                                             // En clase regular, exigimos al menos Área, Grado y Sección (o solo Sección si no hay áreas)
