@@ -38,6 +38,7 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       institutionId: { type: "string", required: false },
+      dni: { type: "string", required: false },
       role: { type: "string", required: false, defaultValue: "docente" },
       isSuperAdmin: { type: "boolean", required: false, defaultValue: false },
     },

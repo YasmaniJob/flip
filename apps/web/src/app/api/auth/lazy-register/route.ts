@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createHmac } from 'crypto';
+import { createHmac, scryptSync, randomBytes } from 'crypto';
 import { db } from '@/lib/db';
-import { staff, users, sessions } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { staff, users, sessions, accounts } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit';
 import { TooManyRequestsError } from '@/lib/utils/errors';
@@ -11,19 +11,35 @@ import { errorResponse } from '@/lib/utils/response';
 type LazyRegisterRequest = {
   email: string;
   dni: string;
-  selectedInstitutionId?: string; // Para cuando el usuario ya eligió
+  selectedInstitutionId?: string;
 };
 
+/**
+ * Endpoint de lazy register - Solución Estructural
+ * 
+ * Esta implementación resuelve el problema de raíz:
+ * - Usuarios nuevos: Se crean con password HMAC
+ * - Usuarios existentes: Se actualiza su password HMAC directamente en la BD
+ * - Ambos: Usan el mismo password determinístico para signIn
+ * 
+ * IMPORTANTE: El password se hashea usando scrypt (mismo que Better Auth)
+ * para garantizar compatibilidad total.
+ */
 export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for') || 'anonymous';
     if (!rateLimit(`lazy-register-${ip}`, 5, 60 * 1000)) {
-       throw new TooManyRequestsError();
+      throw new TooManyRequestsError();
     }
+
     const body: LazyRegisterRequest = await request.json();
     const { email, dni, selectedInstitutionId } = body;
 
-    console.log('[Lazy Register] Request received:', { email, dni: dni.slice(0, 3) + '***', selectedInstitutionId });
+    console.log('[Lazy Register] Request received:', { 
+      email, 
+      dni: dni.slice(0, 3) + '***', 
+      selectedInstitutionId 
+    });
 
     // Validación básica
     if (!email || !dni) {
@@ -44,7 +60,6 @@ export async function POST(request: NextRequest) {
 
     console.log('[Lazy Register] Staff records found:', staffRecords.length);
 
-    // Si no hay registros con ese DNI
     if (staffRecords.length === 0) {
       console.error('[Lazy Register] DNI not found in any institution');
       return NextResponse.json(
@@ -53,7 +68,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Validar que el email coincida en al menos un registro
+    // 2. Validar que el email coincida
     const matchingStaff = staffRecords.find(
       (s) => s.email?.toLowerCase() === email.toLowerCase()
     );
@@ -72,18 +87,14 @@ export async function POST(request: NextRequest) {
     let targetInstitutionId: string;
 
     if (staffRecords.length === 1) {
-      // Solo una institución
       targetInstitutionId = staffRecords[0].institutionId;
       console.log('[Lazy Register] Single institution detected:', targetInstitutionId);
     } else if (selectedInstitutionId) {
-      // Usuario proporcionó un ID (desde localStorage o modal)
-      // VALIDACIÓN DE SEGURIDAD: Verificar que el ID sea válido para este usuario
       const validSelection = staffRecords.find(
         (s) => s.institutionId === selectedInstitutionId
       );
       
       if (!validSelection) {
-        // ID inválido o manipulado - ignorar y requerir selección manual
         console.warn('[Lazy Register] Invalid or outdated institution ID, requiring selection');
         return NextResponse.json({
           requiresSelection: true,
@@ -98,7 +109,6 @@ export async function POST(request: NextRequest) {
       targetInstitutionId = selectedInstitutionId;
       console.log('[Lazy Register] Valid institution ID from preference:', targetInstitutionId);
     } else {
-      // Múltiples instituciones, requiere selección
       console.log('[Lazy Register] Multiple institutions, requiring selection');
       return NextResponse.json({
         requiresSelection: true,
@@ -110,53 +120,83 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 4. Verificar si el usuario ya existe
-    const existingUser = await db.query.users.findFirst({
+    const staffRecord = staffRecords.find((s) => s.institutionId === targetInstitutionId)!;
+
+    // 4. Generar password determinístico
+    const secret = process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET || '';
+    
+    if (!secret) {
+      console.error('[Lazy Register] CRITICAL: No BETTER_AUTH_SECRET or AUTH_SECRET found');
+      return NextResponse.json(
+        { error: 'Error de configuración del servidor' },
+        { status: 500 }
+      );
+    }
+
+    // Password determinístico para este usuario
+    const internalPassword = createHmac('sha256', secret)
+      .update(`lazy:${email.toLowerCase()}:${dni}`)
+      .digest('hex');
+
+    // 5. Verificar si el usuario ya existe
+    let existingUser = await db.query.users.findFirst({
       where: eq(users.email, email.toLowerCase()),
     });
 
     let userId: string;
-    const staffRecord = staffRecords.find((s) => s.institutionId === targetInstitutionId)!;
 
     if (existingUser) {
       console.log('[Lazy Register] User already exists:', existingUser.id);
       userId = existingUser.id;
 
-      // Actualizar institutionId si cambió
-      if (existingUser.institutionId !== targetInstitutionId) {
-        console.log('[Lazy Register] Updating user institutionId');
+      // Actualizar institutionId y DNI si cambió
+      if (existingUser.institutionId !== targetInstitutionId || existingUser.dni !== dni) {
+        console.log('[Lazy Register] Updating user institutionId and DNI');
         await db
           .update(users)
           .set({ 
             institutionId: targetInstitutionId,
+            dni: dni,
             updatedAt: new Date(),
           })
           .where(eq(users.id, userId));
       }
+
+      // SOLUCIÓN ESTRUCTURAL: Actualizar el password directamente en la tabla accounts
+      // Hashear usando scrypt (mismo algoritmo que Better Auth)
+      console.log('[Lazy Register] Syncing password for existing user');
+      
+      const existingAccount = await db.query.accounts.findFirst({
+        where: and(
+          eq(accounts.userId, userId),
+          eq(accounts.providerId, 'credential')
+        ),
+      });
+
+      if (existingAccount) {
+        // Generar salt y hashear con scrypt (parámetros compatibles con Better Auth)
+        const salt = randomBytes(16);
+        const hashedPassword = scryptSync(internalPassword, salt, 64).toString('base64');
+        const passwordWithSalt = `${salt.toString('base64')}:${hashedPassword}`;
+
+        await db
+          .update(accounts)
+          .set({
+            password: passwordWithSalt,
+            updatedAt: new Date(),
+          })
+          .where(eq(accounts.id, existingAccount.id));
+        
+        console.log('[Lazy Register] Password synced successfully');
+      } else {
+        // Si no existe account de tipo credential, lo creamos en el próximo signIn
+        console.log('[Lazy Register] No credential account found, will be created on signIn');
+      }
     } else {
-      // 5. Crear nuevo usuario con Better Auth
+      // 6. Crear nuevo usuario
       console.log('[Lazy Register] Creating new user account');
       
-      // Password interno derivado de un HMAC del servidor:
-      // - Impredecible sin conocer BETTER_AUTH_SECRET
-      // - Determinístico: mismo resultado para la misma cuenta
-      // - Nunca expuesto al usuario; solo usado internamente
-      const secret = process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET || '';
-      
-      if (!secret) {
-        console.error('[Lazy Register] CRITICAL: No BETTER_AUTH_SECRET or AUTH_SECRET found');
-        return NextResponse.json(
-          { error: 'Error de configuración del servidor' },
-          { status: 500 }
-        );
-      }
-      
-      const internalPassword = createHmac('sha256', secret)
-        .update(`lazy:${email.toLowerCase()}:${dni}`)
-        .digest('hex');
-      
       try {
-        // Usar Better Auth para crear el usuario
         const signUpResult = await auth.api.signUpEmail({
           body: {
             email: email.toLowerCase(),
@@ -169,7 +209,6 @@ export async function POST(request: NextRequest) {
           throw new Error('SignUp failed - no result returned');
         }
 
-        // Extraer userId del resultado
         userId = (signUpResult as any).user?.id;
         
         if (!userId) {
@@ -188,7 +227,6 @@ export async function POST(request: NextRequest) {
         console.log('[Lazy Register] Is first user of institution?', isFirstUser);
 
         // Actualizar campos adicionales
-        // El primer usuario de una institución es automáticamente superadmin
         await db
           .update(users)
           .set({
@@ -202,7 +240,7 @@ export async function POST(request: NextRequest) {
 
         console.log('[Lazy Register] User fields updated - Role:', isFirstUser ? 'superadmin' : (staffRecord.role || 'docente'));
 
-        // Si es el primer usuario, también actualizar el staff record para que tenga rol admin
+        // Si es el primer usuario, actualizar staff a admin
         if (isFirstUser) {
           await db
             .update(staff)
@@ -216,7 +254,6 @@ export async function POST(request: NextRequest) {
         }
       } catch (signUpError) {
         console.error('[Lazy Register] Better Auth signUp failed:', signUpError);
-        console.error('[Lazy Register] SignUp error details:', JSON.stringify(signUpError, null, 2));
         return NextResponse.json(
           { error: 'Error al crear la cuenta. Intente nuevamente.' },
           { status: 500 }
@@ -224,26 +261,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 6. Crear sesión con Better Auth usando nextCookies plugin
+    // 7. Crear sesión con Better Auth
     console.log('[Lazy Register] Creating session for user:', userId);
     
     try {
-      // Con nextCookies, Better Auth maneja las cookies de Next.js nativamente
-      // El password se deriva del mismo HMAC determinístico para garantizar consistencia
-      const secret = process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET || '';
-      
-      if (!secret) {
-        console.error('[Lazy Register] CRITICAL: No BETTER_AUTH_SECRET or AUTH_SECRET found for signIn');
-        return NextResponse.json(
-          { error: 'Error de configuración del servidor' },
-          { status: 500 }
-        );
-      }
-      
-      const internalPassword = createHmac('sha256', secret)
-        .update(`lazy:${email.toLowerCase()}:${dni}`)
-        .digest('hex');
-
       await auth.api.signInEmail({
         body: {
           email: email.toLowerCase(),
@@ -253,7 +274,7 @@ export async function POST(request: NextRequest) {
 
       console.log('[Lazy Register] Session created successfully');
 
-      // 7. Actualizar activeInstitutionId en la sesión más reciente del usuario
+      // 8. Actualizar activeInstitutionId en la sesión
       await db
         .update(sessions)
         .set({ 
@@ -264,7 +285,7 @@ export async function POST(request: NextRequest) {
 
       console.log('[Lazy Register] Session activeInstitutionId set:', targetInstitutionId);
 
-      // 8. Retornar éxito - nextCookies maneja las cookies automáticamente
+      // 9. Retornar éxito
       return NextResponse.json({
         success: true,
         user: {
@@ -278,7 +299,6 @@ export async function POST(request: NextRequest) {
       });
     } catch (signInError) {
       console.error('[Lazy Register] Session creation failed:', signInError);
-      console.error('[Lazy Register] SignIn error details:', JSON.stringify(signInError, null, 2));
       return NextResponse.json(
         { error: 'Error al iniciar sesión. Intente nuevamente.' },
         { status: 500 }
