@@ -74,9 +74,20 @@ export function SettingsClient() {
             setLogoUrl(institution.settings.logoUrl);
         }
         if (institution?.settings) {
-            setLocalFeatures((institution.settings as any)?.features || {});
+            const institutionFeatures = (institution.settings as any)?.features || {};
+            setLocalFeatures(institutionFeatures);
+            setHasFeatureChanges(false);
         }
     }, [institution]);
+    
+    // Track changes in features/permissions
+    useEffect(() => {
+        if (institution?.settings) {
+            const institutionFeatures = (institution.settings as any)?.features || {};
+            const changed = JSON.stringify(localFeatures) !== JSON.stringify(institutionFeatures);
+            setHasFeatureChanges(changed);
+        }
+    }, [localFeatures, institution]);
 
     const handleSaveBrand = async (color?: string, logo?: string) => {
         if (!hasInstitution) return;
@@ -125,8 +136,12 @@ export function SettingsClient() {
         }
     });
     const [originalSettings, setOriginalSettings] = useState<typeof settings | null>(null);
-    const [isSavingSettings, setIsSavingSettings] = useState(false);
+    const [isSavingPreferences, setIsSavingPreferences] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
+    
+    // Separate state for features/permissions
+    const [isSavingFeatures, setIsSavingFeatures] = useState(false);
+    const [hasFeatureChanges, setHasFeatureChanges] = useState(false);
 
     // Fetch user settings
     useEffect(() => {
@@ -154,7 +169,7 @@ export function SettingsClient() {
     }, [settings, originalSettings]);
 
     const handleSaveSettings = async () => {
-        setIsSavingSettings(true);
+        setIsSavingPreferences(true);
         try {
             const res = await fetch('/api/users/settings', {
                 method: 'POST',
@@ -171,7 +186,39 @@ export function SettingsClient() {
         } catch (error) {
             toast.error("No se pudieron guardar las preferencias");
         } finally {
-            setIsSavingSettings(false);
+            setIsSavingPreferences(false);
+        }
+    };
+    
+    const handleSaveFeatures = async () => {
+        if (!institution) return;
+        setIsSavingFeatures(true);
+        try {
+            const res = await fetch('/api/institutions/my-institution/features', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ features: localFeatures })
+            });
+            if (res.ok) {
+                queryClient.invalidateQueries({ queryKey: institutionKeys.myInstitution });
+                toast.success("Permisos actualizados correctamente");
+                setHasFeatureChanges(false);
+            } else {
+                throw new Error();
+            }
+        } catch {
+            toast.error("Error al guardar permisos");
+        } finally {
+            setIsSavingFeatures(false);
+        }
+    };
+    
+    const handleDiscardFeatures = () => {
+        if (institution?.settings) {
+            const institutionFeatures = (institution.settings as any)?.features || {};
+            setLocalFeatures(institutionFeatures);
+            setHasFeatureChanges(false);
+            toast.info("Cambios descartados");
         }
     };
 
@@ -695,16 +742,16 @@ export function SettingsClient() {
                         </div>
                     </TabsContent>
 
-                    {/* Floating save button */}
-                    {hasChanges && (
+                    {/* Floating save button - only for preferences */}
+                    {hasChanges && activeTab === 'preferences' && (
                         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
                             <Button
                                 onClick={handleSaveSettings}
-                                disabled={isSavingSettings}
+                                disabled={isSavingPreferences}
                                 className="px-8 py-3.5 text-white font-bold shadow-lg shadow-black/20 rounded-lg"
                                 style={{ backgroundColor: getBrandColor(brandColor) }}
                             >
-                                {isSavingSettings ? (
+                                {isSavingPreferences ? (
                                     <Loader2 className="w-5 h-5 animate-spin mr-2" />
                                 ) : (
                                     <Save className="w-5 h-5 mr-2" />
@@ -858,35 +905,28 @@ export function SettingsClient() {
                                         <p className="text-xs text-muted-foreground">Define qué roles pueden acceder a cada funcionalidad básica</p>
                                     </div>
                                 </div>
-                                <Button
-                                    onClick={async () => {
-                                        if (!institution) return;
-                                        setIsSavingSettings(true);
-                                        try {
-                                            const res = await fetch('/api/institutions/my-institution/features', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ features: localFeatures })
-                                            });
-                                            if (res.ok) {
-                                                queryClient.invalidateQueries({ queryKey: institutionKeys.myInstitution });
-                                                toast.success("Permisos actualizados correctamente");
-                                            } else {
-                                                throw new Error();
-                                            }
-                                        } catch {
-                                            toast.error("Error al guardar permisos");
-                                        } finally {
-                                            setIsSavingSettings(false);
-                                        }
-                                    }}
-                                    disabled={isSavingSettings}
-                                    className="text-white font-bold h-10 px-6 shrink-0"
-                                    style={{ backgroundColor: getBrandColor(brandColor) }}
-                                >
-                                    {isSavingSettings ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                                    Guardar Configuración
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                    {hasFeatureChanges && (
+                                        <Button
+                                            onClick={handleDiscardFeatures}
+                                            disabled={isSavingFeatures}
+                                            variant="outline"
+                                            className="h-10 px-4 shrink-0"
+                                        >
+                                            <X className="w-4 h-4 mr-2" />
+                                            Descartar
+                                        </Button>
+                                    )}
+                                    <Button
+                                        onClick={handleSaveFeatures}
+                                        disabled={isSavingFeatures || !hasFeatureChanges}
+                                        className="text-white font-bold h-10 px-6 shrink-0"
+                                        style={{ backgroundColor: getBrandColor(brandColor) }}
+                                    >
+                                        {isSavingFeatures ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                                        Guardar Configuración
+                                    </Button>
+                                </div>
                             </div>
 
                             <div className="overflow-x-auto">
