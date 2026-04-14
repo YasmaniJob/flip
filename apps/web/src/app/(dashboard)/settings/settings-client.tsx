@@ -64,11 +64,17 @@ export function SettingsClient() {
     const { brandColor, setBrandColor } = useBrandColor();
     const [isSavingBrand, setIsSavingBrand] = useState(false);
     const [logoUrl, setLogoUrl] = useState("");
+    
+    // Local state for permissions matrix (optimistic updates)
+    const [localFeatures, setLocalFeatures] = useState<Record<string, any>>({});
 
-    // Update logoUrl when institution loads
+    // Update logoUrl and localFeatures when institution loads
     useEffect(() => {
         if (institution?.settings?.logoUrl) {
             setLogoUrl(institution.settings.logoUrl);
+        }
+        if (institution?.settings) {
+            setLocalFeatures((institution.settings as any)?.features || {});
         }
     }, [institution]);
 
@@ -855,13 +861,12 @@ export function SettingsClient() {
                                 <Button
                                     onClick={async () => {
                                         if (!institution) return;
-                                        const currentFeatures = (institution.settings as any)?.features || {};
                                         setIsSavingSettings(true);
                                         try {
                                             const res = await fetch('/api/institutions/my-institution/features', {
                                                 method: 'POST',
                                                 headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ features: currentFeatures })
+                                                body: JSON.stringify({ features: localFeatures })
                                             });
                                             if (res.ok) {
                                                 queryClient.invalidateQueries({ queryKey: institutionKeys.myInstitution });
@@ -899,28 +904,16 @@ export function SettingsClient() {
                                             { id: 'reservations', name: 'Reservas de Aula', desc: 'Permitir crear y gestionar reservaciones de espacios (AIP/Laboratorios).' },
                                             { id: 'loans', name: 'Préstamos de Recursos', desc: 'Permitir realizar solicitudes de préstamo de equipos e inventario.' },
                                         ].map((feature) => {
-                                            const currentFeatures = (institution?.settings as any)?.features || {};
-                                            const featureData = currentFeatures[feature.id] || { docente: false, pip: true }; 
+                                            const featureData = localFeatures[feature.id] || { docente: false, pip: true }; 
 
                                             const toggle = (role: string) => {
-                                                const updatedFeatures = {
-                                                    ...currentFeatures,
+                                                setLocalFeatures(prev => ({
+                                                    ...prev,
                                                     [feature.id]: {
                                                         ...featureData,
                                                         [role]: !featureData[role]
                                                     }
-                                                };
-                                                
-                                                fetch('/api/institutions/my-institution/features', {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({ features: updatedFeatures })
-                                                }).then(res => {
-                                                    if (res.ok) {
-                                                        queryClient.invalidateQueries({ queryKey: institutionKeys.myInstitution });
-                                                        toast.success(`${feature.name} actualizado`);
-                                                    }
-                                                });
+                                                }));
                                             };
 
                                             return (
