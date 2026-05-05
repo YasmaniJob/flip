@@ -557,21 +557,80 @@ export function WizardStep1({
                       );
                     })}
                     
-                    <button
-                      onClick={() => {
-                        setIsAddingCustom(group.catName);
-                        setCustomName("");
-                        setCustomIcon("📦");
-                      }}
-                      className="relative p-2 rounded-none text-left transition-all group shadow-none border border-dashed border-border bg-card/30 hover:border-primary/50 hover:bg-muted/20 flex flex-col items-center justify-center gap-1.5 h-full min-h-[88px]"
-                    >
-                      <div className="w-8 h-8 rounded-none flex items-center justify-center text-lg border border-dashed border-border/50 bg-muted/20 group-hover:bg-primary/5 group-hover:border-primary/30 group-hover:text-primary transition-colors">
-                        <Plus className="h-4 w-4" />
+                    {isAddingCustom === group.catName ? (
+                      <div className="col-span-full mt-2 p-3 bg-primary/5 border border-primary/20 flex flex-col sm:flex-row items-center gap-3 animate-in fade-in zoom-in-95">
+                        <div className="flex-1 w-full">
+                          <input 
+                            type="text" 
+                            autoFocus
+                            value={customName}
+                            onChange={e => setCustomName(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' && customName.trim()) {
+                                setCustomTemplates(prev => [...prev, { catName: group.catName, name: customName.trim(), icon: customIcon || "📦" }]);
+                                const newKey = `std:${group.catName}||${customName.trim()}`;
+                                setSelectedKeys(prev => new Set([...prev, newKey]));
+                                setIsAddingCustom(null);
+                              } else if (e.key === 'Escape') {
+                                setIsAddingCustom(null);
+                              }
+                            }}
+                            placeholder="Nombre de la subcategoría..."
+                            className="w-full h-9 px-3 text-xs bg-background border border-border focus:outline-none focus:border-primary transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <input 
+                            type="text" 
+                            value={customIcon}
+                            onChange={e => setCustomIcon(e.target.value)}
+                            maxLength={2}
+                            className="w-12 h-9 text-center text-sm bg-background border border-border focus:outline-none focus:border-primary transition-colors"
+                            title="Ícono (Emoji)"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => setIsAddingCustom(null)} 
+                            className="h-9 px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground w-full sm:w-auto"
+                          >
+                            Cancelar
+                          </Button>
+                          <Button 
+                            size="sm"
+                            onClick={() => {
+                              if (!customName.trim()) return;
+                              setCustomTemplates(prev => [...prev, { catName: group.catName, name: customName.trim(), icon: customIcon || "📦" }]);
+                              const newKey = `std:${group.catName}||${customName.trim()}`;
+                              setSelectedKeys(prev => new Set([...prev, newKey]));
+                              setIsAddingCustom(null);
+                            }}
+                            disabled={!customName.trim()}
+                            className="h-9 px-4 text-[10px] font-black uppercase tracking-widest w-full sm:w-auto"
+                          >
+                            Guardar
+                          </Button>
+                        </div>
                       </div>
-                      <p className="text-[9px] font-black uppercase tracking-tight text-center w-full truncate text-muted-foreground group-hover:text-primary transition-colors">
-                        Añadir Nuevo
-                      </p>
-                    </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setIsAddingCustom(group.catName);
+                          setCustomName("");
+                          setCustomIcon("📦");
+                        }}
+                        className="relative p-2 rounded-none text-left transition-all group shadow-none border border-dashed border-border bg-card/30 hover:border-primary/50 hover:bg-muted/20 flex flex-col items-center justify-center gap-1.5 h-full min-h-[88px]"
+                      >
+                        <div className="w-8 h-8 rounded-none flex items-center justify-center text-lg border border-dashed border-border/50 bg-muted/20 group-hover:bg-primary/5 group-hover:border-primary/30 group-hover:text-primary transition-colors">
+                          <Plus className="h-4 w-4" />
+                        </div>
+                        <p className="text-[9px] font-black uppercase tracking-tight text-center w-full truncate text-muted-foreground group-hover:text-primary transition-colors">
+                          Añadir Nuevo
+                        </p>
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -630,64 +689,6 @@ export function WizardStep1({
         </div>
       </div>
 
-      {isAddingCustom && (
-        <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-card border border-border shadow-2xl w-full max-w-sm rounded-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-4 border-b border-border bg-muted/20 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center text-primary">
-                <Plus className="h-4 w-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black text-foreground uppercase tracking-tight">Nueva Subcategoría</h3>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{isAddingCustom}</p>
-              </div>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nombre del Recurso</label>
-                <input 
-                  type="text" 
-                  autoFocus
-                  value={customName}
-                  onChange={e => setCustomName(e.target.value)}
-                  placeholder="Ej: Timbales, Raspberry Pi..."
-                  className="w-full h-10 px-3 text-sm bg-background border border-border rounded-md focus:outline-none focus:border-primary transition-colors"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ícono (Emoji)</label>
-                <input 
-                  type="text" 
-                  value={customIcon}
-                  onChange={e => setCustomIcon(e.target.value)}
-                  maxLength={2}
-                  className="w-16 h-10 px-3 text-center text-lg bg-background border border-border rounded-md focus:outline-none focus:border-primary transition-colors"
-                />
-              </div>
-            </div>
-            <div className="p-4 border-t border-border bg-muted/20 flex items-center justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsAddingCustom(null)} className="h-9 px-4 text-[10px] font-black uppercase tracking-widest">
-                Cancelar
-              </Button>
-              <Button 
-                onClick={() => {
-                  if (!customName.trim()) return;
-                  setCustomTemplates(prev => [...prev, { catName: isAddingCustom, name: customName.trim(), icon: customIcon || "📦" }]);
-                  
-                  const newKey = `std:${isAddingCustom}||${customName.trim()}`;
-                  setSelectedKeys(prev => new Set([...prev, newKey]));
-                  
-                  setIsAddingCustom(null);
-                }}
-                disabled={!customName.trim()}
-                className="h-9 px-6 text-[10px] font-black uppercase tracking-widest"
-              >
-                Añadir y Seleccionar
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </WizardLayout>
   );
 }
