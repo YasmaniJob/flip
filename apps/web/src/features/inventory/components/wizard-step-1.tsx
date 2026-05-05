@@ -144,7 +144,6 @@ export function WizardStep1({
   const [customTemplates, setCustomTemplates] = useState<{ catName: string; name: string; icon: string }[]>([]);
   const [isAddingCustom, setIsAddingCustom] = useState<string | null>(null);
   const [customName, setCustomName] = useState("");
-  const [customIcon, setCustomIcon] = useState("📦");
 
   const { data: categories = [] } = useCategories();
   const { data: allTemplates = [], isLoading: templatesLoading } =
@@ -629,7 +628,7 @@ export function WizardStep1({
                             onChange={e => setCustomName(e.target.value)}
                             onKeyDown={e => {
                               if (e.key === 'Enter' && customName.trim()) {
-                                setCustomTemplates(prev => [...prev, { catName: group.catName, name: customName.trim(), icon: customIcon || "📦" }]);
+                                setCustomTemplates(prev => [...prev, { catName: group.catName, name: customName.trim(), icon: "📦" }]);
                                 const newKey = `std:${group.catName}||${customName.trim()}`;
                                 setSelectedKeys(prev => new Set([...prev, newKey]));
                                 setIsAddingCustom(null);
@@ -640,18 +639,6 @@ export function WizardStep1({
                             placeholder="Nombre de la subcategoría..."
                             className="w-full h-9 px-3 text-xs bg-background border border-border focus:outline-none focus:border-primary transition-colors"
                           />
-                        </div>
-                        <div>
-                          <select 
-                            value={customIcon}
-                            onChange={e => setCustomIcon(e.target.value)}
-                            className="w-14 h-9 text-center text-lg bg-background border border-border focus:outline-none focus:border-primary transition-colors cursor-pointer appearance-none px-2"
-                            title="Seleccionar Ícono"
-                          >
-                            {["📦", "💻", "📱", "🖥️", "🗄️", "📽️", "🖼️", "📟", "📺", "🔊", "🎤", "⌨️", "🖱️", "🎧", "📷", "💾", "🔌", "⚡", "🌐", "📡", "🔀", "📶", "🤖", "🧊", "🔬", "🌍", "🪑", "🪞", "📝", "🔧", "🧰", "🚀", "💡", "🎮", "🕹️", "📡", "🔋", "🖨️"].map(emoji => (
-                              <option key={emoji} value={emoji}>{emoji}</option>
-                            ))}
-                          </select>
                         </div>
                         <div className="flex items-center gap-2 w-full sm:w-auto">
                           <Button 
@@ -666,7 +653,7 @@ export function WizardStep1({
                             size="sm"
                             onClick={() => {
                               if (!customName.trim()) return;
-                              setCustomTemplates(prev => [...prev, { catName: group.catName, name: customName.trim(), icon: customIcon || "📦" }]);
+                              setCustomTemplates(prev => [...prev, { catName: group.catName, name: customName.trim(), icon: "📦" }]);
                               const newKey = `std:${group.catName}||${customName.trim()}`;
                               setSelectedKeys(prev => new Set([...prev, newKey]));
                               setIsAddingCustom(null);
@@ -683,7 +670,6 @@ export function WizardStep1({
                         onClick={() => {
                           setIsAddingCustom(group.catName);
                           setCustomName("");
-                          setCustomIcon("📦");
                         }}
                         className="relative p-2 rounded-none text-left transition-all group shadow-none border border-dashed border-border bg-card/30 hover:border-primary/50 hover:bg-muted/20 flex flex-col items-center justify-center gap-1.5 h-full min-h-[88px]"
                       >
