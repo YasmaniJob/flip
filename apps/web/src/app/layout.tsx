@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   description:
     "Sistema de gestión de inventario y préstamos para instituciones educativas",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
