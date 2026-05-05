@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, Check, X } from "lucide-react";
+import { Loader2, Search, Check, X, Plus } from "lucide-react";
 import {
   useCategories,
   useCreateCategory,
@@ -140,6 +140,10 @@ export function WizardStep1({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [customTemplates, setCustomTemplates] = useState<{ catName: string; name: string; icon: string }[]>([]);
+  const [isAddingCustom, setIsAddingCustom] = useState<string | null>(null);
+  const [customName, setCustomName] = useState("");
+  const [customIcon, setCustomIcon] = useState("📦");
 
   const { data: categories = [] } = useCategories();
   const { data: allTemplates = [], isLoading: templatesLoading } =
@@ -149,7 +153,10 @@ export function WizardStep1({
 
   const catalogue: CatalogueGroup[] = useMemo(() => {
     return STANDARD_CATALOGUE.map((stdGroup) => {
-      const items: CatalogueItem[] = stdGroup.templates.map((tpl) => {
+      const groupCustomTemplates = customTemplates.filter(t => t.catName === stdGroup.category.name);
+      const allTpls = [...stdGroup.templates, ...groupCustomTemplates];
+
+      const items: CatalogueItem[] = allTpls.map((tpl) => {
         const matchingCat = categories.find(
           (c) => c.name.toLowerCase() === stdGroup.category.name.toLowerCase(),
         );
@@ -182,7 +189,7 @@ export function WizardStep1({
         items,
       };
     });
-  }, [allTemplates, categories]);
+  }, [allTemplates, categories, customTemplates]);
 
   const filteredGroups = useMemo(() => {
     if (!searchQuery.trim()) return catalogue;
@@ -549,6 +556,22 @@ export function WizardStep1({
                         </button>
                       );
                     })}
+                    
+                    <button
+                      onClick={() => {
+                        setIsAddingCustom(group.catName);
+                        setCustomName("");
+                        setCustomIcon("📦");
+                      }}
+                      className="relative p-2 rounded-none text-left transition-all group shadow-none border border-dashed border-border bg-card/30 hover:border-primary/50 hover:bg-muted/20 flex flex-col items-center justify-center gap-1.5 h-full min-h-[88px]"
+                    >
+                      <div className="w-8 h-8 rounded-none flex items-center justify-center text-lg border border-dashed border-border/50 bg-muted/20 group-hover:bg-primary/5 group-hover:border-primary/30 group-hover:text-primary transition-colors">
+                        <Plus className="h-4 w-4" />
+                      </div>
+                      <p className="text-[9px] font-black uppercase tracking-tight text-center w-full truncate text-muted-foreground group-hover:text-primary transition-colors">
+                        Añadir Nuevo
+                      </p>
+                    </button>
                   </div>
                 </div>
               );
@@ -606,6 +629,65 @@ export function WizardStep1({
           </Button>
         </div>
       </div>
+
+      {isAddingCustom && (
+        <div className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border shadow-2xl w-full max-w-sm rounded-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-4 border-b border-border bg-muted/20 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center text-primary">
+                <Plus className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-foreground uppercase tracking-tight">Nueva Subcategoría</h3>
+                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{isAddingCustom}</p>
+              </div>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nombre del Recurso</label>
+                <input 
+                  type="text" 
+                  autoFocus
+                  value={customName}
+                  onChange={e => setCustomName(e.target.value)}
+                  placeholder="Ej: Timbales, Raspberry Pi..."
+                  className="w-full h-10 px-3 text-sm bg-background border border-border rounded-md focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ícono (Emoji)</label>
+                <input 
+                  type="text" 
+                  value={customIcon}
+                  onChange={e => setCustomIcon(e.target.value)}
+                  maxLength={2}
+                  className="w-16 h-10 px-3 text-center text-lg bg-background border border-border rounded-md focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-border bg-muted/20 flex items-center justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsAddingCustom(null)} className="h-9 px-4 text-[10px] font-black uppercase tracking-widest">
+                Cancelar
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (!customName.trim()) return;
+                  setCustomTemplates(prev => [...prev, { catName: isAddingCustom, name: customName.trim(), icon: customIcon || "📦" }]);
+                  
+                  const newKey = `std:${isAddingCustom}||${customName.trim()}`;
+                  setSelectedKeys(prev => new Set([...prev, newKey]));
+                  
+                  setIsAddingCustom(null);
+                }}
+                disabled={!customName.trim()}
+                className="h-9 px-6 text-[10px] font-black uppercase tracking-widest"
+              >
+                Añadir y Seleccionar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </WizardLayout>
   );
 }
