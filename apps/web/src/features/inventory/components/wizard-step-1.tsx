@@ -117,6 +117,7 @@ interface CatalogueItem {
   stdCatIcon: string;
   stdCatColor: string;
   inDb: boolean;
+  isCustom?: boolean;
 }
 
 interface CatalogueGroup {
@@ -154,7 +155,10 @@ export function WizardStep1({
   const catalogue: CatalogueGroup[] = useMemo(() => {
     return STANDARD_CATALOGUE.map((stdGroup) => {
       const groupCustomTemplates = customTemplates.filter(t => t.catName === stdGroup.category.name);
-      const allTpls = [...stdGroup.templates, ...groupCustomTemplates];
+      const allTpls = [
+        ...stdGroup.templates.map(t => ({ ...t, isCustom: false })), 
+        ...groupCustomTemplates.map(t => ({ ...t, isCustom: true }))
+      ];
 
       const items: CatalogueItem[] = allTpls.map((tpl) => {
         const matchingCat = categories.find(
@@ -179,6 +183,7 @@ export function WizardStep1({
           stdCatIcon: stdGroup.category.icon,
           stdCatColor: stdGroup.category.color,
           inDb: !!dbMatch,
+          isCustom: tpl.isCustom,
         };
       });
 
@@ -518,6 +523,24 @@ export function WizardStep1({
                             <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-none border border-border bg-card opacity-0 group-hover:opacity-100 transition-opacity shadow-none" />
                           )}
 
+                          {item.isCustom && !item.inDb && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCustomTemplates(prev => prev.filter(t => !(t.catName === group.catName && t.name === item.name)));
+                                setSelectedKeys(prev => {
+                                  const next = new Set(prev);
+                                  next.delete(key);
+                                  return next;
+                                });
+                              }}
+                              className="absolute top-1 left-1 w-4 h-4 rounded-sm bg-destructive/10 hover:bg-destructive text-destructive hover:text-destructive-foreground flex items-center justify-center transition-colors z-10 opacity-0 group-hover:opacity-100"
+                              title="Eliminar subcategoría personalizada"
+                            >
+                              <X className="h-2.5 w-2.5" />
+                            </button>
+                          )}
+
                           <div className="flex flex-col items-center gap-1.5 pt-1">
                             <div
                               className={cn(
@@ -584,7 +607,6 @@ export function WizardStep1({
                             type="text" 
                             value={customIcon}
                             onChange={e => setCustomIcon(e.target.value)}
-                            maxLength={2}
                             className="w-12 h-9 text-center text-sm bg-background border border-border focus:outline-none focus:border-primary transition-colors"
                             title="Ícono (Emoji)"
                           />
