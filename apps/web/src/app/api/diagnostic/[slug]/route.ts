@@ -11,9 +11,11 @@ import { getCachedDiagnosticConfig } from '@/features/diagnostic/lib/diagnostic-
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const { slug } = await params;
+    
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     const rateLimitResult = rateLimit(ip, 20, 3600000); // 20 requests per hour
@@ -40,8 +42,6 @@ export async function GET(
         { status: 503 }
       );
     }
-    
-    const { slug } = params;
     
     const config = await getCachedDiagnosticConfig(slug) as any;
     

@@ -12,10 +12,10 @@ import { revalidateTag } from 'next/cache';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string; sessionId: string } }
+  { params }: { params: Promise<{ id: string; sessionId: string }> }
 ) {
   try {
-    const { id: institutionId, sessionId } = params;
+    const { id: institutionId, sessionId } = await params;
     
     // Verify admin access
     const authResult = await verifyAdminAccess(request, institutionId);

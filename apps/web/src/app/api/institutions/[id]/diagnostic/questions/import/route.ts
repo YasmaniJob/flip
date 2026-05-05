@@ -6,9 +6,10 @@ import { verifyAdminAccess } from '@/features/diagnostic/lib/auth-middleware';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: institutionId } = await params;
     const diagnosticEnabled = process.env.FEATURE_DIAGNOSTIC_ADMIN_PANEL === 'true';
     if (!diagnosticEnabled) {
       return NextResponse.json(
@@ -16,8 +17,6 @@ export async function POST(
         { status: 503 }
       );
     }
-    
-    const { id: institutionId } = params;
     
     // Verify admin access
     const authResult = await verifyAdminAccess(request, institutionId);

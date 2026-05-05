@@ -10,7 +10,7 @@ import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
 import { getTrialConfig, setTrialDays } from '@/lib/trial-config';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Verify authentication
     const session = await auth.api.getSession({

@@ -22,8 +22,8 @@ export function useConfigLoadout(options?: { enabled?: boolean }) {
     return useQuery<ConfigLoadout>({
         queryKey: ['institution', 'config-loadout'],
         queryFn: () => api.get<ConfigLoadout>('/institution/config-loadout'),
-        // We rely on revalidateTag and query invalidations for consistency
-        staleTime: 0, 
+        // Config loadout is heavy, cache it for 5 minutes
+        staleTime: 5 * 60 * 1000, 
         gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
         enabled: options?.enabled !== false, 
     });

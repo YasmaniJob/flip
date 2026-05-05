@@ -32,8 +32,8 @@ export function validateQuery<T>(
   params: URLSearchParams | ReadonlyURLSearchParams | Record<string, string | string[] | undefined>
 ): T {
   // Si params ya es un objeto plano, usarlo directamente
-  const obj = params instanceof URLSearchParams || 'entries' in params
-    ? Object.fromEntries(params.entries())
+  const obj = (params instanceof URLSearchParams || (params && typeof params === 'object' && 'entries' in params && typeof (params as any).entries === 'function'))
+    ? Object.fromEntries((params as any).entries())
     : params;
   return validateBody(schema, obj);
 }

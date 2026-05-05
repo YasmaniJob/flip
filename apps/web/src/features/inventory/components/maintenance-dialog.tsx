@@ -1,4 +1,4 @@
-nimport { ConfirmDeleteDialog } from '@/components/molecules/confirm-delete-dialog';
+import { ActionConfirm } from '@/components/molecules/action-confirm';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -378,5 +378,16 @@ export function MaintenanceDialog({
                 </AlertDialogContent>
             </AlertDialog>
 
-            <ConfirmDeleteDialog
-                open={showDec
+            <ActionConfirm
+                open={showDecommissionConfirm}
+                onOpenChange={setShowDecommissionConfirm}
+                onConfirm={confirmDecommission}
+                title="¿Dar de baja este recurso?"
+                description="Esta acción inhabilitará permanentemente el recurso para su uso. Solo debe hacerse si no es reparable."
+                confirmText="Sellar Baja Permanente"
+                variant="destructive"
+                isLoading={isSubmitting}
+            />
+        </>
+    );
+}

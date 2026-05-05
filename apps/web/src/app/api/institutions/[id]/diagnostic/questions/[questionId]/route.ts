@@ -14,9 +14,10 @@ import { questionRequestSchema } from '@/features/diagnostic/lib/validation';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; questionId: string } }
+  { params }: { params: Promise<{ id: string; questionId: string }> }
 ) {
   try {
+    const { id: institutionId, questionId } = await params;
     // Check feature flag
     const diagnosticEnabled = process.env.FEATURE_DIAGNOSTIC_ADMIN_PANEL === 'true';
     if (!diagnosticEnabled) {
@@ -26,7 +27,7 @@ export async function PATCH(
       );
     }
     
-    const { id: institutionId, questionId } = params;
+
     
     // Verify admin access
     const authResult = await verifyAdminAccess(request, institutionId);
@@ -122,9 +123,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; questionId: string } }
+  { params }: { params: Promise<{ id: string; questionId: string }> }
 ) {
   try {
+    const { id: institutionId, questionId } = await params;
     // Check feature flag
     const diagnosticEnabled = process.env.FEATURE_DIAGNOSTIC_ADMIN_PANEL === 'true';
     if (!diagnosticEnabled) {
@@ -134,7 +136,7 @@ export async function DELETE(
       );
     }
     
-    const { id: institutionId, questionId } = params;
+
     
     // Verify admin access
     const authResult = await verifyAdminAccess(request, institutionId);

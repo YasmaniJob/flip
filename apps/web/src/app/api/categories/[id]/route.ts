@@ -11,7 +11,7 @@ import { eq, and, sql } from 'drizzle-orm';
 // PUT /api/categories/:id - Update category
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAuth(request);
@@ -20,7 +20,7 @@ export async function PUT(
     const body = await request.json();
     const data = validateBody(updateCategorySchema, body);
 
-    const { id } = params;
+    const { id } = await params;
 
     const [category] = await db
       .update(categories)
@@ -45,13 +45,13 @@ export async function PUT(
 // DELETE /api/categories/:id - Delete category (validate no resources)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
 
-    const { id } = params;
+    const { id } = await params;
 
     // Check if category exists
     const category = await db.query.categories.findFirst({

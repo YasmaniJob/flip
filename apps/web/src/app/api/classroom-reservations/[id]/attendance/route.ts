@@ -42,8 +42,8 @@ export async function GET(
     // Flatten for easier frontend consumption
     const flattenedList = attendanceList.map(item => ({
       ...item,
-      staffName: item.staff?.name || 'Sin nombre',
-      staffRole: item.staff?.role || 'DOCENTE',
+      staffName: (item.staff as any)?.name || 'Sin nombre',
+      staffRole: (item.staff as any)?.role || 'DOCENTE',
     }));
 
     return successResponse(flattenedList);

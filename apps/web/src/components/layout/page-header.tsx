@@ -14,6 +14,7 @@ interface PageHeaderAction {
 interface PageHeaderProps {
     title: string;
     subtitle?: string;
+    description?: string;
     primaryAction?: PageHeaderAction;
     secondaryActions?: PageHeaderAction[];
     className?: string;
@@ -22,19 +23,21 @@ interface PageHeaderProps {
 export function PageHeader({
     title,
     subtitle,
+    description,
     primaryAction,
     secondaryActions = [],
     className
 }: PageHeaderProps) {
+    const displaySubtitle = subtitle || description;
     return (
         <header className={cn("flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between", className)}>
             <div>
                 <h1 className="text-3xl font-black tracking-tighter text-foreground">
                     {title}
                 </h1>
-                {subtitle && (
+                {displaySubtitle && (
                     <p className="text-sm text-muted-foreground mt-1">
-                        {subtitle}
+                        {displaySubtitle}
                     </p>
                 )}
             </div>

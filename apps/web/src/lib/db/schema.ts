@@ -893,3 +893,200 @@ export const diagnosticResponsesRelations = relations(diagnosticResponses, ({ on
         references: [diagnosticQuestions.id],
     }),
 }));
+
+// ============================================
+// INCIDENT MANAGEMENT MODULE
+// ============================================
+
+// Incident Sequences (Atomic ID generation per institution)
+export const incidentSequences = pgTable('incident_sequences', {
+    id: text('id').primaryKey(),
+    institutionId: text('institution_id').references(() => institutions.id).notNull(),
+    lastNumber: integer('last_number').default(0).notNull(),
+}, (table) => ({
+    uniqueInstitution: uniqueIndex('idx_incident_sequence_institution').on(table.institutionId),
+}));
+
+// Incidents
+export const incidents = pgTable('incidents', {
+    id: text('id').primaryKey(),
+    institutionId: text('institution_id').references(() => institutions.id).notNull(),
+    sequentialId: integer('sequential_id').notNull(),
+    displayId: text('display_id').notNull(), // e.g., "INC-001"
+    
+    // Basic Information
+    title: text('title').notNull(),
+    description: text('description').notNull(),
+    type: text('type').notNull(), // 'recursos' | 'infraestructura' | 'servicios' | 'seguridad' | 'otros'
+    priority: text('priority').notNull(), // 'baja' | 'media' | 'alta' | 'critica'
+    status: text('status').notNull(), // 'reportada' | 'en_revision' | 'en_progreso' | 'resuelta' | 'cerrada'
+    
+    // Relationships
+    reporterId: text('reporter_id').references(() => users.id).notNull(),
+    assigneeId: text('assignee_id').references(() => users.id),
+    resourceId: text('resource_id').references(() => resources.id),
+    
+    // Location (for infraestructura/servicios)
+    location: text('location'),
+    
+    // Recurrence tracking
+    masterIncidentId: text('master_incident_id').references(() => incidents.id),
+    isRecurrent: boolean('is_recurrent').default(false),
+    recurrenceCount: integer('recurrence_count').default(0),
+    
+    // Resolution tracking
+    resolvedAt: timestamp('resolved_at'),
+    resolutionTime: integer('resolution_time'), // Minutes from creation to resolution
+    
+    // Metadata
+    isActive: boolean('is_active').default(true), // Soft delete
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+    uniqueInstitutionSequential: uniqueIndex('idx_incident_institution_sequential').on(table.institutionId, table.sequentialId),
+    institutionStatusIdx: index('idx_incident_institution_status').on(table.institutionId, table.status),
+    institutionPriorityIdx: index('idx_incident_institution_priority').on(table.institutionId, table.priority),
+    institutionTypeIdx: index('idx_incident_institution_type').on(table.institutionId, table.type),
+    institutionReporterIdx: index('idx_incident_institution_reporter').on(table.institutionId, table.reporterId),
+    institutionAssigneeIdx: index('idx_incident_institution_assignee').on(table.institutionId, table.assigneeId),
+    institutionResourceIdx: index('idx_incident_institution_resource').on(table.institutionId, table.resourceId),
+    institutionCreatedIdx: index('idx_incident_institution_created').on(table.institutionId, table.createdAt),
+    institutionRecurrentIdx: index('idx_incident_institution_recurrent').on(table.institutionId, table.isRecurrent),
+    masterIncidentIdx: index('idx_incident_master').on(table.masterIncidentId),
+}));
+
+// Incident Comments
+export const incidentComments = pgTable('incident_comments', {
+    id: text('id').primaryKey(),
+    incidentId: text('incident_id').references(() => incidents.id).notNull(),
+    authorId: text('author_id').references(() => users.id).notNull(),
+    content: text('content').notNull(),
+    isResolutionComment: boolean('is_resolution_comment').default(false),
+    isEdited: boolean('is_edited').default(false),
+    editedAt: timestamp('edited_at'),
+    createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+    incidentCreatedIdx: index('idx_incident_comment_incident_created').on(table.incidentId, table.createdAt),
+    authorIdx: index('idx_incident_comment_author').on(table.authorId),
+}));
+
+// Incident Attachments
+export const incidentAttachments = pgTable('incident_attachments', {
+    id: text('id').primaryKey(),
+    incidentId: text('incident_id').references(() => incidents.id).notNull(),
+    uploadedBy: text('uploaded_by').references(() => users.id).notNull(),
+    fileName: text('file_name').notNull(),
+    fileSize: integer('file_size').notNull(), // Bytes
+    mimeType: text('mime_type').notNull(),
+    storageKey: text('storage_key').notNull(), // Path in storage service
+    storageUrl: text('storage_url').notNull(), // Public URL
+    createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+    incidentIdx: index('idx_incident_attachment_incident').on(table.incidentId),
+    uploadedByIdx: index('idx_incident_attachment_uploaded_by').on(table.uploadedBy),
+}));
+
+// Incident Change History
+export const incidentChangeHistory = pgTable('incident_change_history', {
+    id: text('id').primaryKey(),
+    incidentId: text('incident_id').references(() => incidents.id).notNull(),
+    changedBy: text('changed_by').references(() => users.id).notNull(),
+    field: text('field').notNull(), // 'status' | 'priority' | 'assignee' | 'type' | 'title' | 'description' | 'resource'
+    oldValue: text('old_value'),
+    newValue: text('new_value'),
+    changeType: text('change_type').notNull(), // 'created' | 'updated' | 'deleted'
+    metadata: jsonb('metadata'),
+    createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+    incidentCreatedIdx: index('idx_incident_history_incident_created').on(table.incidentId, table.createdAt),
+    changedByIdx: index('idx_incident_history_changed_by').on(table.changedBy),
+}));
+
+// Incident Templates
+export const incidentTemplates = pgTable('incident_templates', {
+    id: text('id').primaryKey(),
+    institutionId: text('institution_id').references(() => institutions.id).notNull(),
+    name: text('name').notNull(),
+    type: text('type').notNull(),
+    suggestedPriority: text('suggested_priority').notNull(),
+    titleTemplate: text('title_template').notNull(),
+    descriptionTemplate: text('description_template').notNull(),
+    isActive: boolean('is_active').default(true),
+    createdBy: text('created_by').references(() => users.id).notNull(),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+    institutionActiveIdx: index('idx_incident_template_institution_active').on(table.institutionId, table.isActive),
+    institutionTypeIdx: index('idx_incident_template_institution_type').on(table.institutionId, table.type),
+}));
+
+// Incident Relations
+export const incidentsRelations = relations(incidents, ({ one, many }) => ({
+    institution: one(institutions, {
+        fields: [incidents.institutionId],
+        references: [institutions.id],
+    }),
+    reporter: one(users, {
+        fields: [incidents.reporterId],
+        references: [users.id],
+    }),
+    assignee: one(users, {
+        fields: [incidents.assigneeId],
+        references: [users.id],
+    }),
+    resource: one(resources, {
+        fields: [incidents.resourceId],
+        references: [resources.id],
+    }),
+    masterIncident: one(incidents, {
+        fields: [incidents.masterIncidentId],
+        references: [incidents.id],
+    }),
+    comments: many(incidentComments),
+    attachments: many(incidentAttachments),
+    changeHistory: many(incidentChangeHistory),
+}));
+
+export const incidentCommentsRelations = relations(incidentComments, ({ one }) => ({
+    incident: one(incidents, {
+        fields: [incidentComments.incidentId],
+        references: [incidents.id],
+    }),
+    author: one(users, {
+        fields: [incidentComments.authorId],
+        references: [users.id],
+    }),
+}));
+
+export const incidentAttachmentsRelations = relations(incidentAttachments, ({ one }) => ({
+    incident: one(incidents, {
+        fields: [incidentAttachments.incidentId],
+        references: [incidents.id],
+    }),
+    uploadedBy: one(users, {
+        fields: [incidentAttachments.uploadedBy],
+        references: [users.id],
+    }),
+}));
+
+export const incidentChangeHistoryRelations = relations(incidentChangeHistory, ({ one }) => ({
+    incident: one(incidents, {
+        fields: [incidentChangeHistory.incidentId],
+        references: [incidents.id],
+    }),
+    changedBy: one(users, {
+        fields: [incidentChangeHistory.changedBy],
+        references: [users.id],
+    }),
+}));
+
+export const incidentTemplatesRelations = relations(incidentTemplates, ({ one }) => ({
+    institution: one(institutions, {
+        fields: [incidentTemplates.institutionId],
+        references: [institutions.id],
+    }),
+    createdBy: one(users, {
+        fields: [incidentTemplates.createdBy],
+        references: [users.id],
+    }),
+}));

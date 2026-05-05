@@ -12,16 +12,17 @@ import { eq, and } from 'drizzle-orm';
 // PUT /api/resources/:id - Update resource (partial update with null support)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await requireRole(request, ['admin', 'pip']);
     const institutionId = await getInstitutionId(request);
 
     const body = await request.json();
     const data = validateBody(updateResourceSchema, body);
 
-    const { id } = params;
+
 
     // Check if resource exists and belongs to institution
     const existing = await db.query.resources.findFirst({
@@ -57,13 +58,14 @@ export async function PUT(
 // DELETE /api/resources/:id - Delete resource (admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await requireRole(request, ['admin']);
     const institutionId = await getInstitutionId(request);
 
-    const { id } = params;
+
 
     // Check if resource exists and belongs to institution
     const existing = await db.query.resources.findFirst({

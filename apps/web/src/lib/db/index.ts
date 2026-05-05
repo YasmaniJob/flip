@@ -8,7 +8,7 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 2, // Safe for Neon Free 10-connection limit across 3-4 concurrent lambdas
+  max: 8, // Optimized for Neon Free 10-connection limit, allowing concurrency
   idleTimeoutMillis: 10000, 
 });
 

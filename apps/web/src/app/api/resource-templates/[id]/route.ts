@@ -11,16 +11,17 @@ import { eq, and } from 'drizzle-orm';
 // PUT /api/resource-templates/:id - Update template
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
 
     const body = await request.json();
     const data = validateBody(updateResourceTemplateSchema, body);
 
-    const { id } = params;
+
 
     const [template] = await db
       .update(resourceTemplates)
@@ -49,13 +50,14 @@ export async function PUT(
 // DELETE /api/resource-templates/:id - Delete template
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
 
-    const { id } = params;
+
 
     const [template] = await db
       .delete(resourceTemplates)

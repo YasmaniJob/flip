@@ -13,9 +13,10 @@ import { verifyAdminAccess } from '@/features/diagnostic/lib/auth-middleware';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: institutionId } = await params;
     // Check feature flag
     const diagnosticEnabled = process.env.FEATURE_DIAGNOSTIC_ADMIN_PANEL === 'true';
     if (!diagnosticEnabled) {
@@ -24,8 +25,6 @@ export async function GET(
         { status: 503 }
       );
     }
-    
-    const { id: institutionId } = params;
     
     // Verify admin access
     const authResult = await verifyAdminAccess(request, institutionId);

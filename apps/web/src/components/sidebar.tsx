@@ -42,6 +42,7 @@ import {
   BookOpen,
   School,
   FileQuestion,
+  AlertTriangle,
 } from "lucide-react";
 import { InstitutionHeader } from "@/components/institution-header";
 import { InstitutionSwitcher } from "@/components/institution-switcher";
@@ -84,6 +85,12 @@ const menuItems: MenuItem[] = [
     icon: CalendarDays,
     label: "Reservaciones",
     href: "/reservaciones",
+    roles: ["all"],
+  },
+  {
+    icon: AlertTriangle,
+    label: "Incidencias",
+    href: "/incidencias",
     roles: ["all"],
   },
   {

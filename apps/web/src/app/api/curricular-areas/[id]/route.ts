@@ -11,9 +11,10 @@ import { revalidateTag } from 'next/cache';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
 
@@ -23,7 +24,7 @@ export async function PUT(
     const [updated] = await db
       .update(curricularAreas)
       .set(data)
-      .where(and(eq(curricularAreas.id, params.id), eq(curricularAreas.institutionId, institutionId)))
+      .where(and(eq(curricularAreas.id, id), eq(curricularAreas.institutionId, institutionId)))
       .returning();
 
     if (!updated) {
@@ -40,15 +41,16 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
 
     const [deleted] = await db
       .delete(curricularAreas)
-      .where(and(eq(curricularAreas.id, params.id), eq(curricularAreas.institutionId, institutionId)))
+      .where(and(eq(curricularAreas.id, id), eq(curricularAreas.institutionId, institutionId)))
       .returning();
 
     if (!deleted) {

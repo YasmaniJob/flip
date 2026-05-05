@@ -11,12 +11,12 @@ import { NotFoundError, ForbiddenError } from '@/lib/utils/errors';
 // PATCH /api/meetings/tasks/:taskId - Update task (acuerdo)
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { taskId: string } }
+    { params }: { params: Promise<{ taskId: string }> }
 ) {
     try {
+        const { taskId } = await params;
         const { user } = await requireAuth(request);
         const institutionId = await getInstitutionId(user);
-        const { taskId } = params;
 
         // Verify task exists AND belongs to the user's institution
         const task = await db.query.meetingTasks.findFirst({
@@ -57,12 +57,12 @@ export async function PATCH(
 // DELETE /api/meetings/tasks/:taskId - Delete task (acuerdo)
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { taskId: string } }
+    { params }: { params: Promise<{ taskId: string }> }
 ) {
     try {
+        const { taskId } = await params;
         const { user } = await requireAuth(request);
         const institutionId = await getInstitutionId(user);
-        const { taskId } = params;
 
         // Verify task exists AND belongs to the user's institution
         const task = await db.query.meetingTasks.findFirst({

@@ -11,9 +11,10 @@ import { revalidateTag } from 'next/cache';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
 
@@ -23,7 +24,7 @@ export async function PUT(
     const [updated] = await db
       .update(grades)
       .set(data)
-      .where(and(eq(grades.id, params.id), eq(grades.institutionId, institutionId)))
+      .where(and(eq(grades.id, id), eq(grades.institutionId, institutionId)))
       .returning();
 
     if (!updated) {
@@ -40,9 +41,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
 
@@ -50,7 +52,7 @@ export async function DELETE(
     const [{ value: sectionCount }] = await db
       .select({ value: count() })
       .from(sections)
-      .where(eq(sections.gradeId, params.id));
+      .where(eq(sections.gradeId, id));
 
     if (sectionCount > 0) {
       throw new ValidationError(
@@ -61,7 +63,7 @@ export async function DELETE(
     // Eliminar el grado
     const [deleted] = await db
       .delete(grades)
-      .where(and(eq(grades.id, params.id), eq(grades.institutionId, institutionId)))
+      .where(and(eq(grades.id, id), eq(grades.institutionId, institutionId)))
       .returning();
 
     if (!deleted) {

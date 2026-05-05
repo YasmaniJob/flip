@@ -29,7 +29,7 @@ export async function DELETE(
     }
 
     // Verify institution
-    if (attendance.reservation.institutionId !== institutionId) {
+    if ((attendance.reservation as any).institutionId !== institutionId) {
       throw new NotFoundError('Asistencia no encontrada');
     }
 

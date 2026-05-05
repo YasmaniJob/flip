@@ -79,8 +79,8 @@ export async function POST(request: NextRequest) {
         requiresSelection: true,
         institutions: staffRecords.map((s) => ({
           id: s.institutionId,
-          name: s.institution.name,
-          nivel: s.institution.nivel,
+          name: (s.institution as any).name,
+          nivel: (s.institution as any).nivel,
         })),
       });
     }

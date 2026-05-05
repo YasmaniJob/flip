@@ -79,7 +79,7 @@ export async function hasSlotConflict(
   // Filter out cancelled reservations and excluded reservation
   const activeConflicts = existingSlots.filter(
     (slot) =>
-      slot.reservation.status === 'active' &&
+      (slot.reservation as any).status === 'active' &&
       (!excludeReservationId || slot.reservationId !== excludeReservationId)
   );
 
@@ -124,7 +124,7 @@ export async function validateSlotsNoConflicts(
   // Check for active conflicts
   const conflicts = existingSlots.filter(
     (slot) =>
-      slot.reservation.status === 'active' &&
+      (slot.reservation as any).status === 'active' &&
       (!excludeReservationId || slot.reservationId !== excludeReservationId)
   );
 

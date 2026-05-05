@@ -14,6 +14,7 @@ import { useConfigLoadout } from '@/features/settings/hooks/use-config-loadout';
 import { format, addDays, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useUserRole } from '@/hooks/use-user-role';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SelectedSlot {
     date: Date;
@@ -356,9 +357,9 @@ export function ReservationDialog({
                     {/* 2. Main Discovery Canvas */}
                     <main className="flex-1 flex flex-col bg-background overflow-hidden relative">
                     {viewState === 'CONTEXT' ? (
-                        <div className="flex-1 flex overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                        <div className="flex-1 flex flex-col md:flex-row overflow-hidden animate-in fade-in zoom-in-95 duration-300">
                              {/* Sidebar: Context & Responsibility (Left) */}
-                             <aside className="w-[320px] shrink-0 border-r border-border bg-muted/20 flex flex-col overflow-hidden">
+                             <aside className="w-full md:w-[320px] shrink-0 border-b md:border-b-0 md:border-r border-border bg-muted/20 flex flex-col overflow-hidden">
                                 <div className="p-6 space-y-8 flex-1 overflow-y-auto scrollbar-hide">
                                     {/* Teacher Chip */}
                                     <div className="space-y-4">
@@ -443,7 +444,8 @@ export function ReservationDialog({
                              </aside>
 
                              {/* Main Panel: Selection (Right) */}
-                             <div className="flex-1 flex flex-col overflow-hidden bg-background p-10">
+                             <ScrollArea className="flex-1 bg-background">
+                                <div className="p-10">
                                 {canManage && !selectedStaffId ? (
                                     <div className="flex-1 flex flex-col overflow-hidden">
                                         {!staff?.length && staffSearch ? (
@@ -452,7 +454,7 @@ export function ReservationDialog({
                                                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em]">Sin resultados docentes</p>
                                             </div>
                                         ) : staffSearch ? (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto pr-2 custom-scrollbar">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                                 {staff?.map((s) => (
                                                     <button
                                                         key={s.id}
@@ -470,7 +472,7 @@ export function ReservationDialog({
                                                 ))}
                                             </div>
                                         ) : (
-                                            <div className="flex-1 flex flex-col space-y-10 overflow-y-auto pr-2 custom-scrollbar">
+                                            <div className="flex-1 flex flex-col space-y-10">
                                                 {recurrentStaff && recurrentStaff.length > 0 && (
                                                     <div className="space-y-4">
                                                         <div className="flex items-center gap-3">
@@ -504,9 +506,9 @@ export function ReservationDialog({
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="flex-1 flex flex-col overflow-hidden space-y-10">
+                                    <div className="flex-1 flex flex-col space-y-10">
                                         {reservationType === 'learning' ? (
-                                            <div className="flex-1 flex flex-col overflow-hidden space-y-10">
+                                            <div className="flex-1 flex flex-col space-y-10">
                                                 <div className="space-y-4">
                                                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] block">Área Curricular</label>
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -615,7 +617,8 @@ export function ReservationDialog({
                                         )}
                                     </div>
                                 )}
-                             </div>
+                                </div>
+                             </ScrollArea>
                         </div>
                     ) : (
                         <div className="flex-1 min-h-0 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -656,7 +659,8 @@ export function ReservationDialog({
                             </div>
 
                             {/* Calendar Grid */}
-                            <div className="flex-1 flex flex-col px-8 py-6 overflow-hidden">
+                            <ScrollArea className="flex-1">
+                                <div className="px-8 py-6 min-w-[700px]">
                                 <table className="w-full h-full border-collapse table-fixed select-none">
                                     <thead>
                                         <tr className="border-b border-border/50 h-12">
@@ -725,6 +729,7 @@ export function ReservationDialog({
                                     </tbody>
                                 </table>
                             </div>
+                        </ScrollArea>
                         </div>
                     )}
                 </main>

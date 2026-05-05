@@ -4,15 +4,23 @@ import { useApiClient } from '@/lib/api-client';
 export type Institution = {
     id: string;
     name: string;
-    codigoModular: string;
-    departamento: string;
-    provincia: string;
-    distrito: string;
-    nivel: string;
-    logo?: string;
-    brandColor?: string;
-    subscriptionStatus: 'trial' | 'active' | 'expired';
-    trialEndsAt?: string;
+    slug: string;
+    codigoModular: string | null;
+    nivel: string | null;
+    plan: string | null;
+    subscriptionStatus: string | null;
+    trialEndsAt: string | null;
+    settings?: {
+        brandColor?: string;
+        logoUrl?: string;
+        location?: {
+            departamento?: string;
+            provincia?: string;
+            distrito?: string;
+            direccion?: string;
+        };
+        features?: Record<string, any>;
+    } | null;
     stats?: {
         totalStaff: number;
         totalResources: number;
@@ -21,6 +29,7 @@ export type Institution = {
         weekReservations: number;
         totalMeetings: number;
     };
+    createdAt: string | null;
 };
 
 // Query keys for cache invalidation

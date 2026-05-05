@@ -12,79 +12,133 @@ import { revalidateTag } from 'next/cache';
 // PATCH /api/staff/:id - Update staff member
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { user } = await requireAuth(request);
     const institutionId = await getInstitutionId(request);
 
     const body = await request.json();
     const data = validateBody(updateStaffSchema, body);
 
-    const { id } = params;
+
 
     // Only SuperAdmin can assign SuperAdmin or Admin role
     if ((data.role === 'superadmin' || data.role === 'admin') && !user.isSuperAdmin) {
       throw new ForbiddenError('Solo el SuperAdmin puede asignar los roles Admin o SuperAdmin');
     }
 
-    // Verify ownership
-    const existing = await db.query.staff.findFirst({
+    // Verify ownership - Check staff table first
+    const existingStaff = await db.query.staff.findFirst({
       where: and(eq(staff.id, id), eq(staff.institutionId, institutionId)),
     });
 
-    if (!existing) {
-      throw new NotFoundError('Personal no encontrado');
+    if (existingStaff) {
+      const [updatedStaff] = await db
+        .update(staff)
+        .set({
+          name: data.name,
+          dni: data.dni || null,
+          email: data.email || null,
+          phone: data.phone || null,
+          area: data.area || null,
+          role: data.role,
+        })
+        .where(eq(staff.id, id))
+        .returning();
+
+      revalidateTag('staff');
+
+      // Si el staff tiene email, sincronizar rol en tabla users
+      if (data.role && updatedStaff.email) {
+        // Buscar el usuario con ese email
+        const userToUpdate = await db.query.users.findFirst({
+          where: eq(users.email, updatedStaff.email),
+        });
+
+        if (userToUpdate) {
+          // Actualizar el rol en la tabla users
+          await db
+            .update(users)
+            .set({ role: data.role })
+            .where(eq(users.email, updatedStaff.email));
+
+          // Invalidar todas las sesiones del usuario para forzar re-login
+          await db
+            .delete(sessions)
+            .where(eq(sessions.userId, userToUpdate.id));
+
+          return successResponse({
+            ...updatedStaff,
+            _meta: {
+              userAccountUpdated: true,
+              sessionsInvalidated: true,
+              message: 'El rol se actualizó correctamente. El usuario deberá iniciar sesión nuevamente para ver los cambios.',
+            },
+          });
+        }
+      }
+
+      return successResponse(updatedStaff);
     }
 
-    const [updatedStaff] = await db
-      .update(staff)
-      .set({
-        name: data.name,
-        dni: data.dni || null,
-        email: data.email || null,
-        phone: data.phone || null,
-        area: data.area || null,
-        role: data.role,
-      })
-      .where(eq(staff.id, id))
-      .returning();
+    // If not found in staff, check users table (for administrators)
+    const existingUser = await db.query.users.findFirst({
+      where: and(eq(users.id, id), eq(users.institutionId, institutionId)),
+    });
 
-    revalidateTag('staff');
+    if (existingUser) {
+      // Validate that it's an administrator (consistent with GET /api/staff)
+      const isAdmin = 
+        existingUser.isSuperAdmin || 
+        ['admin', 'superadmin', 'pip'].includes(existingUser.role || '');
 
-    // Si el staff tiene email, sincronizar rol en tabla users
-    if (data.role && updatedStaff.email) {
-      // Buscar el usuario con ese email
-      const userToUpdate = await db.query.users.findFirst({
-        where: eq(users.email, updatedStaff.email),
-      });
+      if (!isAdmin) {
+        throw new NotFoundError('Personal no encontrado');
+      }
 
-      if (userToUpdate) {
-        // Actualizar el rol en la tabla users
-        await db
-          .update(users)
-          .set({ role: data.role })
-          .where(eq(users.email, updatedStaff.email));
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          name: data.name,
+          dni: data.dni || existingUser.dni,
+          email: data.email || existingUser.email,
+          role: data.role || existingUser.role,
+        })
+        .where(eq(users.id, id))
+        .returning();
 
-        // Invalidar todas las sesiones del usuario para forzar re-login
-        // Esto asegura que el usuario vea su nuevo rol inmediatamente
+      revalidateTag('staff');
+
+      // If role changed, invalidate sessions
+      if (data.role && data.role !== existingUser.role) {
         await db
           .delete(sessions)
-          .where(eq(sessions.userId, userToUpdate.id));
+          .where(eq(sessions.userId, id));
 
-        // Retornar información adicional sobre la sincronización
         return successResponse({
-          ...updatedStaff,
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role,
           _meta: {
             userAccountUpdated: true,
             sessionsInvalidated: true,
-            message: 'El rol se actualizó correctamente. El usuario deberá iniciar sesión nuevamente para ver los cambios.',
+            message: 'El rol del administrador se actualizó. Deberá iniciar sesión nuevamente.',
           },
         });
       }
+
+      return successResponse({
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+      });
     }
 
-    return successResponse(updatedStaff);
+    throw new NotFoundError('Personal no encontrado');
   } catch (error) {
     return errorResponse(error);
   }
@@ -93,26 +147,53 @@ export async function PATCH(
 // DELETE /api/staff/:id - Delete staff member
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
 
-    const { id } = params;
 
-    const [deleted] = await db
+
+    // Try deleting from staff table first
+    const [deletedStaff] = await db
       .delete(staff)
       .where(and(eq(staff.id, id), eq(staff.institutionId, institutionId)))
       .returning();
 
-    revalidateTag('staff');
-
-    if (!deleted) {
-      throw new NotFoundError('Personal no encontrado');
+    if (deletedStaff) {
+      revalidateTag('staff');
+      return successResponse({ success: true });
     }
 
-    return successResponse({ success: true });
+    // If not in staff, check users table (only if they are admins)
+    const existingUser = await db.query.users.findFirst({
+      where: and(eq(users.id, id), eq(users.institutionId, institutionId)),
+    });
+
+    if (existingUser) {
+      const isAdmin = 
+        existingUser.isSuperAdmin || 
+        ['admin', 'superadmin', 'pip'].includes(existingUser.role || '');
+
+      if (!isAdmin) {
+        throw new NotFoundError('Personal no encontrado');
+      }
+
+      // Instead of deleting the whole user account (which could be dangerous),
+      // we might want to just remove their institutionId or role?
+      // But in this app, "deleting personal" usually means removing access.
+      // If they are only in users table, deleting them from here means deleting their account.
+      await db
+        .delete(users)
+        .where(eq(users.id, id));
+
+      revalidateTag('staff');
+      return successResponse({ success: true });
+    }
+
+    throw new NotFoundError('Personal no encontrado');
   } catch (error) {
     return errorResponse(error);
   }

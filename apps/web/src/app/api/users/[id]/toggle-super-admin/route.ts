@@ -11,15 +11,14 @@ import { eq } from 'drizzle-orm';
 // POST /api/users/:id/toggle-super-admin - Toggle SuperAdmin status (SuperAdmin only)
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: userId } = await params;
     await requireSuperAdmin(request);
 
     const body = await request.json();
     const data = validateBody(toggleSuperAdminSchema, body);
-
-    const { id: userId } = params;
 
     // Check if user exists
     const user = await db.query.users.findFirst({

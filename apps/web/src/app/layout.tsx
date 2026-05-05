@@ -5,6 +5,7 @@ import { BrandColorProvider } from "@/components/brand-color-provider";
 import { QueryProvider } from "@/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Toaster as SileoToaster } from "sileo";
+import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -61,6 +62,7 @@ export default function RootLayout({
           <ThemeProvider>
             <BrandColorProvider>
               {children}
+              <PWAInstallPrompt />
               <Toaster />
               <SileoToaster position="top-center" theme="system" />
             </BrandColorProvider>

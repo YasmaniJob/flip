@@ -8,13 +8,12 @@ import { eq, and, inArray, isNotNull, desc } from 'drizzle-orm';
 // GET /api/resources/:id/last-damage-report - Get last damage report for resource
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: resourceId } = await params;
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
-
-    const { id: resourceId } = params;
 
     // Step 1: Find all loans that contain this resource
     const loanResourceRows = await db

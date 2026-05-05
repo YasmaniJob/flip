@@ -14,9 +14,10 @@ import { validateSession } from '@/features/diagnostic/lib/session-manager';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string; token: string } }
+  { params }: { params: Promise<{ slug: string; token: string }> }
 ) {
   try {
+    const { slug, token } = await params;
     // Rate limiting
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     const rateLimitResult = rateLimit(ip, 20, 3600000);
@@ -36,8 +37,6 @@ export async function GET(
         { status: 503 }
       );
     }
-    
-    const { slug, token } = params;
     
     // Validate institution
     const institution = await db.query.institutions.findFirst({
