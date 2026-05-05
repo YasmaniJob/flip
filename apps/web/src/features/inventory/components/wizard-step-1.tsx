@@ -524,7 +524,9 @@ export function WizardStep1({
                           )}
 
                           {item.isCustom && !item.inDb && (
-                            <button 
+                            <div 
+                              role="button"
+                              tabIndex={0}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setCustomTemplates(prev => prev.filter(t => !(t.catName === group.catName && t.name === item.name)));
@@ -538,7 +540,7 @@ export function WizardStep1({
                               title="Eliminar subcategoría personalizada"
                             >
                               <X className="h-2.5 w-2.5" />
-                            </button>
+                            </div>
                           )}
 
                           <div className="flex flex-col items-center gap-1.5 pt-1">
