@@ -7,92 +7,53 @@
  * @constant
  */
 export const DEFAULT_TEMPLATES: Record<string, { name: string; icon: string }[]> = {
-  'Mantenimiento': [
-    { name: 'Herramientas', icon: '🔧' },
-    { name: 'Repuestos', icon: '⚙️' },
-    { name: 'Limpieza', icon: '🧹' },
-    { name: 'Insumos', icon: '📦' },
-    { name: 'Otros', icon: '📌' },
-  ],
-  'Equipos Portátiles': [
+  'Equipos de Cómputo y CRT': [
     { name: 'Laptop', icon: '💻' },
-    { name: 'Tablet', icon: '📱' },
-    { name: 'Chromebook', icon: '📓' },
+    { name: 'Tableta MINEDU', icon: '📱' },
+    { name: 'Computadora de Escritorio', icon: '🖥️' },
+    { name: 'Servidor Escolar', icon: '🗄️' },
   ],
-  'Componentes PC': [
-    { name: 'Monitor', icon: '🖥️' },
+  'Multimedia y Audiovisuales': [
+    { name: 'Proyector Multimedia', icon: '📽️' },
+    { name: 'Ecran / Pantalla', icon: '🖼️' },
+    { name: 'Pizarra Interactiva', icon: '📟' },
+    { name: 'Televisor / Smart TV', icon: '📺' },
+    { name: 'Equipo de Sonido', icon: '🔊' },
+    { name: 'Micrófono / Megáfono', icon: '🎤' },
+  ],
+  'Periféricos y Accesorios': [
     { name: 'Teclado', icon: '⌨️' },
     { name: 'Mouse', icon: '🖱️' },
-    { name: 'CPU', icon: '🖥️' },
-  ],
-  'Periféricos': [
-    { name: 'Audífonos', icon: '🎧' },
-    { name: 'Micrófono', icon: '🎤' },
+    { name: 'Audífonos con Micrófono', icon: '🎧' },
     { name: 'Cámara Web', icon: '📷' },
-    { name: 'Parlantes', icon: '🔊' },
+    { name: 'Disco Duro Externo', icon: '💾' },
+    { name: 'Memoria USB', icon: '🔌' },
   ],
-  'Cables y Conectores': [
-    { name: 'HDMI', icon: '🔌' },
-    { name: 'VGA', icon: '🔌' },
-    { name: 'USB', icon: '🔌' },
-    { name: 'Red (RJ45)', icon: '🌐' },
-    { name: 'Alimentación', icon: '⚡' },
-  ],
-  'Displays y Multimedia': [
-    { name: 'Proyector', icon: '📽️' },
-    { name: 'Televisor', icon: '📺' },
-    { name: 'Pizarra Interactiva', icon: '📟' },
-    { name: 'Pantalla', icon: '🖥️' },
-  ],
-  'Red e Infraestructura': [
-    { name: 'Router', icon: '📡' },
-    { name: 'Switch', icon: '🖧' },
-    { name: 'Access Point', icon: '📶' },
-    { name: 'Servidor', icon: '🗄️' },
-    { name: 'Firewall', icon: '🧱' },
-  ],
-  'Almacenamiento': [
-    { name: 'Disco Duro', icon: '💽' },
-    { name: 'SSD Externo', icon: '💾' },
-    { name: 'Memoria USB', icon: '🖊️' },
-    { name: 'NAS', icon: '🗄️' },
-  ],
-  'Protección Eléctrica': [
-    { name: 'UPS', icon: '🔋' },
+  'Cables, Conectores y Energía': [
+    { name: 'Extensión Eléctrica', icon: '🔌' },
+    { name: 'Cable de Poder', icon: '⚡' },
+    { name: 'Cable de Red (RJ45)', icon: '🌐' },
+    { name: 'Cable de Video (HDMI/VGA)', icon: '🖥️' },
     { name: 'Estabilizador', icon: '⚡' },
-    { name: 'Regleta Multicontacto', icon: '🔌' },
+    { name: 'UPS', icon: '🔋' },
   ],
-  'Mobiliario': [
-    { name: 'Escritorio', icon: '🪑' },
-    { name: 'Silla', icon: '🪑' },
-    { name: 'Archivador', icon: '🗄️' },
-    { name: 'Mesa', icon: '🪑' },
-    { name: 'Pizarra', icon: '📝' },
+  'Redes y Conectividad': [
+    { name: 'Router / Módem', icon: '📡' },
+    { name: 'Switch', icon: '🔀' },
+    { name: 'Access Point', icon: '📶' },
+    { name: 'Gabinete / Rack', icon: '🗄️' },
   ],
-  'Software y Licencias': [
-    { name: 'Sistema Operativo', icon: '💽' },
-    { name: 'Antivirus', icon: '🛡️' },
-    { name: 'Diseño Gráfico', icon: '🎨' },
-    { name: 'Paquete de Ofimática', icon: '📄' },
-  ],
-  'Streaming y Producción': [
-    { name: 'Capturadora', icon: '📼' },
-    { name: 'Iluminación', icon: '💡' },
-    { name: 'Consola de Audio', icon: '🎛️' },
-  ],
-  'Kits Educativos': [
+  'Kits Educativos y Robótica': [
     { name: 'Kit de Robótica', icon: '🤖' },
-    { name: 'Microscopio', icon: '🔬' },
-    { name: 'Material de Laboratorio', icon: '🧪' },
+    { name: 'Material Base 10', icon: '🧊' },
+    { name: 'Kit de Ciencias', icon: '🔬' },
+    { name: 'Globo Terráqueo', icon: '🌍' },
   ],
-  'Presentación': [
-    { name: 'Puntero Láser', icon: '🖍️' },
-    { name: 'Papelógrafo', icon: '📋' },
-    { name: 'Atril', icon: '🎤' },
-  ],
-  'Seguridad Física': [
-    { name: 'Cámara de Seguridad', icon: '📹' },
-    { name: 'Lector Biométrico', icon: '👆' },
-    { name: 'Alarma', icon: '🚨' },
+  'Mobiliario Escolar': [
+    { name: 'Carpeta Unipersonal', icon: '🪑' },
+    { name: 'Silla', icon: '🪑' },
+    { name: 'Escritorio', icon: '🪞' },
+    { name: 'Estante / Armario', icon: '🗄️' },
+    { name: 'Pizarra Acrílica', icon: '📝' },
   ],
 };

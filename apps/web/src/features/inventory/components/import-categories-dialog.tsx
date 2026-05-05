@@ -7,21 +7,13 @@ import { cn } from '@/lib/utils';
 import { useSeedCategories, type Category } from '@/features/inventory/hooks/use-categories';
 
 const AVAILABLE_CATEGORIES = [
-    { name: 'Equipos Portátiles', icon: '💻', color: '#3b82f6' },
-    { name: 'Componentes PC', icon: '🖥️', color: '#8b5cf6' },
-    { name: 'Displays y Multimedia', icon: '📺', color: '#ec4899' },
-    { name: 'Cables y Conectores', icon: '🔌', color: '#f59e0b' },
-    { name: 'Periféricos', icon: '🎧', color: '#10b981' },
-    { name: 'Red e Infraestructura', icon: '📡', color: '#06b6d4' },
-    { name: 'Almacenamiento', icon: '💾', color: '#6366f1' },
-    { name: 'Protección Eléctrica', icon: '🔋', color: '#f97316' },
-    { name: 'Mobiliario', icon: '🪑', color: '#84cc16' },
-    { name: 'Software y Licencias', icon: '💿', color: '#a855f7' },
-    { name: 'Streaming y Producción', icon: '🎬', color: '#ec4899' },
-    { name: 'Kits Educativos', icon: '🤖', color: '#14b8a6' },
-    { name: 'Presentación', icon: '📍', color: '#f59e0b' },
-    { name: 'Seguridad Física', icon: '🔒', color: '#ef4444' },
-    { name: 'Mantenimiento', icon: '🧰', color: '#64748b' },
+    { name: 'Equipos de Cómputo y CRT', icon: '💻', color: '#3b82f6' },
+    { name: 'Multimedia y Audiovisuales', icon: '📺', color: '#ec4899' },
+    { name: 'Periféricos y Accesorios', icon: '🖱️', color: '#10b981' },
+    { name: 'Cables, Conectores y Energía', icon: '🔌', color: '#f59e0b' },
+    { name: 'Redes y Conectividad', icon: '📡', color: '#06b6d4' },
+    { name: 'Kits Educativos y Robótica', icon: '🤖', color: '#14b8a6' },
+    { name: 'Mobiliario Escolar', icon: '🪑', color: '#84cc16' },
 ];
 
 interface ImportCategoriesDialogProps {
