@@ -481,8 +481,24 @@ export function WizardStep1({
 
       <div className="flex-1 overflow-y-auto px-8 py-6 custom-scrollbar">
         {templatesLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 text-primary animate-spin" />
+          <div className="space-y-8 animate-pulse">
+            {[1, 2].map((i) => (
+              <div key={i}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 bg-muted rounded-none" />
+                  <div className="w-48 h-3 bg-muted rounded-none" />
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+                  {[1, 2, 3, 4, 5, 6].map((j) => (
+                    <div key={j} className="h-[88px] border border-border/50 bg-card/30 flex flex-col items-center justify-center gap-2">
+                      <div className="w-8 h-8 bg-muted rounded-none" />
+                      <div className="w-16 h-2 bg-muted rounded-none" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="space-y-8">
