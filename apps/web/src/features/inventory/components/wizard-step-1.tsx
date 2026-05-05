@@ -642,13 +642,16 @@ export function WizardStep1({
                           />
                         </div>
                         <div>
-                          <input 
-                            type="text" 
+                          <select 
                             value={customIcon}
                             onChange={e => setCustomIcon(e.target.value)}
-                            className="w-12 h-9 text-center text-sm bg-background border border-border focus:outline-none focus:border-primary transition-colors"
-                            title="Ícono (Emoji)"
-                          />
+                            className="w-14 h-9 text-center text-lg bg-background border border-border focus:outline-none focus:border-primary transition-colors cursor-pointer appearance-none px-2"
+                            title="Seleccionar Ícono"
+                          >
+                            {["📦", "💻", "📱", "🖥️", "🗄️", "📽️", "🖼️", "📟", "📺", "🔊", "🎤", "⌨️", "🖱️", "🎧", "📷", "💾", "🔌", "⚡", "🌐", "📡", "🔀", "📶", "🤖", "🧊", "🔬", "🌍", "🪑", "🪞", "📝", "🔧", "🧰", "🚀", "💡", "🎮", "🕹️", "📡", "🔋", "🖨️"].map(emoji => (
+                              <option key={emoji} value={emoji}>{emoji}</option>
+                            ))}
+                          </select>
                         </div>
                         <div className="flex items-center gap-2 w-full sm:w-auto">
                           <Button 
