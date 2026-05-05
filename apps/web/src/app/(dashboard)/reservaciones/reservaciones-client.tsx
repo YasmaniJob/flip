@@ -19,6 +19,7 @@ import { useConfigLoadout } from "@/features/settings/hooks/use-config-loadout";
 import { useMyInstitution } from "@/features/institutions/hooks/use-my-institution";
 import { ReservationCard } from "@/features/reservations/components/reservation-card";
 import { SelectionActionBar } from "@/features/reservations/components/selection-action-bar";
+import { useAcademicDefaults } from "@/hooks/use-academic-defaults";
 
 // Lazy load heavy components
 const ReservationDialog = lazy(() => import("@/features/reservations/components/reservation-dialog").then(m => ({ default: m.ReservationDialog })));
@@ -50,8 +51,10 @@ export function ReservacionesClient() {
     
     // Config Loadout (combines defaults, classrooms, pedagogic hours to eliminate waterfall)
     const { data: config, isLoading: isLoadingConfig, error: errorConfig } = useConfigLoadout();
-    const defaults = config?.defaults;
-    const isLoadingDefaults = isLoadingConfig;
+    const configDefaults = config?.defaults;
+    
+    const { data: academicDefaults, isLoading: isLoadingAcademic } = useAcademicDefaults();
+    const isLoadingDefaults = isLoadingConfig || isLoadingAcademic;
     
     // UI State
     const [currentWeekStart, setCurrentWeekStart] = useState(() => {
@@ -86,8 +89,9 @@ export function ReservacionesClient() {
         
         // Set classroom only if not already set
         if (!selectedClassroomId && classrooms && classrooms.length > 0) {
-            const defaultClassroom = defaults?.classroomId 
-                ? classrooms.find(c => c.id === defaults.classroomId)
+            const defaultClassroomId = academicDefaults?.classroomId || configDefaults?.classroomId;
+            const defaultClassroom = defaultClassroomId 
+                ? classrooms.find(c => c.id === defaultClassroomId)
                 : classrooms.find(c => c.isPrimary) || classrooms[0];
             
             if (defaultClassroom) {
@@ -97,9 +101,9 @@ export function ReservacionesClient() {
         
         // Set shift only if not already set
         if (!selectedShift) {
-            setSelectedShift((defaults?.shift as Shift) || "mañana");
+            setSelectedShift((academicDefaults?.shift || configDefaults?.shift as Shift) || "mañana");
         }
-    }, [defaults, isLoadingDefaults, isLoadingClassrooms, classrooms, selectedClassroomId, selectedShift]);
+    }, [configDefaults, academicDefaults, isLoadingDefaults, isLoadingClassrooms, classrooms, selectedClassroomId, selectedShift]);
 
     const weekEnd = useMemo(() => {
         const d = new Date(currentWeekStart);
