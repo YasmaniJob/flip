@@ -248,32 +248,35 @@ export function WizardStep1({
     try {
       const catIdCache = new Map<string, string>();
 
+      // 1. Resolver/Crear las categorías necesarias (secuencial para evitar duplicados en la misma categoría)
       for (const item of selected) {
-        if (!item.inDb) {
-          let categoryId = catIdCache.get(item.stdCatName);
-          if (!categoryId) {
-            const existing = categories.find(
-              (c) => c.name.toLowerCase() === item.stdCatName.toLowerCase(),
-            );
-            if (existing) {
-              categoryId = existing.id;
-            } else {
-              const created = await createCategoryMutation.mutateAsync({
-                name: item.stdCatName,
-                icon: item.stdCatIcon,
-              });
-              categoryId = created.id;
-            }
-            catIdCache.set(item.stdCatName, categoryId);
+        if (!item.inDb && !catIdCache.has(item.stdCatName)) {
+          const existing = categories.find(
+            (c) => c.name.toLowerCase() === item.stdCatName.toLowerCase(),
+          );
+          if (existing) {
+            catIdCache.set(item.stdCatName, existing.id);
+          } else {
+            const created = await createCategoryMutation.mutateAsync({
+              name: item.stdCatName,
+              icon: item.stdCatIcon,
+            });
+            catIdCache.set(item.stdCatName, created.id);
           }
-
-          await createTemplateMutation.mutateAsync({
-            name: item.name,
-            categoryId,
-            icon: item.icon,
-          });
         }
       }
+
+      // 2. Crear todos los templates en paralelo para máxima velocidad
+      const templatesToCreate = selected.filter(item => !item.inDb);
+      await Promise.all(
+        templatesToCreate.map(item => 
+          createTemplateMutation.mutateAsync({
+            name: item.name,
+            categoryId: catIdCache.get(item.stdCatName)!,
+            icon: item.icon,
+          })
+        )
+      );
 
       onNext();
     } catch (err) {
@@ -284,7 +287,16 @@ export function WizardStep1({
 
   if (isMobile) {
     return (
-      <div className="flex flex-col h-full bg-background">
+      <div className="flex flex-col h-full bg-background relative">
+        {isCreating && (
+          <div className="fixed inset-0 z-[200] bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-200">
+            <div className="w-16 h-16 rounded-2xl bg-card border border-border shadow-2xl flex items-center justify-center mb-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+            <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Activando Catálogo</h3>
+            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Configurando los recursos...</p>
+          </div>
+        )}
         <div className="shrink-0 px-4 pt-2 pb-3 border-b border-border/40">
           <div className="mb-3">
             <h3 className="text-base font-black text-foreground">
@@ -421,11 +433,20 @@ export function WizardStep1({
   return (
     <WizardLayout
       title="Nuevo Recurso"
-      description="Registra un nuevo recurso en el inventario."
+      description="Registra un nuevo equipo, mobiliario o software en el inventario escolar."
       onClose={onCancel}
       isFullscreen={isFullscreen}
       onToggleFullscreen={onToggleFullscreen}
     >
+      {isCreating && (
+        <div className="fixed inset-0 z-[200] bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-200">
+          <div className="w-16 h-16 rounded-2xl bg-card border border-border shadow-2xl flex items-center justify-center mb-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+          <h3 className="text-sm font-black uppercase tracking-widest text-foreground">Activando Catálogo</h3>
+          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest mt-1">Configurando los recursos seleccionados...</p>
+        </div>
+      )}
       <div className="shrink-0 px-8 pt-5 pb-3 border-b border-border bg-muted/10">
         <div className="flex items-center justify-between mb-3">
           <div>
