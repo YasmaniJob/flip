@@ -30,6 +30,7 @@ const STANDARD_CATALOGUE = [
       { name: "Proyector", icon: "📽️" },
       { name: "Televisor", icon: "📺" },
       { name: "Monitor", icon: "🖥️" },
+      { name: "Pizarra Interactiva", icon: "📟" },
     ],
   },
   {
@@ -47,6 +48,17 @@ const STANDARD_CATALOGUE = [
       { name: "Switch", icon: "🔀" },
       { name: "Router", icon: "📡" },
       { name: "Access Point", icon: "📶" },
+    ],
+  },
+  {
+    category: { name: "Cables y Conectores", icon: "🔌", color: "#4C9AFF" },
+    templates: [
+      { name: "Cable de Red", icon: "🌐" },
+      { name: "Cable de Poder", icon: "⚡" },
+      { name: "Extensión Eléctrica", icon: "🔌" },
+      { name: "Adaptador", icon: "🔄" },
+      { name: "Cable de Video", icon: "🖥️" },
+      { name: "Cable USB", icon: "🔌" },
     ],
   },
   {
