@@ -1,169 +1,153 @@
-'use client';
+import { db } from '@/lib/db';
+import { classroomReservations } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { notFound } from 'next/navigation';
+import { AttendanceIdentificationForm } from '@/features/reservations/components/attendance-identification-form';
+import { AuthenticatedCheckIn } from '@/features/reservations/components/authenticated-check-in';
+import { CheckCircle2, Calendar, Clock, MapPin, Users, QrCode } from 'lucide-react';
+import Link from 'next/link';
+import { Metadata } from 'next';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { Button } from '@/components/atoms/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, Loader2, AlertCircle, QrCode, UserCheck, CalendarDays, ArrowRight } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { useSession } from '@/lib/auth-client';
+interface PageProps {
+    params: Promise<{ id: string }>;
+}
 
-export default function WorkshopCheckInPage() {
-    const params = useParams();
-    const router = useRouter();
-    const reservationId = params.id as string;
-    const { data: session, isPending: isSessionLoading } = useSession();
-    const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
-
-    useEffect(() => {
-        if (!isSessionLoading && !session) {
-            const currentUrl = encodeURIComponent(window.location.pathname);
-            router.push(`/sign-in?callbackUrl=${currentUrl}`);
-        }
-    }, [isSessionLoading, session, router]);
-
-    const checkInMutation = useMutation({
-        mutationFn: async () => {
-            const res = await fetch(`/api/classroom-reservations/${reservationId}/attendance/check-in`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Error al registrar asistencia');
-            return data;
-        },
-        onSuccess: () => {
-            setStatus('success');
-            toast.success('¡Asistencia confirmada!');
-        },
-        onError: (error: any) => {
-            setStatus('error');
-            toast.error(error.message || 'Error al registrar asistencia');
-        }
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { id } = await params;
+    const reservation = await db.query.classroomReservations.findFirst({
+        where: eq(classroomReservations.id, id),
     });
 
-    if (isSessionLoading) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-[#fdfdfd] dark:bg-[#0a0a0a]">
-                <Loader2 className="h-10 w-10 animate-spin text-primary/40 mb-4" />
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">Cargando...</p>
-            </div>
-        );
+    return {
+        title: `Asistencia: ${reservation?.title || 'Taller BeeClass'}`,
+        description: 'Registra tu asistencia al taller pedagógico de BeeClass',
+    };
+}
+
+export default async function PublicAttendancePage({ params }: PageProps) {
+    const { id } = await params;
+    
+    // Check session for authenticated users
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    // Fetch reservation details server-side
+    const reservation = await db.query.classroomReservations.findFirst({
+      where: eq(classroomReservations.id, id),
+      with: {
+          classroom: true,
+          staff: true,
+      }
+    });
+
+    if (!reservation) {
+        notFound();
     }
 
-    if (!session) return null;
+    const reservationDate = new Date(reservation.createdAt || new Date()).toLocaleDateString('es-ES', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+    });
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#fdfdfd] dark:bg-[#0a0a0a] p-6 selection:bg-primary/10">
-            <div className="w-full max-w-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                {/* Brand Header */}
-                <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="h-16 w-16 bg-primary rounded-3xl flex items-center justify-center shadow-2xl shadow-primary/30 group">
-                        <QrCode className="h-8 w-8 text-primary-foreground group-hover:scale-110 transition-all" />
+        <div className="min-h-screen bg-[#fdfdfd] dark:bg-[#0a0a0a] flex flex-col items-center py-12 px-6 sm:px-8">
+            {/* Minimal Header */}
+            <div className="w-full max-w-5xl flex items-center justify-between mb-16 animate-in fade-in slide-in-from-top-2 duration-500">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-primary flex items-center justify-center rounded-none border border-primary">
+                        <QrCode className="h-6 w-6 text-primary-foreground" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-black text-foreground tracking-tight uppercase">Control de Asistencia</h1>
-                        <p className="text-xs font-bold text-muted-foreground/50 uppercase tracking-[0.2em] mt-2 italic">Registro Digital de Talleres - PIP</p>
+                        <h1 className="text-2xl font-black tracking-tight uppercase leading-none">FLIP</h1>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-2 opacity-50">
+                            Asistencia Digital Institucional
+                        </p>
+                    </div>
+                </div>
+                
+                {!session && (
+                    <Link 
+                        href="/login" 
+                        className="h-10 px-8 border border-border rounded-none flex items-center justify-center text-[10px] font-black uppercase tracking-widest hover:bg-muted transition-all active:scale-95 shadow-none"
+                    >
+                        Ya tengo cuenta
+                    </Link>
+                )}
+            </div>
+
+            <main className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-20 items-start">
+                {/* Information Column */}
+                <div className="space-y-12 animate-in fade-in slide-in-from-left-4 duration-700">
+                    <div className="space-y-6">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-none">
+                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                            <span className="text-[10px] font-black text-primary uppercase tracking-widest">Identificación Obligatoria</span>
+                        </div>
+                        <h2 className="text-5xl sm:text-6xl font-black text-foreground uppercase tracking-tighter leading-[0.85]">
+                            {reservation.title || 'Sesión de Aprendizaje'}
+                        </h2>
+                        <p className="text-sm font-medium text-muted-foreground leading-relaxed max-w-md">
+                            Para registrar tu asistencia, por favor confirma tus datos en el formulario. Si ya tienes cuenta, el sistema los reconocerá automáticamente.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                        <div className="flex items-start gap-5 p-6 bg-card border border-border/60 rounded-none group hover:border-primary/20 transition-all shadow-none">
+                            <div className="w-12 h-12 bg-muted/50 rounded-none flex items-center justify-center group-hover:bg-primary/5 transition-colors border border-border/20">
+                                <Calendar className="h-6 w-6 text-primary" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1.5">Fecha del evento</p>
+                                <p className="text-lg font-black text-foreground uppercase tracking-tight leading-none">{reservationDate}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-5 p-6 bg-card border border-border/60 rounded-none group hover:border-primary/20 transition-all shadow-none">
+                            <div className="w-12 h-12 bg-muted/50 rounded-none flex items-center justify-center group-hover:bg-primary/5 transition-colors border border-border/20">
+                                <MapPin className="h-6 w-6 text-primary" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1.5">Ubicación física</p>
+                                <p className="text-lg font-black text-foreground uppercase tracking-tight leading-none">{reservation.classroom?.name || 'Aula Designada'}</p>
+                            </div>
+                        </div>
+
+                        {reservation.staff && (
+                            <div className="flex items-start gap-5 p-6 bg-card border border-border/60 rounded-none group hover:border-primary/20 transition-all shadow-none">
+                                <div className="w-12 h-12 bg-muted/50 rounded-none flex items-center justify-center group-hover:bg-primary/5 transition-colors border border-border/20">
+                                    <Users className="h-6 w-6 text-primary" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1.5">Responsable</p>
+                                    <p className="text-lg font-black text-foreground uppercase tracking-tight leading-none">{reservation.staff.name}</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <Card className="border-none shadow-2xl shadow-black/5 bg-card overflow-hidden rounded-[2.5rem]">
-                    <CardHeader className="text-center bg-muted/5 pb-8 pt-10 px-8">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full mb-6">
-                            <CalendarDays className="h-3 w-3" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Taller Activo</span>
-                        </div>
-                        <CardTitle className="text-2xl font-black text-foreground uppercase tracking-tight leading-none px-4 mb-3">
-                            Confirmar participación
-                        </CardTitle>
-                        <CardDescription className="text-sm font-medium text-muted-foreground max-w-[300px] mx-auto leading-relaxed">
-                            Hola <span className="text-foreground font-black underline decoration-primary/40 underline-offset-4">{session.user.name.split(' ')[0]}</span>, pulsa el botón para añadirte al registro oficial de este taller.
-                        </CardDescription>
-                    </CardHeader>
+                {/* Always show the Form */}
+                <div className="lg:sticky lg:top-12">
+                    <AttendanceIdentificationForm 
+                        reservationId={id} 
+                        initialData={session?.user ? {
+                            dni: session.user.dni || '',
+                            name: session.user.name || '',
+                            email: session.user.email || '',
+                        } : undefined}
+                    />
+                </div>
+            </main>
 
-                    <CardContent className="p-10 pt-4 flex flex-col items-center">
-                        {status === 'idle' && (
-                            <div className="w-full space-y-8">
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-4 p-5 bg-muted/30 rounded-3xl border border-border group hover:bg-muted/50 transition-all cursor-default">
-                                        <div className="h-12 w-12 bg-card rounded-2xl flex items-center justify-center border border-border group-hover:border-primary/20 transition-all">
-                                            <UserCheck className="h-6 w-6 text-primary" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Usuario</span>
-                                            <span className="text-sm font-black text-foreground truncate max-w-[200px] uppercase tracking-tight">{session.user.name}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <Button
-                                    size="lg"
-                                    className="w-full text-[10px] uppercase tracking-[0.2em] h-16 font-black rounded-3xl shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all gap-4 group"
-                                    onClick={() => checkInMutation.mutate()}
-                                    disabled={checkInMutation.isPending}
-                                >
-                                    {checkInMutation.isPending ? (
-                                        <>
-                                            <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                                            Procesando registro...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Confirmar mi asistencia
-                                            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-                        )}
-
-                        {status === 'success' && (
-                            <div className="flex flex-col items-center animate-in zoom-in-90 duration-500 py-4">
-                                <div className="h-24 w-24 bg-emerald-500 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl shadow-emerald-500/30">
-                                    <CheckCircle2 className="h-12 w-12 text-white" />
-                                </div>
-                                <h3 className="text-2xl font-black text-foreground mb-3 uppercase tracking-tight">¡REGISTRO EXITOSO!</h3>
-                                <p className="text-sm font-medium text-muted-foreground text-center mb-10 max-w-[240px]">Tu participación ha sido guardada en el acta digital del taller.</p>
-                                
-                                <Button 
-                                    variant="outline" 
-                                    className="rounded-2xl h-12 px-8 font-black text-[10px] uppercase tracking-widest gap-3"
-                                    onClick={() => router.push('/reservaciones')}
-                                >
-                                    Ir a mis reservas
-                                    <ArrowRight className="h-3 w-3" />
-                                </Button>
-                            </div>
-                        )}
-
-                        {status === 'error' && (
-                            <div className="flex flex-col items-center animate-in zoom-in-95 duration-300 py-4 text-center">
-                                <div className="h-24 w-24 bg-red-500 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-2xl shadow-red-500/30">
-                                    <AlertCircle className="h-12 w-12 text-white" />
-                                </div>
-                                <h3 className="text-2xl font-black text-foreground mb-3 uppercase tracking-tight">ERROR AL REGISTRAR</h3>
-                                <p className="text-sm font-medium text-muted-foreground text-center mb-10 max-w-[280px]">
-                                    No pudimos completar tu registro. Asegúrate de estar asignado a esta institución.
-                                </p>
-                                <Button 
-                                    variant="outline" 
-                                    className="rounded-2xl h-12 px-8 font-black text-[10px] uppercase tracking-widest"
-                                    onClick={() => setStatus('idle')}
-                                >
-                                    Reintentar ahora
-                                </Button>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-
-                <p className="text-[10px] text-center font-bold text-muted-foreground/30 uppercase tracking-[0.2em]">
-                    FLIP INNOVACIÓN • SISTEMA DE GESTIÓN EDUCATIVA
+            <footer className="mt-32 pb-12 w-full max-w-5xl text-center">
+                <p className="text-[10px] font-bold text-muted-foreground/20 uppercase tracking-[0.5em]">
+                    FLIP INNOVACIÓN &bull; beeclass.io &bull; {new Date().getFullYear()}
                 </p>
-            </div>
+            </footer>
         </div>
     );
 }
