@@ -97,7 +97,7 @@ export function WorkshopDetailSheet({ reservationId, title, onClose, onReschedul
                     <div className="w-1.5 h-6 bg-primary rounded-full" />
                     <div className="space-y-1">
                         <h2 className="text-[13px] font-black text-foreground uppercase tracking-tight leading-none tabular-nums">
-                            {title || 'Detalle del taller'}
+                            {title || reservation?.title || 'Detalle del taller'}
                         </h2>
                     </div>
                 </div>
@@ -134,6 +134,7 @@ export function WorkshopDetailSheet({ reservationId, title, onClose, onReschedul
                 <TabsContent value="attendance" className="flex-1 mt-0 overflow-hidden outline-none bg-card/10">
                     <AttendanceTab 
                         reservationId={reservationId} 
+                        title={title}
                         onOpenSearch={() => setShowSearch(true)}
                         onOpenQR={() => setShowQR(true)}
                         reservation={reservation}
@@ -310,12 +311,14 @@ export function WorkshopDetailSheet({ reservationId, title, onClose, onReschedul
 
 function AttendanceTab({ 
     reservationId, 
+    title,
     onOpenSearch, 
     onOpenQR,
     reservation,
     institutionName 
 }: { 
     reservationId: string;
+    title?: string;
     onOpenSearch: () => void;
     onOpenQR: () => void;
     reservation?: {
@@ -324,6 +327,7 @@ function AttendanceTab({
         endTime: string;
         classroomName?: string;
         purpose?: string;
+        title?: string;
     };
     institutionName?: string;
 }) {
@@ -373,6 +377,7 @@ function AttendanceTab({
                         <AttendancePDFGenerator
                             reservation={{
                                 id: reservationId,
+                                title: title || reservation?.title,
                                 date: reservation?.date || new Date(),
                                 startTime: reservation?.startTime || '08:00',
                                 endTime: reservation?.endTime || '09:00',

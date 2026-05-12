@@ -10,7 +10,7 @@ interface ReservationCardProps {
   isToday: boolean;
   isLive: boolean;
   isAdmin: boolean;
-  onSelectReservation?: (id: string) => void;
+  onSelectReservation?: (id: string, title: string, slot: ReservationSlot) => void;
   classroomId?: string;
   shift?: 'mañana' | 'tarde';
 }
@@ -38,7 +38,11 @@ export const ReservationCard: FC<ReservationCardProps> = memo(
           onClick={() =>
             isAdmin &&
             slot.reservationMainId &&
-            onSelectReservation?.(slot.reservationMainId)
+            onSelectReservation?.(
+              slot.reservationMainId, 
+              slot.title || `Taller: ${slot.staff?.name}`,
+              slot
+            )
           }
           className={cn(
             commonClasses,

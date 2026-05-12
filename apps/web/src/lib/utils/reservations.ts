@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { reservationSlots, staff } from '@/lib/db/schema';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, or, sql } from 'drizzle-orm';
 import { ValidationError, ForbiddenError } from './errors';
 
 /**
@@ -121,18 +121,34 @@ export async function validateSlotsNoConflicts(
     },
   });
 
-  // Check for active conflicts
-  const conflicts = existingSlots.filter(
+  if (existingSlots.length === 0) return;
+
+  // Separate active conflicts from "zombie" slots (cancelled reservations)
+  const activeConflicts = existingSlots.filter(
     (slot) =>
       (slot.reservation as any).status === 'active' &&
       (!excludeReservationId || slot.reservationId !== excludeReservationId)
   );
 
-  if (conflicts.length > 0) {
-    const dateStr = new Date(conflicts[0].date).toISOString().split('T')[0];
+  if (activeConflicts.length > 0) {
+    const dateStr = new Date(activeConflicts[0].date).toISOString().split('T')[0];
     throw new ValidationError(
       `Conflicto en reserva: El ${dateStr} ya tiene una reserva activa.`
     );
+  }
+
+  // Handle "zombie" slots: these exist in the database but belong to cancelled reservations
+  // They cause UNIQUE constraint failures because the index is global.
+  const zombieSlots = existingSlots.filter(
+    (slot) => (slot.reservation as any).status === 'cancelled'
+  );
+
+  if (zombieSlots.length > 0) {
+    console.log(`[CLEANUP] Deleting ${zombieSlots.length} zombie slots from cancelled reservations`);
+    const zombieIds = zombieSlots.map(s => s.id);
+    
+    // We can delete them right here to clear the path for the new reservation
+    await db.delete(reservationSlots).where(sql`${reservationSlots.id} IN (${sql.join(zombieIds, sql`, `)})`);
   }
 }
 

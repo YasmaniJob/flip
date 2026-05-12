@@ -47,6 +47,7 @@ export interface ReservationAttendance {
     notes: string | null;
     staffName?: string;
     staffRole?: string;
+    staffEmail?: string;
 }
 
 export interface ReservationTask {

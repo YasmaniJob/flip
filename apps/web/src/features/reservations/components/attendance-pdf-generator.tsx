@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 interface AttendancePDFGeneratorProps {
     reservation: {
         id: string;
+        title?: string | null;
         date: Date;
         startTime: string;
         endTime: string;

@@ -543,7 +543,11 @@ export function ReservacionesClient() {
                                                                     isToday={isToday}
                                                                     isLive={isToday && isLiveRow}
                                                                     isAdmin={canReserve}
-                                                                    onSelectReservation={setSelectedReservationId}
+                                                                    onSelectReservation={(id, title, slot) => {
+                                                                        setSelectedReservationId(id);
+                                                                        setSelectedTitle(title);
+                                                                        setSelectedReservationSlot(slot);
+                                                                    }}
                                                                     classroomId={selectedClassroomId}
                                                                     shift={selectedShift}
                                                                 />
@@ -637,6 +641,7 @@ export function ReservacionesClient() {
                                         endTime: selectedReservationSlot.pedagogicalHour.endTime,
                                         classroomName: config?.classrooms?.find(c => c.id === selectedReservationSlot.classroomId)?.name,
                                         purpose: selectedReservationSlot.purpose,
+                                        title: selectedTitle,
                                     } : undefined}
                                     institutionName={institution?.name}
                                 />

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { classroomReservations } from '@/lib/db/schema';
+import { classroomReservations, reservationSlots } from '@/lib/db/schema';
 import { requireAuth, getInstitutionId } from '@/lib/auth/helpers';
 import { successResponse, errorResponse } from '@/lib/utils/response';
 import { NotFoundError } from '@/lib/utils/errors';
@@ -32,20 +32,32 @@ export async function PUT(
     // Check permissions
     await requireModifyPermission(reservation, user);
 
-    // Update status to cancelled
-    const [updated] = await db
-      .update(classroomReservations)
-      .set({
-        status: 'cancelled',
-        cancelledAt: new Date(),
-      })
-      .where(
-        and(
-          eq(classroomReservations.id, id),
-          eq(classroomReservations.institutionId, institutionId)
+    // Update status to cancelled and DELETE SLOTS to free them up
+    // We delete slots because the unique index (classroomId, date, hour) in reservation_slots 
+    // is global and doesn't know about the 'cancelled' status in classroom_reservations.
+    const [updated] = await db.transaction(async (tx) => {
+      // 1. Delete associated slots first
+      await tx
+        .delete(reservationSlots)
+        .where(eq(reservationSlots.reservationId, id));
+
+      // 2. Update status to cancelled
+      const [res] = await tx
+        .update(classroomReservations)
+        .set({
+          status: 'cancelled',
+          cancelledAt: new Date(),
+        })
+        .where(
+          and(
+            eq(classroomReservations.id, id),
+            eq(classroomReservations.institutionId, institutionId)
+          )
         )
-      )
-      .returning();
+        .returning();
+      
+      return [res];
+    });
 
     return successResponse(updated, 'Reserva cancelada exitosamente');
   } catch (error) {

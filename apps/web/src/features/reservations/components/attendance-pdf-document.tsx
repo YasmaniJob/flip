@@ -7,6 +7,7 @@ import { es } from 'date-fns/locale';
 interface AttendancePDFDocumentProps {
     reservation: {
         id: string;
+        title?: string | null;
         date: Date;
         startTime: string;
         endTime: string;
@@ -17,6 +18,7 @@ interface AttendancePDFDocumentProps {
         id: string;
         staffName: string;
         staffRole: string;
+        staffEmail?: string;
         status: 'presente' | 'ausente';
     }>;
     tasks?: Array<{
@@ -97,6 +99,7 @@ const styles = StyleSheet.create({
         borderBottom: '1 solid #e0e0e0',
         padding: 8,
         minHeight: 35,
+        alignItems: 'center',
     },
     tableRowAlt: {
         backgroundColor: '#f9f9f9',
@@ -112,22 +115,6 @@ const styles = StyleSheet.create({
     },
     checkboxChecked: {
         backgroundColor: '#7c3aed',
-    },
-    signatureSection: {
-        marginTop: 30,
-        paddingTop: 15,
-        borderTop: '1 solid #e0e0e0',
-    },
-    signatureBox: {
-        marginTop: 30,
-        borderTop: '1.5 solid #7c3aed',
-        paddingTop: 8,
-        width: 200,
-    },
-    signatureLabel: {
-        fontSize: 8,
-        color: '#666666',
-        textTransform: 'uppercase',
     },
     footer: {
         position: 'absolute',
@@ -149,18 +136,18 @@ export function AttendancePDFDocument({
     institutionName = 'Institución Educativa'
 }: AttendancePDFDocumentProps) {
     const formattedDate = format(reservation.date, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
-    const totalAttendees = attendees.length;
-    const presentCount = attendees.filter(a => a.status === 'presente').length;
     
     // Generate human-readable reservation number from ID
     const reservationNumber = reservation.id.slice(0, 8).toUpperCase();
 
     return (
-        <Document>
+        <Document title={`Asistencia - ${reservation.title || 'Reserva'}`}>
             <Page size="A4" style={styles.page}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.title}>Registro de Asistencia</Text>
+                    <Text style={styles.title}>
+                        {reservation.title || 'Registro de Asistencia'}
+                    </Text>
                     <Text style={styles.subtitle}>{institutionName}</Text>
                 </View>
 
@@ -178,20 +165,24 @@ export function AttendancePDFDocument({
                             <Text style={styles.infoValue}>{reservation.purpose}</Text>
                         </View>
                     )}
+                    <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>Fecha:</Text>
+                        <Text style={styles.infoValue}>{formattedDate}</Text>
+                    </View>
                 </View>
 
                 {/* Attendance List */}
                 <View style={styles.section}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                         <Text style={styles.sectionTitle}>Lista de Asistencia</Text>
-                        <Text style={{ fontSize: 10, color: '#64748b' }}>{formattedDate}</Text>
+                        <Text style={{ fontSize: 9, color: '#64748b' }}>{attendees.length} registrados</Text>
                     </View>
                     <View style={styles.table}>
                         <View style={styles.tableHeader}>
                             <Text style={[styles.tableCell, { width: 40 }]}>N°</Text>
                             <Text style={[styles.tableCell, { flex: 1 }]}>Nombre Completo</Text>
-                            <Text style={[styles.tableCell, { width: 120 }]}>Cargo</Text>
-                            <Text style={[styles.tableCell, { width: 100 }]}>Firma</Text>
+                            <Text style={[styles.tableCell, { width: 100 }]}>Cargo</Text>
+                            <Text style={[styles.tableCell, { width: 150 }]}>Correo Electrónico</Text>
                         </View>
                         {attendees.map((attendee, index) => (
                             <View 
@@ -204,24 +195,17 @@ export function AttendancePDFDocument({
                                 <Text style={[styles.tableCell, { width: 40 }]}>
                                     {(index + 1).toString().padStart(2, '0')}
                                 </Text>
-                                <Text style={[styles.tableCell, { flex: 1 }]}>
+                                <Text style={[styles.tableCell, { flex: 1, fontFamily: 'Helvetica-Bold' }]}>
                                     {attendee.staffName}
                                 </Text>
-                                <Text style={[styles.tableCell, { width: 120, fontSize: 8 }]}>
+                                <Text style={[styles.tableCell, { width: 100, fontSize: 8 }]}>
                                     {attendee.staffRole}
                                 </Text>
-                                <View style={{ width: 100, borderBottom: '1 solid #cccccc' }} />
+                                <Text style={[styles.tableCell, { width: 150, fontSize: 8, color: '#64748b' }]}>
+                                    {attendee.staffEmail || '-'}
+                                </Text>
                             </View>
                         ))}
-                    </View>
-                </View>
-
-                {/* Signature Section */}
-                <View style={styles.signatureSection}>
-                    <View style={styles.signatureBox}>
-                        <Text style={styles.signatureLabel}>
-                            Firma del Responsable AIP
-                        </Text>
                     </View>
                 </View>
 
@@ -235,3 +219,4 @@ export function AttendancePDFDocument({
         </Document>
     );
 }
+

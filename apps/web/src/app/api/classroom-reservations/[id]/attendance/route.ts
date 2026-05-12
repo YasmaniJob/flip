@@ -44,6 +44,7 @@ export async function GET(
       ...item,
       staffName: (item.staff as any)?.name || 'Sin nombre',
       staffRole: (item.staff as any)?.role || 'DOCENTE',
+      staffEmail: (item.staff as any)?.email || '',
     }));
 
     return successResponse(flattenedList);
