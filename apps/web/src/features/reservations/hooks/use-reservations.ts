@@ -135,6 +135,7 @@ export function useReservationAttendance(reservationId: string, options?: any) {
         queryKey: reservationKeys.attendance(reservationId),
         queryFn: () => ReservationsApi.getAttendance(reservationId),
         enabled: !!reservationId && (options?.enabled !== false),
+        refetchInterval: 5000, // Poll every 5 seconds for real-time QR updates
         ...options,
     });
 }
@@ -146,7 +147,7 @@ export function useAddReservationAttendee() {
             ReservationsApi.addAttendee(reservationId, { staffId, staffIds }),
         onSuccess: (data, vars) => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.attendance(vars.reservationId) });
-            queryClient.invalidateQueries({ queryKey: ['staff'] }); // Invalidate staff to refresh exclusion filters
+            queryClient.invalidateQueries({ queryKey: ['staff'] });
             const count = data.count || (vars.staffIds?.length || 1);
             showSuccess(count > 1 ? `${count} participantes agregados` : 'Participante agregado');
         },
@@ -161,11 +162,34 @@ export function useBulkUpdateReservationAttendance() {
     return useMutation({
         mutationFn: ({ reservationId, updates }: { reservationId: string; updates: { attendanceId: string; status: string }[] }) =>
             ReservationsApi.bulkUpdateAttendance(reservationId, updates),
-        onSuccess: (_, vars) => {
-            queryClient.invalidateQueries({ queryKey: reservationKeys.attendance(vars.reservationId) });
+        onMutate: async ({ reservationId, updates }) => {
+            // Cancel any outgoing refetches
+            await queryClient.cancelQueries({ queryKey: reservationKeys.attendance(reservationId) });
+
+            // Snapshot the previous value
+            const previousAttendance = queryClient.getQueryData<ReservationAttendance[]>(reservationKeys.attendance(reservationId));
+
+            // Optimistically update to the new value
+            if (previousAttendance) {
+                queryClient.setQueryData<ReservationAttendance[]>(
+                    reservationKeys.attendance(reservationId),
+                    previousAttendance.map(item => {
+                        const update = updates.find(u => u.attendanceId === item.id);
+                        return update ? { ...item, status: update.status as any } : item;
+                    })
+                );
+            }
+
+            return { previousAttendance };
         },
-        onError: (error) => {
-            handleApiError(error, 'No se pudo actualizar la asistencia');
+        onError: (err, vars, context) => {
+            if (context?.previousAttendance) {
+                queryClient.setQueryData(reservationKeys.attendance(vars.reservationId), context.previousAttendance);
+            }
+            handleApiError(err, 'No se pudo actualizar la asistencia');
+        },
+        onSettled: (data, error, vars) => {
+            queryClient.invalidateQueries({ queryKey: reservationKeys.attendance(vars.reservationId) });
         },
     });
 }
@@ -174,12 +198,34 @@ export function useRemoveReservationAttendee() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (attendanceId: string) => ReservationsApi.removeAttendee(attendanceId),
+        onMutate: async (attendanceId) => {
+            // We don't have reservationId here, so we have to find which query contains this ID
+            // or just invalidate broadly. For better UX, we try to find the query.
+            const queries = queryClient.getQueryCache().findAll({ queryKey: reservationKeys.all });
+            const queriesToRestore: any[] = [];
+
+            for (const query of queries) {
+                if (query.queryKey[1] === 'attendance') {
+                    const data = query.state.data as ReservationAttendance[];
+                    if (data?.find(a => a.id === attendanceId)) {
+                        const previousData = data;
+                        queryClient.setQueryData(query.queryKey, data.filter(a => a.id !== attendanceId));
+                        queriesToRestore.push({ key: query.queryKey, previousData });
+                    }
+                }
+            }
+
+            return { queriesToRestore };
+        },
+        onError: (err, vars, context) => {
+            context?.queriesToRestore.forEach(q => {
+                queryClient.setQueryData(q.key, q.previousData);
+            });
+            handleApiError(err, 'No se pudo remover el participante');
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
             showSuccess('Participante removido');
-        },
-        onError: (error) => {
-            handleApiError(error, 'No se pudo remover el participante');
         },
     });
 }
@@ -207,6 +253,7 @@ export function useReservationTasks(reservationId: string, options?: any) {
         queryKey: reservationKeys.tasks(reservationId),
         queryFn: () => ReservationsApi.getTasks(reservationId),
         enabled: !!reservationId && (options?.enabled !== false),
+        refetchInterval: 10000, // Poll every 10 seconds for tasks
         ...options,
     });
 }
@@ -231,11 +278,31 @@ export function useUpdateReservationTask() {
     return useMutation({
         mutationFn: ({ taskId, data }: { taskId: string; data: Partial<ReservationTask> }) =>
             ReservationsApi.updateTask(taskId, data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: reservationKeys.all });
+        onMutate: async ({ taskId, data }) => {
+            const queries = queryClient.getQueryCache().findAll({ queryKey: reservationKeys.all });
+            const snapshots: any[] = [];
+
+            for (const query of queries) {
+                if (query.queryKey[1] === 'tasks') {
+                    const tasks = query.state.data as ReservationTask[];
+                    if (tasks?.find(t => t.id === taskId)) {
+                        snapshots.push({ key: query.queryKey, previousData: tasks });
+                        queryClient.setQueryData(query.queryKey, tasks.map(t => 
+                            t.id === taskId ? { ...t, ...data } : t
+                        ));
+                    }
+                }
+            }
+            return { snapshots };
         },
-        onError: (error) => {
-            handleApiError(error, 'No se pudo actualizar el acuerdo');
+        onError: (err, vars, context) => {
+            context?.snapshots.forEach(s => {
+                queryClient.setQueryData(s.key, s.previousData);
+            });
+            handleApiError(err, 'No se pudo actualizar el acuerdo');
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: reservationKeys.all });
         },
     });
 }
@@ -244,12 +311,31 @@ export function useDeleteReservationTask() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (taskId: string) => ReservationsApi.deleteTask(taskId),
+        onMutate: async (taskId) => {
+            const queries = queryClient.getQueryCache().findAll({ queryKey: reservationKeys.all });
+            const snapshots: any[] = [];
+
+            for (const query of queries) {
+                if (query.queryKey[1] === 'tasks') {
+                    const tasks = query.state.data as ReservationTask[];
+                    if (tasks?.find(t => t.id === taskId)) {
+                        snapshots.push({ key: query.queryKey, previousData: tasks });
+                        queryClient.setQueryData(query.queryKey, tasks.filter(t => t.id !== taskId));
+                    }
+                }
+            }
+            return { snapshots };
+        },
+        onError: (err, vars, context) => {
+            context?.snapshots.forEach(s => {
+                queryClient.setQueryData(s.key, s.previousData);
+            });
+            handleApiError(err, 'No se pudo eliminar el acuerdo');
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: reservationKeys.all });
             showSuccess('Acuerdo eliminado');
         },
-        onError: (error) => {
-            handleApiError(error, 'No se pudo eliminar el acuerdo');
-        },
     });
 }
+
