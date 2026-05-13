@@ -3,19 +3,25 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/atoms/button';
-import { QrCode, Copy, Check, Download, X } from 'lucide-react';
+import { QrCode, Copy, Check, Download, X, Loader2 } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { toast } from 'sonner';
+import { pdf } from '@react-pdf/renderer';
+import { QRPDFDocument } from './qr-pdf-document';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface QRAttendanceDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     reservationId: string;
     title?: string;
+    date?: Date;
 }
 
-export function QRAttendanceDialog({ open, onOpenChange, reservationId, title }: QRAttendanceDialogProps) {
+export function QRAttendanceDialog({ open, onOpenChange, reservationId, title, date }: QRAttendanceDialogProps) {
     const [copied, setCopied] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
     
     // Generate full URL for QR
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
@@ -32,33 +38,60 @@ export function QRAttendanceDialog({ open, onOpenChange, reservationId, title }:
         }
     };
 
-    const handleDownloadQR = () => {
+    const handleDownloadQR = async () => {
         const svg = document.getElementById('qr-code-svg');
         if (!svg) return;
 
-        const svgData = new XMLSerializer().serializeToString(svg);
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
+        setIsGenerating(true);
+        try {
+            // Render SVG to PNG data URL via canvas
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
 
-        img.onload = () => {
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx?.drawImage(img, 0, 0);
-            
-            canvas.toBlob((blob) => {
-                if (!blob) return;
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `qr-asistencia-${reservationId}.png`;
-                link.click();
-                URL.revokeObjectURL(url);
-                toast.success('QR descargado correctamente');
+            const qrDataUrl = await new Promise<string>((resolve, reject) => {
+                img.onload = () => {
+                    const size = 480;
+                    canvas.width = size;
+                    canvas.height = size;
+                    ctx!.fillStyle = '#ffffff';
+                    ctx!.fillRect(0, 0, size, size);
+                    ctx!.drawImage(img, 0, 0, size, size);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.onerror = reject;
+                img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
             });
-        };
 
-        img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+            const doc = (
+                <QRPDFDocument
+                    qrDataUrl={qrDataUrl}
+                    title={title}
+                    date={date}
+                    attendanceUrl={attendanceUrl}
+                />
+            );
+
+            const blob = await pdf(doc).toBlob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+
+            // Build filename: title + date
+            const safeName = (title ?? 'taller').replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, '').trim().replace(/\s+/g, '-').toLowerCase();
+            const dateStr = date ? format(date, 'dd-MM-yyyy', { locale: es }) : format(new Date(), 'dd-MM-yyyy', { locale: es });
+            link.download = `qr-${safeName}-${dateStr}.pdf`;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            toast.success('QR descargado como PDF');
+        } catch (error) {
+            console.error('Error generating QR PDF:', error);
+            toast.error('Error al generar el PDF');
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     return (
@@ -136,11 +169,16 @@ export function QRAttendanceDialog({ open, onOpenChange, reservationId, title }:
                     <div className="w-full pt-2 space-y-3">
                         <Button
                             onClick={handleDownloadQR}
+                            disabled={isGenerating}
                             variant="outline"
                             className="w-full h-11 font-black text-[10px] uppercase tracking-[0.2em] gap-2 border-border hover:bg-muted rounded-sm"
                         >
-                            <Download className="h-4 w-4" />
-                            Descargar QR como imagen
+                            {isGenerating ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Download className="h-4 w-4" />
+                            )}
+                            {isGenerating ? 'Generando PDF...' : 'Descargar QR como PDF'}
                         </Button>
                         
                         <p className="text-[10px] text-center text-muted-foreground/50 font-medium px-6 leading-relaxed">

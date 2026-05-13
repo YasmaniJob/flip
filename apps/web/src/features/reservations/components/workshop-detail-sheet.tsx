@@ -300,6 +300,7 @@ export function WorkshopDetailSheet({ reservationId, title, onClose, onReschedul
                 onOpenChange={setShowQR}
                 reservationId={reservationId}
                 title={title}
+                date={reservation?.date}
             />
         </div>
     );
