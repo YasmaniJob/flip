@@ -121,7 +121,10 @@ export const useStaff = (params: UseStaffParams = {}) => {
                 showSuccess('Personal actualizado correctamente');
             }
         },
-        onError: (error) => {
+        onError: (error: any) => {
+            if (error?.status === 404) {
+                queryClient.invalidateQueries({ queryKey: ['staff'] });
+            }
             handleApiError(error, 'No se pudo actualizar el personal');
         },
     });
@@ -133,7 +136,10 @@ export const useStaff = (params: UseStaffParams = {}) => {
             queryClient.invalidateQueries({ queryKey: ['staff'] });
             showSuccess('Personal eliminado correctamente');
         },
-        onError: (error) => {
+        onError: (error: any) => {
+            if (error?.status === 404) {
+                queryClient.invalidateQueries({ queryKey: ['staff'] });
+            }
             handleApiError(error, 'No se pudo eliminar el personal');
         },
     });

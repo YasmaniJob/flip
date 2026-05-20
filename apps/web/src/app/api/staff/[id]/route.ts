@@ -16,6 +16,10 @@ import {
   meetingAttendance,
   meetingTasks,
   loans,
+  accounts,
+  meetings,
+  diagnosticSessions,
+  incidents,
 } from '@/lib/db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import { revalidateTag } from 'next/cache';
@@ -106,6 +110,7 @@ export async function PATCH(
         ['admin', 'superadmin', 'pip'].includes(existingUser.role || '');
 
       if (!isAdmin) {
+        revalidateTag('staff');
         throw new NotFoundError('Personal no encontrado');
       }
 
@@ -149,13 +154,14 @@ export async function PATCH(
       });
     }
 
+    revalidateTag('staff');
     throw new NotFoundError('Personal no encontrado');
   } catch (error) {
     return errorResponse(error);
   }
 }
 
-// DELETE /api/staff/:id - Delete staff member (full cascade)
+// DELETE /api/staff/:id - Delete staff member (Leveraging DB Cascades)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -165,51 +171,22 @@ export async function DELETE(
     await requireAuth(request);
     const institutionId = await getInstitutionId(request);
 
-    // --- CASO 1: El ID pertenece a un registro en la tabla `staff` ---
+    // --- CASO 1: El ID pertenece a la tabla `staff` ---
     const existingStaff = await db.query.staff.findFirst({
       where: and(eq(staff.id, id), eq(staff.institutionId, institutionId)),
     });
 
     if (existingStaff) {
       await db.transaction(async (tx) => {
-        // PASO 1: Encontrar reservas donde este docente es el DUEÑO (staffId)
-        // y limpiar todas sus dependencias primero.
-        const ownedReservations = await tx
-          .select({ id: classroomReservations.id })
-          .from(classroomReservations)
-          .where(eq(classroomReservations.staffId, id));
-
-        if (ownedReservations.length > 0) {
-          const resIds = ownedReservations.map((r) => r.id);
-          // Limpiar dependencias de esas reservas
-          await tx.delete(reservationSlots).where(inArray(reservationSlots.reservationId, resIds));
-          await tx.delete(reservationAttendance).where(inArray(reservationAttendance.reservationId, resIds));
-          await tx.delete(reservationTasks).where(inArray(reservationTasks.reservationId, resIds));
-          // Ahora sí borrar las reservas
-          await tx.delete(classroomReservations).where(inArray(classroomReservations.id, resIds));
-        }
-
-        // PASO 2: Limpiar la participación del docente en reservas de OTROS
-        await tx.delete(reservationAttendance).where(eq(reservationAttendance.staffId, id));
-
-        // PASO 3: Limpiar asistencia a reuniones y desvincular compromisos
-        await tx.delete(meetingAttendance).where(eq(meetingAttendance.staffId, id));
-        await tx.update(meetingTasks).set({ assignedStaffId: null }).where(eq(meetingTasks.assignedStaffId, id));
-        await tx.update(reservationTasks).set({ assignedStaffId: null }).where(eq(reservationTasks.assignedStaffId, id));
-
-        // PASO 4: Desvincular préstamos (se mantiene el historial)
-        await tx.update(loans).set({ staffId: null }).where(eq(loans.staffId, id));
-
-        // PASO 5: Borrar el registro de Staff
+        // 1. Borrar el registro staff (DB cascades all reservation slots, attendance, etc. automatically)
         await tx.delete(staff).where(eq(staff.id, id));
 
-        // PASO 6: Si tenía cuenta de usuario de rol 'docente', borrarla también
+        // 2. Si tenía cuenta vinculada de rol 'docente', borrarla también
         if (existingStaff.email) {
           const linkedUser = await tx.query.users.findFirst({
             where: eq(users.email, existingStaff.email),
           });
           if (linkedUser && linkedUser.role === 'docente') {
-            await tx.delete(sessions).where(eq(sessions.userId, linkedUser.id));
             await tx.delete(users).where(eq(users.id, linkedUser.id));
           }
         }
@@ -219,7 +196,7 @@ export async function DELETE(
       return successResponse({ success: true });
     }
 
-    // --- CASO 2: El ID pertenece directamente a un usuario Admin ---
+    // --- CASO 2: El ID pertenece a un usuario Admin ---
     const existingUser = await db.query.users.findFirst({
       where: and(eq(users.id, id), eq(users.institutionId, institutionId)),
     });
@@ -230,16 +207,18 @@ export async function DELETE(
         ['admin', 'superadmin', 'pip'].includes(existingUser.role || '');
 
       if (!isAdmin) {
+        revalidateTag('staff');
         throw new NotFoundError('Personal no encontrado');
       }
 
-      await db.delete(sessions).where(eq(sessions.userId, id));
+      // 1. Borrar el usuario (DB cascades sessions and accounts automatically)
       await db.delete(users).where(eq(users.id, id));
 
       revalidateTag('staff');
       return successResponse({ success: true });
     }
 
+    revalidateTag('staff');
     throw new NotFoundError('Personal no encontrado');
   } catch (error) {
     console.error('[Staff DELETE Error]:', error);

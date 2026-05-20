@@ -92,7 +92,7 @@ export const users = pgTable('users', {
 // ============================================
 export const sessions = pgTable('sessions', {
     id: text('id').primaryKey(),
-    userId: text('user_id').references(() => users.id).notNull(),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
     token: text('token').unique().notNull(),
     expiresAt: timestamp('expires_at').notNull(),
     ipAddress: text('ip_address'),
@@ -110,7 +110,7 @@ export const sessions = pgTable('sessions', {
 // ============================================
 export const accounts = pgTable('accounts', {
     id: text('id').primaryKey(),
-    userId: text('user_id').references(() => users.id).notNull(),
+    userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
     accountId: text('account_id').notNull(),
     providerId: text('provider_id').notNull(),
     accessToken: text('access_token'),
@@ -243,7 +243,7 @@ export const staff = pgTable('staff', {
 export const loans = pgTable('loans', {
     id: text('id').primaryKey(),
     institutionId: text('institution_id').references(() => institutions.id).notNull(),
-    staffId: text('staff_id').references(() => staff.id),
+    staffId: text('staff_id').references(() => staff.id, { onDelete: 'set null' }),
     requestedByUserId: text('requested_by_user_id'),
     status: text('status').default('active'),
     approvalStatus: text('approval_status').default('approved'), // 'pending' | 'approved' | 'rejected'
@@ -363,7 +363,7 @@ export const classroomReservations = pgTable('classroom_reservations', {
     id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
     institutionId: text('institution_id').references(() => institutions.id).notNull(),
     classroomId: text('classroom_id').references(() => classrooms.id).notNull(),
-    staffId: text('staff_id').references(() => staff.id).notNull(),
+    staffId: text('staff_id').references(() => staff.id, { onDelete: 'cascade' }).notNull(),
     gradeId: text('grade_id').references(() => grades.id),
     sectionId: text('section_id').references(() => sections.id),
     curricularAreaId: text('curricular_area_id').references(() => curricularAreas.id),
@@ -384,7 +384,7 @@ export const classroomReservations = pgTable('classroom_reservations', {
 // ============================================
 export const reservationSlots = pgTable('reservation_slots', {
     id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-    reservationId: text('reservation_id').references(() => classroomReservations.id).notNull(),
+    reservationId: text('reservation_id').references(() => classroomReservations.id, { onDelete: 'cascade' }).notNull(),
     institutionId: text('institution_id').references(() => institutions.id).notNull(),
     classroomId: text('classroom_id').references(() => classrooms.id).notNull(),
     pedagogicalHourId: text('pedagogical_hour_id').references(() => pedagogicalHours.id).notNull(),
@@ -408,7 +408,7 @@ export const reservationSlots = pgTable('reservation_slots', {
 export const meetings = pgTable('meetings', {
     id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
     institutionId: text('institution_id').references(() => institutions.id).notNull(),
-    createdByUserId: text('created_by_user_id').references(() => users.id), // Owner - only they can see/manage
+    createdByUserId: text('created_by_user_id').references(() => users.id, { onDelete: 'set null' }), // Owner - only they can see/manage
     title: text('title').notNull(),
     date: timestamp('date').notNull(),
     startTime: text('start_time'),
@@ -431,8 +431,8 @@ export const meetings = pgTable('meetings', {
 // ============================================
 export const meetingAttendance = pgTable('meeting_attendance', {
     id: text('id').primaryKey(),
-    meetingId: text('meeting_id').references(() => meetings.id).notNull(),
-    staffId: text('staff_id').references(() => staff.id).notNull(),
+    meetingId: text('meeting_id').references(() => meetings.id, { onDelete: 'cascade' }).notNull(),
+    staffId: text('staff_id').references(() => staff.id, { onDelete: 'cascade' }).notNull(),
     status: text('status').default('presente'), // presente, ausente, tardanza
     notes: text('notes'),
     createdAt: timestamp('created_at').defaultNow(),
@@ -448,9 +448,9 @@ export const meetingAttendance = pgTable('meeting_attendance', {
 // ============================================
 export const meetingTasks = pgTable('meeting_tasks', {
     id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-    meetingId: text('meeting_id').references(() => meetings.id).notNull(),
+    meetingId: text('meeting_id').references(() => meetings.id, { onDelete: 'cascade' }).notNull(),
     description: text('description').notNull(),
-    assignedStaffId: text('assigned_staff_id').references(() => staff.id),
+    assignedStaffId: text('assigned_staff_id').references(() => staff.id, { onDelete: 'set null' }),
     status: text('status').default('pending'), // pending, completed
     dueDate: timestamp('due_date'),
     createdAt: timestamp('created_at').defaultNow(),
@@ -465,8 +465,8 @@ export const meetingTasks = pgTable('meeting_tasks', {
 // ============================================
 export const reservationAttendance = pgTable('reservation_attendance', {
     id: text('id').primaryKey(),
-    reservationId: text('reservation_id').references(() => classroomReservations.id).notNull(),
-    staffId: text('staff_id').references(() => staff.id).notNull(),
+    reservationId: text('reservation_id').references(() => classroomReservations.id, { onDelete: 'cascade' }).notNull(),
+    staffId: text('staff_id').references(() => staff.id, { onDelete: 'cascade' }).notNull(),
     status: text('status').default('presente'), // presente, ausente, tardanza
     notes: text('notes'),
     createdAt: timestamp('created_at').defaultNow(),
@@ -482,9 +482,9 @@ export const reservationAttendance = pgTable('reservation_attendance', {
 // ============================================
 export const reservationTasks = pgTable('reservation_tasks', {
     id: text('id').primaryKey(),
-    reservationId: text('reservation_id').references(() => classroomReservations.id).notNull(),
+    reservationId: text('reservation_id').references(() => classroomReservations.id, { onDelete: 'cascade' }).notNull(),
     description: text('description').notNull(),
-    assignedStaffId: text('assigned_staff_id').references(() => staff.id),
+    assignedStaffId: text('assigned_staff_id').references(() => staff.id, { onDelete: 'set null' }),
     status: text('status').default('pending'), // pending, completed
     dueDate: timestamp('due_date'),
     createdAt: timestamp('created_at').defaultNow(),
@@ -798,8 +798,8 @@ export const diagnosticSessions = pgTable('diagnostic_sessions', {
     id: text('id').primaryKey(),
     token: text('token').unique().notNull(), // UUID for public access
     institutionId: text('institution_id').references(() => institutions.id).notNull(),
-    userId: text('user_id').references(() => users.id), // Reference to the registered user
-    staffId: text('staff_id').references(() => staff.id), // NULL until approved
+    userId: text('user_id').references(() => users.id, { onDelete: 'set null' }), // Reference to the registered user
+    staffId: text('staff_id').references(() => staff.id, { onDelete: 'set null' }), // NULL until approved
     year: integer('year').notNull(), // Year of the diagnostic session (2026+)
     name: text('name').notNull(),
     dni: text('dni'),
@@ -836,7 +836,7 @@ export const diagnosticSessions = pgTable('diagnostic_sessions', {
 // Diagnostic Responses (Individual answers)
 export const diagnosticResponses = pgTable('diagnostic_responses', {
     id: text('id').primaryKey(),
-    sessionId: text('session_id').references(() => diagnosticSessions.id).notNull(),
+    sessionId: text('session_id').references(() => diagnosticSessions.id, { onDelete: 'cascade' }).notNull(),
     questionId: text('question_id').references(() => diagnosticQuestions.id).notNull(),
     score: integer('score').notNull(), // 0-3 (No sé | Con ayuda | Solo | Oriento)
     answeredAt: timestamp('answered_at').defaultNow(),
@@ -923,14 +923,14 @@ export const incidents = pgTable('incidents', {
     
     // Relationships
     reporterId: text('reporter_id').references(() => users.id).notNull(),
-    assigneeId: text('assignee_id').references(() => users.id),
+    assigneeId: text('assignee_id').references(() => users.id, { onDelete: 'set null' }),
     resourceId: text('resource_id').references(() => resources.id),
     
     // Location (for infraestructura/servicios)
     location: text('location'),
     
     // Recurrence tracking
-    masterIncidentId: text('master_incident_id').references(() => incidents.id),
+    masterIncidentId: text('master_incident_id').references((): any => incidents.id),
     isRecurrent: boolean('is_recurrent').default(false),
     recurrenceCount: integer('recurrence_count').default(0),
     
